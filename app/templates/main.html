@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Traceroute Tool</title>
+        <!-- Bootstrap CSS -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <style>
+            #terminal {
+                background-color: #1e1e1e;
+                color: #d4d4d4;
+                font-family: "Courier New", Courier, monospace;
+                padding: 10px;
+                border-radius: 5px;
+                height: 400px;
+                overflow-y: auto;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            }
+
+            #probes-table tr.selected {
+                background-color: #d9edf7; /* Light blue */
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container my-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- Input Section -->
+                    <div class="card p-3 mb-4">
+                        <div
+                            class="d-flex justify-content-between align-items-center mb-3"
+                        >
+                            <div>
+                                <input
+                                    type="radio"
+                                    class="btn-check"
+                                    name="options-outlined"
+                                    id="traceroute-btn"
+                                    autocomplete="off"
+                                    checked
+                                />
+                                <label
+                                    class="btn btn-outline-primary"
+                                    for="traceroute-btn"
+                                    >Traceroute</label
+                                >
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    class="btn-check"
+                                    name="options-outlined"
+                                    id="ping-btn"
+                                    autocomplete="off"
+                                />
+                                <label
+                                    class="btn btn-outline-primary"
+                                    for="ping-btn"
+                                    >Ping</label
+                                >
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    class="btn-check"
+                                    name="options-outlined"
+                                    id="dns-lookup"
+                                    autocomplete="off"
+                                />
+                                <label
+                                    class="btn btn-outline-primary"
+                                    for="dns-lookup"
+                                    >DNS Lookup</label
+                                >
+                            </div>
+                        </div>
+                        <form class="row">
+                            <div class="col-md-9">
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="targetInput"
+                                    placeholder="Select Target"
+                                />
+                            </div>
+                            <div class="col-md-3 d-flex align-items-center">
+                                <div class="form-check form-check-inline me-2">
+                                    <input
+                                        class="form-check-input version-filter"
+                                        type="radio"
+                                        name="version"
+                                        id="v4"
+                                        value="v4"
+                                    />
+                                    <label class="form-check-label" for="v4"
+                                        >v4</label
+                                    >
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input
+                                        class="form-check-input version-filter"
+                                        type="radio"
+                                        name="version"
+                                        id="v6"
+                                        value="v6"
+                                        checked
+                                    />
+                                    <label class="form-check-label" for="v6"
+                                        >v6</label
+                                    >
+                                </div>
+                            </div>
+                        </form>
+
+                        <h5 class="my-3 text-center">Select Probe</h5>
+                        <div
+                            id="showing-probes-text"
+                            class="alert alert-info text-center"
+                        >
+                            [Showing v6 probes]
+                        </div>
+                        <div class="table-responsive" style="height: 400px">
+                            <table class="table table-bordered">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Name</th>
+                                        <th>ASN</th>
+                                        <th>IP</th>
+                                        <th>City</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="probes-table">
+                                    {% for probe in probes %}
+                                    <tr
+                                        data-version="{{ probe.version }}"
+                                        data-id="{{ probe.id }}"
+                                    >
+                                        <td>{{ probe.type }}</td>
+                                        <td>Probe #{{ probe.name }}</td>
+                                        <td>{{ probe.asn }}</td>
+                                        <td>{{ probe.ip }}</td>
+                                        <td>
+                                            {{ probe.city }}, {{ probe.state }},
+                                            {{ probe.country }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr
+                                        id="not-found-row"
+                                        style="display: none"
+                                    >
+                                        <td colspan="8" class="text-center">
+                                            No probes found for the selected
+                                            version.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card p-3">
+                        <div class="mb-2">
+                            <button
+                                class="btn btn-success"
+                                id="performQueryBtn"
+                            >
+                                Perform Query
+                            </button>
+                        </div>
+                        <p>Loading cached query... DONE (64.94s elapsed)</p>
+                        <div id="terminal" class="text-success">
+                            <div class="mb-3 command">
+                                RESOLVED google.com TO 2607:f8b0:4004:c1b::65
+                                STARTED QUERY AT 2025/01/16 13:30:24 UTC
+                            </div>
+                            <div>1 192.168.1.1 0.735ms</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                // Function to filter probes based on the selected version
+                $(".version-filter").change(function () {
+                    var selectedVersion = $(
+                        "input[name='version']:checked"
+                    ).val();
+                    var hasVisibleRows = false;
+
+                    // Update the dynamic text based on the selected version
+                    if (selectedVersion === "v4") {
+                        $("#showing-probes-text").text("[Showing v4 probes]");
+                    } else if (selectedVersion === "v6") {
+                        $("#showing-probes-text").text("[Showing v6 probes]");
+                    } else {
+                        $("#showing-probes-text").text("[Showing all probes]");
+                    }
+
+                    // Show or hide rows based on the selected version
+                    $("#probes-table tr").each(function () {
+                        var rowVersion = $(this).data("version");
+                        if (
+                            selectedVersion === "all" ||
+                            rowVersion === selectedVersion
+                        ) {
+                            $(this).show();
+                            hasVisibleRows = true;
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+
+                    // Show "Not Found" row if no rows match the filter
+                    if (!hasVisibleRows) {
+                        $("#not-found-row").show();
+                    } else {
+                        $("#not-found-row").hide();
+                    }
+                });
+
+                // Initialize by showing only v6 probes and setting the default text
+                $("input[name='version'][value='v6']").prop("checked", true); // Set v6 radio as checked
+                $("#showing-probes-text").text("[Showing v6 probes]");
+                var hasVisibleRows = false;
+                $("#probes-table tr").each(function () {
+                    var rowVersion = $(this).data("version");
+                    if (rowVersion === "v6") {
+                        $(this).show();
+                        hasVisibleRows = true;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+                if (!hasVisibleRows) {
+                    $("#not-found-row").show();
+                } else {
+                    $("#not-found-row").hide();
+                }
+            });
+
+            $(document).ready(function () {
+                // Disable the Perform Query button by default
+                $("#performQueryBtn").prop("disabled", true);
+
+                // Handle row selection
+                $("#probes-table").on("click", "tr", function () {
+                    // Toggle 'selected' class on the clicked row
+                    if ($(this).hasClass("selected")) {
+                        $(this).removeClass("selected");
+                        $("#performQueryBtn").prop("disabled", true); // Disable button if no row is selected
+                    } else {
+                        $("#probes-table tr").removeClass("selected");
+                        $(this).addClass("selected");
+                        $("#performQueryBtn").prop("disabled", false); // Enable button if a row is selected
+                    }
+                });
+
+                // Handle button click for AJAX request
+                $("#performQueryBtn").on("click", function (e) {
+                    e.preventDefault(); // Prevent default button action
+
+                    // Get selected row data
+                    var selectedRow = $("#probes-table tr.selected");
+                    var probeId = selectedRow.data("id"); // Table row data-id
+                    var selectedVersion = $(
+                        "input[name='version']:checked"
+                    ).val(); // Selected version
+                    var targetInput = $("#targetInput").val(); // Target input value
+
+                    if (probeId && targetInput) {
+                        // Perform the AJAX request
+                        $.ajax({
+                            url: "/your-api-endpoint/", // Replace with your API endpoint
+                            method: "POST",
+                            data: {
+                                probe_id: probeId,
+                                version: selectedVersion,
+                                target: targetInput,
+                            },
+                            headers: {
+                                "X-CSRFToken": $(
+                                    "input[name=csrfmiddlewaretoken]"
+                                ).val(), // Include CSRF token if using Django
+                            },
+                            success: function (response) {
+                                console.log("Query successful:", response);
+                                $("#terminal").append(
+                                    `<div class="command">Query Response: ${JSON.stringify(
+                                        response
+                                    )}</div>`
+                                );
+                            },
+                            error: function (error) {
+                                console.error("Error in query:", error);
+                                $("#terminal").append(
+                                    `<div class="command text-danger">Query failed. Check console for details.</div>`
+                                );
+                            },
+                        });
+                    } else {
+                        alert(
+                            "Please select a row and enter a target before performing a query."
+                        );
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
