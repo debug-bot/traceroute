@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-7l(dsx6eig1du4#x%-gad4ct!@*9q^xg&mpc*7)!%$_%s#($^0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["23.141.136.104", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["23.141.136.104", "localhost", "127.0.0.1", "txfiber.dev", "www.txfiber.dev"]
 
 
 # Application definition
