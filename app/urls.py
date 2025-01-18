@@ -3,5 +3,5 @@ from . import views
 
 urlpatterns = [
     path("", views.main, name="main"),
-    path("traceroute/", views.traceroute_view, name="traceroute"),
+    path("network-tools/", views.network_tools_api, name="network_tools_api"),
 ]

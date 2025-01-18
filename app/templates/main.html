@@ -17,7 +17,7 @@
                 font-family: "Courier New", Courier, monospace;
                 padding: 10px;
                 border-radius: 5px;
-                height: 400px;
+                height: 515px;
                 overflow-y: auto;
                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             }
@@ -42,6 +42,7 @@
                                     class="btn-check"
                                     name="options-outlined"
                                     id="traceroute-btn"
+                                    value="traceroute"
                                     autocomplete="off"
                                     checked
                                 />
@@ -56,6 +57,7 @@
                                     type="radio"
                                     class="btn-check"
                                     name="options-outlined"
+                                    value="ping"
                                     id="ping-btn"
                                     autocomplete="off"
                                 />
@@ -70,6 +72,7 @@
                                     type="radio"
                                     class="btn-check"
                                     name="options-outlined"
+                                    value="dns-lookup"
                                     id="dns-lookup"
                                     autocomplete="off"
                                 />
@@ -176,14 +179,11 @@
                                 Perform Query
                             </button>
                         </div>
-                        <p>Loading cached query... DONE (64.94s elapsed)</p>
-                        <div id="terminal" class="text-success">
-                            <div class="mb-3 command">
-                                RESOLVED google.com TO 2607:f8b0:4004:c1b::65
-                                STARTED QUERY AT 2025/01/16 13:30:24 UTC
-                            </div>
-                            <div>1 192.168.1.1 0.735ms</div>
-                        </div>
+                        <p id="query-complete-time">
+                            Results will appear here.
+                        </p>
+                        <p class="mb-1" id="live-time"></p>
+                        <div id="terminal" class="text-success"></div>
                     </div>
                 </div>
             </div>
@@ -268,46 +268,108 @@
                     }
                 });
 
-                // Handle button click for AJAX request
                 $("#performQueryBtn").on("click", function (e) {
-                    e.preventDefault(); // Prevent default button action
+                    e.preventDefault();
 
-                    // Get selected row data
                     var selectedRow = $("#probes-table tr.selected");
-                    var probeId = selectedRow.data("id"); // Table row data-id
+                    var probeId = selectedRow.data("id");
                     var selectedVersion = $(
                         "input[name='version']:checked"
-                    ).val(); // Selected version
-                    var targetInput = $("#targetInput").val(); // Target input value
+                    ).val();
+                    var selectedOption = $(
+                        "input[name='options-outlined']:checked"
+                    ).val();
+                    var targetInput = $("#targetInput").val();
 
-                    if (probeId && targetInput) {
-                        // Perform the AJAX request
+                    if (probeId && targetInput && selectedOption) {
+                        $("#terminal").html("Loading...");
+                        $("#query-complete-time").html(
+                            "Results will appear here."
+                        );
+                        var $button = $("#performQueryBtn");
+                        var $liveTime = $("#live-time"); // Ensure you have an element to show live time
+                        var startTime = Date.now();
+                        var interval;
+
+                        $button
+                            .prop("disabled", true)
+                            .html(
+                                '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...'
+                            );
+
+                        // Start updating live sending time
+                        interval = setInterval(function () {
+                            var elapsed = (
+                                (Date.now() - startTime) /
+                                1000
+                            ).toFixed(2);
+                            $liveTime.text(
+                                `Query running for ${elapsed} seconds...`
+                            );
+                        }, 100); // Update every 100ms for smoother updates
+
                         $.ajax({
-                            url: "/your-api-endpoint/", // Replace with your API endpoint
-                            method: "POST",
+                            url: "{% url 'network_tools_api' %}",
                             data: {
                                 probe_id: probeId,
                                 version: selectedVersion,
-                                target: targetInput,
-                            },
-                            headers: {
-                                "X-CSRFToken": $(
-                                    "input[name=csrfmiddlewaretoken]"
-                                ).val(), // Include CSRF token if using Django
+                                domain: targetInput,
+                                action: selectedOption,
                             },
                             success: function (response) {
-                                console.log("Query successful:", response);
-                                $("#terminal").append(
-                                    `<div class="command">Query Response: ${JSON.stringify(
-                                        response
-                                    )}</div>`
+                                var endTime = Date.now();
+                                var totalElapsedTime = (
+                                    (endTime - startTime) /
+                                    1000
+                                ).toFixed(2);
+
+                                $("#live-time").text(""); // Clear the live time
+                                $("#query-complete-time").html(
+                                    `<div class="command text-info">Query completed in ${totalElapsedTime} seconds.</div>`
                                 );
+                                $("#terminal").empty();
+                                $("#terminal").append(
+                                    `<div class="command">${response.resolved}</div>`
+                                );
+                                $("#terminal").append(
+                                    `<div class="command">${response.timestamp}</div>`
+                                );
+                                $("#terminal").append(
+                                    `<div class="command mb-3">${response.measurement}</div>`
+                                );
+                                if (Array.isArray(response.data)) {
+                                    response.data.forEach((line, index) => {
+                                        if (line.trim()) {
+                                            $("#terminal").append(
+                                                `<div class="command">${
+                                                    index + 1
+                                                }. ${line}</div>`
+                                            );
+                                        } else {
+                                            $("#terminal").append(
+                                                `<div class="command">${
+                                                    index + 1
+                                                }. ***</div>`
+                                            );
+                                        }
+                                    });
+                                } else {
+                                    $("#terminal").append(
+                                        `<div class="command text-danger">Query failed: Try another query.</div>`
+                                    );
+                                }
                             },
                             error: function (error) {
-                                console.error("Error in query:", error);
                                 $("#terminal").append(
-                                    `<div class="command text-danger">Query failed. Check console for details.</div>`
+                                    `<div class="command text-danger">Query failed: ${error.responseJSON?.message}</div>`
                                 );
+                            },
+                            complete: function () {
+                                clearInterval(interval); // Stop live time updates
+                                $liveTime.text(""); // Clear live time text
+                                $button
+                                    .prop("disabled", false)
+                                    .html("Perform Query");
                             },
                         });
                     } else {
