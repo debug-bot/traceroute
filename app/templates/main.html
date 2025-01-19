@@ -41,6 +41,21 @@
                                     type="radio"
                                     class="btn-check"
                                     name="options-outlined"
+                                    value="ping"
+                                    id="ping-btn"
+                                    autocomplete="off"
+                                />
+                                <label
+                                    class="btn btn-outline-primary"
+                                    for="ping-btn"
+                                    >Ping</label
+                                >
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    class="btn-check"
+                                    name="options-outlined"
                                     id="traceroute-btn"
                                     value="traceroute"
                                     autocomplete="off"
@@ -57,21 +72,6 @@
                                     type="radio"
                                     class="btn-check"
                                     name="options-outlined"
-                                    value="ping"
-                                    id="ping-btn"
-                                    autocomplete="off"
-                                />
-                                <label
-                                    class="btn btn-outline-primary"
-                                    for="ping-btn"
-                                    >Ping</label
-                                >
-                            </div>
-                            <div>
-                                <input
-                                    type="radio"
-                                    class="btn-check"
-                                    name="options-outlined"
                                     value="dns-lookup"
                                     id="dns-lookup"
                                     autocomplete="off"
@@ -79,7 +79,22 @@
                                 <label
                                     class="btn btn-outline-primary"
                                     for="dns-lookup"
-                                    >DNS Lookup</label
+                                    >BGP Lookup</label
+                                >
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    class="btn-check"
+                                    name="options-outlined"
+                                    value="custom"
+                                    id="custom-btn"
+                                    autocomplete="off"
+                                />
+                                <label
+                                    class="btn btn-outline-primary"
+                                    for="custom-btn"
+                                    >Custom</label
                                 >
                             </div>
                         </div>
@@ -100,6 +115,7 @@
                                         name="version"
                                         id="v4"
                                         value="v4"
+                                        checked
                                     />
                                     <label class="form-check-label" for="v4"
                                         >v4</label
@@ -112,7 +128,6 @@
                                         name="version"
                                         id="v6"
                                         value="v6"
-                                        checked
                                     />
                                     <label class="form-check-label" for="v6"
                                         >v6</label
@@ -121,12 +136,12 @@
                             </div>
                         </form>
 
-                        <h5 class="my-3 text-center">Select Probe</h5>
+                        <h5 class="my-3 text-center">Select Router</h5>
                         <div
                             id="showing-probes-text"
                             class="alert alert-info text-center"
                         >
-                            [Showing v6 probes]
+                            [Showing v6 routers]
                         </div>
                         <div class="table-responsive" style="height: 400px">
                             <table class="table table-bordered">
@@ -146,7 +161,7 @@
                                         data-id="{{ probe.id }}"
                                     >
                                         <td>{{ probe.type }}</td>
-                                        <td>Probe #{{ probe.name }}</td>
+                                        <td>Router #{{ probe.name }}</td>
                                         <td>{{ probe.asn }}</td>
                                         <td>{{ probe.ip }}</td>
                                         <td>
@@ -160,7 +175,7 @@
                                         style="display: none"
                                     >
                                         <td colspan="8" class="text-center">
-                                            No probes found for the selected
+                                            No routers found for the selected
                                             version.
                                         </td>
                                     </tr>
@@ -202,11 +217,11 @@
 
                     // Update the dynamic text based on the selected version
                     if (selectedVersion === "v4") {
-                        $("#showing-probes-text").text("[Showing v4 probes]");
+                        $("#showing-probes-text").text("[Showing v4 routers]");
                     } else if (selectedVersion === "v6") {
-                        $("#showing-probes-text").text("[Showing v6 probes]");
+                        $("#showing-probes-text").text("[Showing v6 routers]");
                     } else {
-                        $("#showing-probes-text").text("[Showing all probes]");
+                        $("#showing-probes-text").text("[Showing all routers]");
                     }
 
                     // Show or hide rows based on the selected version
@@ -231,13 +246,13 @@
                     }
                 });
 
-                // Initialize by showing only v6 probes and setting the default text
-                $("input[name='version'][value='v6']").prop("checked", true); // Set v6 radio as checked
-                $("#showing-probes-text").text("[Showing v6 probes]");
+                // Initialize by showing only v4 probes and setting the default text
+                $("input[name='version'][value='v4']").prop("checked", true); // Set v4 radio as checked
+                $("#showing-probes-text").text("[Showing v4 routers]");
                 var hasVisibleRows = false;
                 $("#probes-table tr").each(function () {
                     var rowVersion = $(this).data("version");
-                    if (rowVersion === "v6") {
+                    if (rowVersion === "v4") {
                         $(this).show();
                         hasVisibleRows = true;
                     } else {

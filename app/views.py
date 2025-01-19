@@ -5,11 +5,49 @@ import platform
 from django.http import JsonResponse
 import socket
 from datetime import datetime
+import paramiko
+
+
+# Router SSH Details
+ROUTER_SSH_DETAILS = {
+    "hostname": "23.141.136.2",
+    "port": 22,
+    "username": "txfiber",
+    "password": "southtx956",
+}
 
 
 def main(request):
     probes = Probe.objects.all()
     return render(request, "main.html", {"probes": probes})
+
+def execute_ssh_command(command):
+    """
+    Execute a command on the router via SSH and return the output.
+    """
+    try:
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(
+            hostname=ROUTER_SSH_DETAILS["hostname"],
+            port=ROUTER_SSH_DETAILS["port"],
+            username=ROUTER_SSH_DETAILS["username"],
+            password=ROUTER_SSH_DETAILS["password"],
+        )
+
+        stdin, stdout, stderr = client.exec_command(command)
+        output = stdout.read().decode()
+        error = stderr.read().decode()
+
+        client.close()
+
+        if error:
+            raise Exception(error)
+
+        return output.splitlines()
+
+    except Exception as e:
+        raise Exception(f"SSH command execution failed: {e}")
 
 
 def network_tools_api(request):
@@ -41,28 +79,23 @@ def network_tools_api(request):
         )
 
         if action == "traceroute":
-            # Use tracert for Windows and traceroute for Linux/Unix
-            command = (
-                ["tracert", domain]
-                if platform.system() == "Windows"
-                else ["traceroute", domain]
-            )
-            result = subprocess.run(command, capture_output=True, text=True)
-            data = result.stdout.splitlines()
-            measurement = "Traceroute from local host to resolved IP:"
+            # Use traceroute command via SSH
+            command = f"traceroute {domain}"
+            data = execute_ssh_command(command)
+            measurement = "Traceroute from router to resolved IP:"
         elif action == "ping":
-            # Use appropriate ping options for Windows and Linux
-            if platform.system() == "Windows":
-                command = ["ping", "-n", "4", domain]
-            else:
-                command = ["ping", "-c", "4", domain]
-            result = subprocess.run(command, capture_output=True, text=True)
-            data = result.stdout.splitlines()
-            measurement = "Ping statistics:"
+            # Use ping command via SSH
+            command = (
+                f"ping -c 4 {domain}"
+                if platform.system() != "Windows"
+                else f"ping -n 4 {domain}"
+            )
+            data = execute_ssh_command(command)
+            measurement = "Ping statistics from router:"
         elif action == "dns-lookup":
-            # Return resolved IP address in a similar format
+            # DNS Lookup doesn't need SSH; resolve locally
             data = [f"Resolved {domain} to IP: {ip_address}"]
-            measurement = "DNS Lookup Result:"
+            measurement = "DNS Lookup Result:"  # No SSH needed
         else:
             return JsonResponse(
                 {"status": "error", "message": f"Unknown action '{action}'."},
