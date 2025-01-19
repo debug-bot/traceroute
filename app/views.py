@@ -20,7 +20,7 @@ def test_ssh_connection(request):
     """
     try:
         # Test command (e.g., check hostname or uptime)
-        test_command = "traceroute 8.8.8.8"
+        test_command = "hostname"
         output = execute_ssh_command(test_command)
         return JsonResponse(
             {
@@ -75,8 +75,36 @@ def network_tools_api(request):
             # install_package_if_missing("traceroute")
             # Use traceroute command via SSH
             command = f"traceroute {domain}"
-            data = execute_ssh_command(command)
-            measurement = "Traceroute from router to resolved IP:"
+            try:
+                client = paramiko.SSHClient()
+                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                client.connect(
+                    hostname=ROUTER_SSH_DETAILS["hostname"],
+                    port=ROUTER_SSH_DETAILS["port"],
+                    username=ROUTER_SSH_DETAILS["username"],
+                    password=ROUTER_SSH_DETAILS["password"],
+                )
+
+                # Execute the traceroute command
+                channel = client.get_transport().open_session()
+                channel.exec_command(command)
+
+                # Wait for 30 seconds
+                time.sleep(30)
+
+                # Send CTRL+C to stop the traceroute
+                channel.send("\x03")  # CTRL+C
+                output = channel.recv(65535).decode()  # Get remaining output
+
+                data = output.splitlines()
+                measurement = "Traceroute statistics from router:"
+                channel.close()
+                client.close()
+            except Exception as e:
+                return JsonResponse(
+                    {"status": "error", "message": f"Traceroute command failed: {e}"}
+                )
+
         elif action == "ping":
             # Use ping command via SSH
             command = f"ping {domain}"
