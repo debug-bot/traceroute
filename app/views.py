@@ -1,64 +1,34 @@
 from django.shortcuts import render
 from .models import Probe
-import subprocess
 import platform
 from django.http import JsonResponse
 import socket
 from datetime import datetime
-import paramiko
-
-
-# Router SSH Details
-ROUTER_SSH_DETAILS = {
-    "hostname": "23.141.136.2",
-    "port": 22,
-    "username": "txfiber",
-    "password": "southtx956",
-}
+from .utils import execute_ssh_command, install_package_if_missing
 
 
 def main(request):
     probes = Probe.objects.all()
     return render(request, "main.html", {"probes": probes})
 
-def execute_ssh_command(command):
+
+def test_ssh_connection(request):
     """
-    Execute a command on the router via SSH and return the output.
+    Test if the SSH connection to the router is working.
     """
     try:
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(
-            hostname=ROUTER_SSH_DETAILS["hostname"],
-            port=ROUTER_SSH_DETAILS["port"],
-            username=ROUTER_SSH_DETAILS["username"],
-            password=ROUTER_SSH_DETAILS["password"],
+        # Test command (e.g., check hostname or uptime)
+        test_command = "hostname"
+        output = execute_ssh_command(test_command)
+        return JsonResponse(
+            {
+                "status": "success",
+                "message": "SSH connection successful.",
+                "data": output,
+            }
         )
-
-        stdin, stdout, stderr = client.exec_command(command)
-        output = stdout.read().decode()
-        error = stderr.read().decode()
-
-        client.close()
-
-        if error:
-            raise Exception(error)
-
-        return output.splitlines()
-
     except Exception as e:
-        raise Exception(f"SSH command execution failed: {e}")
-
-
-def install_package_if_missing(command):
-    """
-    Check if a package is missing and install it via SSH.
-    """
-    try:
-        install_command = f"which {command.split()[0]} || sudo apt-get install -y {command.split()[0]}"
-        return execute_ssh_command(install_command)
-    except Exception as e:
-        raise Exception(f"Failed to install missing package: {e}")
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 def network_tools_api(request):
@@ -99,6 +69,8 @@ def network_tools_api(request):
             timestamp = f"STARTED QUERY AT {datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S')} UTC"
 
         if action == "traceroute":
+            # Ensure traceroute is installed
+            install_package_if_missing("traceroute")
             # Use traceroute command via SSH
             command = f"traceroute {domain}"
             data = execute_ssh_command(command)
@@ -115,7 +87,7 @@ def network_tools_api(request):
         elif action == "dns-lookup":
             # DNS Lookup doesn't need SSH; resolve locally
             data = [f"Resolved {domain} to IP: {ip_address}"]
-            measurement = "DNS Lookup Result:"  # No SSH needed
+            measurement = "BGP Lookup Result:"  # No SSH needed
         elif action == "custom":
             if not custom_command:
                 return JsonResponse(
