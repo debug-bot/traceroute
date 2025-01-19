@@ -186,7 +186,7 @@
                                         <td>{{ probe.ip }}</td>
                                         <td>
                                             {% if probe.city or probe.state or probe.country %}
-                                                {{ probe.city }}{% if probe.city and (probe.state or probe.country) %}, {% endif %}
+                                                {{ probe.city }}{% if probe.city and probe.state %}, {% endif %}
                                                 {{ probe.state }}{% if probe.state and probe.country %}, {% endif %}
                                                 {{ probe.country }}
                                             {% else %}
