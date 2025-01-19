@@ -38,6 +38,12 @@ def network_tools_api(request):
     action = request.GET.get("action", "").lower()
     domain = request.GET.get("domain", "")
     custom_command = request.GET.get("command", "")
+    probe_id = request.GET.get("probe_id", "")
+    # from the probe_id, get the probe object
+    probe = Probe.objects.filter(id=probe_id).first()
+    
+    # get the probe's ip address and add to the ROUTER_SSH_DETAILS
+    ROUTER_SSH_DETAILS["hostname"] = probe.ip
 
     if not action:
         return JsonResponse(
@@ -172,7 +178,7 @@ def network_tools_api(request):
                 client.close()
             except Exception as e:
                 return JsonResponse({"status": "error", "message": f"BGP lookup failed: {e}"})
-            
+
         elif action == "custom":
             if not custom_command:
                 return JsonResponse(

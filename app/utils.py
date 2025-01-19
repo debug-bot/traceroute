@@ -10,7 +10,7 @@ ROUTER_SSH_DETAILS = {
 }
 
 
-def execute_ssh_command(command):
+def execute_ssh_command(command, hostname=ROUTER_SSH_DETAILS["hostname"], delay_in_seconds=20):
     """
     Execute a command on the router via SSH and return the output.
     If wait is True, continuously read the output until the command completes.
@@ -19,7 +19,7 @@ def execute_ssh_command(command):
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(
-            hostname=ROUTER_SSH_DETAILS["hostname"],
+            hostname=hostname,
             port=ROUTER_SSH_DETAILS["port"],
             username=ROUTER_SSH_DETAILS["username"],
             password=ROUTER_SSH_DETAILS["password"],
@@ -29,13 +29,8 @@ def execute_ssh_command(command):
         channel = client.get_transport().open_session()
         channel.exec_command(command) 
         
-        # if error, return error message
-        if channel.recv_stderr_ready():
-            error = channel.recv_stderr(65535).decode()
-            return error
-        
-        # Wait for 20 seconds
-        time.sleep(20)
+        # Wait
+        time.sleep(delay_in_seconds)
 
         output = channel.recv(65535).decode()  # Get remaining output
 
