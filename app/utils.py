@@ -1,5 +1,5 @@
 import paramiko
-
+import time
 
 # Router SSH Details
 ROUTER_SSH_DETAILS = {
@@ -10,7 +10,7 @@ ROUTER_SSH_DETAILS = {
 }
 
 
-def execute_ssh_command(command, wait=True):
+def execute_ssh_command(command):
     """
     Execute a command on the router via SSH and return the output.
     If wait is True, continuously read the output until the command completes.
@@ -25,27 +25,28 @@ def execute_ssh_command(command, wait=True):
             password=ROUTER_SSH_DETAILS["password"],
         )
 
-        stdin, stdout, stderr = client.exec_command(command)
+        # Execute the traceroute command
+        channel = client.get_transport().open_session()
+        channel.exec_command(command) 
+        
+        # if error, return error message
+        if channel.recv_stderr_ready():
+            error = channel.recv_stderr(65535).decode()
+            return error
+        
+        # Wait for 20 seconds
+        time.sleep(20)
 
-        output_lines = []
-        if wait:
-            # Read output in real-time
-            while not stdout.channel.exit_status_ready():
-                if stdout.channel.recv_ready():
-                    output = stdout.channel.recv(1024).decode()  # Read in chunks
-                    output_lines.extend(output.splitlines())
+        output = channel.recv(65535).decode()  # Get remaining output
 
-        # Finalize reading after the command completes
-        output = stdout.read().decode()
-        output_lines.extend(output.splitlines())
-
-        error = stderr.read().decode()
+        data = output.splitlines()
+        
+        channel.close()
         client.close()
+        
+        
 
-        if error:
-            raise Exception(error)
-
-        return output_lines
+        return data
 
     except Exception as e:
         raise Exception(f"SSH command execution failed: {e}")

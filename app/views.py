@@ -89,7 +89,7 @@ def network_tools_api(request):
                 channel = client.get_transport().open_session()
                 channel.exec_command(command)
 
-                # Wait for 30 seconds
+                # Wait for 20 seconds
                 time.sleep(20)
 
                 # Send CTRL+C to stop the traceroute
@@ -150,10 +150,35 @@ def network_tools_api(request):
                     },
                     status=400,
                 )
-            data = execute_ssh_command(custom_command)
-            measurement = "Custom Command Execution Result:"
-            resolved_info = "N/A"
-            timestamp = f"STARTED QUERY AT {datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S')} UTC"
+            try:
+                client = paramiko.SSHClient()
+                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                client.connect(
+                    hostname=ROUTER_SSH_DETAILS["hostname"],
+                    port=ROUTER_SSH_DETAILS["port"],
+                    username=ROUTER_SSH_DETAILS["username"],
+                    password=ROUTER_SSH_DETAILS["password"],
+                )
+
+                # Execute the custom command
+                channel = client.get_transport().open_session()
+                channel.exec_command(custom_command)
+
+                # Wait for 20 seconds
+                time.sleep(20)
+
+                # Collect the output
+                output = channel.recv(65535).decode()  # Get output
+
+                data = output.splitlines()
+                measurement = "Custom Command Execution Result:"
+                resolved_info = "N/A"
+                timestamp = f"STARTED QUERY AT {datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S')} UTC"
+
+                channel.close()
+                client.close()
+            except Exception as e:
+                return JsonResponse({"status": "error", "message": f"Custom command failed: {e}"})
         else:
             return JsonResponse(
                 {"status": "error", "message": f"Unknown action '{action}'."},
