@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Router
+from .models import Router, SSHSettings
 
 
 @admin.register(Router)
@@ -24,3 +24,7 @@ class RouterAdmin(admin.ModelAdmin):
 
     # Pagination in the admin list view
     list_per_page = 20
+
+@admin.register(SSHSettings)
+class SSHSettingsAdmin(admin.ModelAdmin):
+    list_display = ("settings_name", "port", "username", "password")
