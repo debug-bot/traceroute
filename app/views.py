@@ -20,7 +20,7 @@ def test_ssh_connection(request):
     """
     try:
         # Test command (e.g., check hostname or uptime)
-        test_command = "hostname"
+        test_command = "traceroute 8.8.8.8"
         output = execute_ssh_command(test_command)
         return JsonResponse(
             {
