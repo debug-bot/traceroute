@@ -3,7 +3,8 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Traceroute Tool</title>
+        <title>TX FIBER</title>
+        <link rel="icon" type="image/png" href="/static/logo.png" />
         <!-- Bootstrap CSS -->
         <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
@@ -332,7 +333,10 @@
                                 domain: targetInput,
                                 action: selectedOption,
                                 // command should be input from input field with id "targetInput"
-                                command: selectedOption === "custom" ? targetInput : "",
+                                command:
+                                    selectedOption === "custom"
+                                        ? targetInput
+                                        : "",
                             },
                             success: function (response) {
                                 var endTime = Date.now();
@@ -378,6 +382,7 @@
                                 }
                             },
                             error: function (error) {
+                                $("#terminal").empty();
                                 $("#terminal").append(
                                     `<div class="command text-danger">Query failed: ${error.responseJSON?.message}</div>`
                                 );

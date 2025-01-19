@@ -26,7 +26,13 @@ SECRET_KEY = "django-insecure-7l(dsx6eig1du4#x%-gad4ct!@*9q^xg&mpc*7)!%$_%s#($^0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["23.141.136.104", "localhost", "127.0.0.1", "txfiber.dev", "www.txfiber.dev"]
+ALLOWED_HOSTS = [
+    "23.141.136.104",
+    "localhost",
+    "127.0.0.1",
+    "txfiber.dev",
+    "www.txfiber.dev",
+]
 
 
 # Application definition
@@ -38,7 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "app.apps.AppConfig"
+    "app.apps.AppConfig",
 ]
 
 MIDDLEWARE = [
@@ -124,9 +130,9 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
-
-
-
-
+# static files directory
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+# static root directory
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles/")
