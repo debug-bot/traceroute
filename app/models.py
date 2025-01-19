@@ -2,9 +2,21 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 
-class Probe(models.Model):
+# Django model for SSH settings
+class SSHSettings(models.Model):
+    settings_name = models.CharField(unique=True, max_length=255, help_text="Enter the unique settings name, This will be used to connect to each router/probe", default="default")
+    port = models.PositiveIntegerField(default=22)
+    username = models.CharField(max_length=255, default="txfiber")
+    password = models.CharField(max_length=255, default="southtx956")
+
+    def __str__(self):
+        return f"SSH Settings for '{self.settings_name}'"
+
+class Router(models.Model):
     TYPE_CHOICES = [
-        ("RIPE", "RIPE"),
+        ("JUNIPER", "Juniper"),
+        ("CISCO", "Cisco"),
+        ("MIKROTIK", "Mikrotik"),
         ("OTHER", "Other"),
     ]
 
@@ -12,18 +24,20 @@ class Probe(models.Model):
         ("v4", "IPv4"),
         ("v6", "IPv6"),
     ]
+    
+    ssh_settings = models.ForeignKey(SSHSettings, on_delete=models.CASCADE)
 
     type = models.CharField(
         max_length=20,
         choices=TYPE_CHOICES,
-        help_text="Select the type of the probe, e.g., RIPE or Other.",
-        verbose_name="Probe Type",
+        help_text="Select the model of the router, e.g., JUNIPER or Other.",
+        verbose_name="Router Model",
     )
     name = models.CharField(
         max_length=100,
-        help_text="Enter the unique name of the probe, e.g., Probe #100.",
+        help_text="Enter the unique hostname of the router, e.g., ABC-100.",
         unique=True,
-        verbose_name="Probe Name",
+        verbose_name="Router Host Name",
     )
     asn = models.PositiveIntegerField(
         help_text="Enter the Autonomous System Number (ASN) of the probe. Must be a valid ASN.",

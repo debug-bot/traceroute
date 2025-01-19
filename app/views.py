@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Probe
+from .models import Router, SSHSettings
 import platform
 from django.http import JsonResponse
 import socket
@@ -10,8 +10,8 @@ import paramiko
 
 
 def main(request):
-    probes = Probe.objects.all()
-    return render(request, "main.html", {"probes": probes})
+    routers = Router.objects.all()
+    return render(request, "main.html", {"routers": routers})
 
 
 def test_ssh_connection(request):
@@ -38,12 +38,16 @@ def network_tools_api(request):
     action = request.GET.get("action", "").lower()
     domain = request.GET.get("domain", "")
     custom_command = request.GET.get("command", "")
-    probe_id = request.GET.get("probe_id", "")
-    # from the probe_id, get the probe object
-    probe = Probe.objects.filter(id=probe_id).first()
+    router_id = request.GET.get("router_id", "")
+    # from the router_id, get the router object
+    router = Router.objects.filter(id=router_id).first()
     
-    # get the probe's ip address and add to the ROUTER_SSH_DETAILS
-    ROUTER_SSH_DETAILS["hostname"] = probe.ip
+    # get the router's ip address and add to the ROUTER_SSH_DETAILS
+    if router:
+        ROUTER_SSH_DETAILS["hostname"] = router.ip
+        ROUTER_SSH_DETAILS["password"] = router.ssh_settings.password
+        ROUTER_SSH_DETAILS["username"] = router.ssh_settings.username
+        ROUTER_SSH_DETAILS["port"] = router.ssh_settings.port
 
     if not action:
         return JsonResponse(
@@ -77,8 +81,6 @@ def network_tools_api(request):
             timestamp = f"STARTED QUERY AT {datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S')} UTC"
 
         if action == "traceroute":
-            # Ensure traceroute is installed
-            # install_package_if_missing("traceroute")
             # Use traceroute command via SSH
             command = f"traceroute {domain}"
             try:

@@ -174,7 +174,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="probes-table">
-                                    {% for probe in probes %}
+                                    {% for probe in routers %}
                                     <tr
                                         class="cursor-pointer"
                                         data-version="{{ probe.version }}"
@@ -346,22 +346,14 @@
                                 '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...'
                             );
 
-                        // Start updating live sending time
-                        interval = setInterval(function () {
-                            var elapsed = (
-                                (Date.now() - startTime) /
-                                1000
-                            ).toFixed(2);
-                            //$liveTime.text(
-                            //    `Query running for ${elapsed} seconds...`
-                            //);
-                            $liveTime.text("Executing query...");
-                        }, 100); // Update every 100ms for smoother updates
+                        
+                        $liveTime.html('Executing query... <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+
 
                         $.ajax({
                             url: "{% url 'network_tools_api' %}",
                             data: {
-                                probe_id: probeId,
+                                router_id: probeId,
                                 version: selectedVersion,
                                 domain: targetInput,
                                 action: selectedOption,
@@ -396,15 +388,11 @@
                                     response.data.forEach((line, index) => {
                                         if (line.trim()) {
                                             $("#terminal").append(
-                                                `<div class="command">${
-                                                    index + 1
-                                                }. ${line}</div>`
+                                                `<div class="command">${line}</div>`
                                             );
                                         } else {
                                             $("#terminal").append(
-                                                `<div class="command">${
-                                                    index + 1
-                                                }. ***</div>`
+                                                `<div class="command">***</div>`
                                             );
                                         }
                                     });

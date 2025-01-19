@@ -1,9 +1,9 @@
 from django.contrib import admin
-from .models import Probe
+from .models import Router
 
 
-@admin.register(Probe)
-class ProbeAdmin(admin.ModelAdmin):
+@admin.register(Router)
+class RouterAdmin(admin.ModelAdmin):
     # Fields to display in the admin list view
     list_display = ("type", "name", "asn", "ip", "version", "city", "state", "country")
 
@@ -15,7 +15,7 @@ class ProbeAdmin(admin.ModelAdmin):
 
     # Group related fields in the detail view
     fieldsets = (
-        ("Probe Details", {"fields": ("type", "name", "asn", "ip", "version")}),
+        ("Router Details", {"fields": ("type", "name", "asn", "ip", "version")}),
         ("Location Information", {"fields": ("city", "state", "country")}),
     )
 
