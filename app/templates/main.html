@@ -330,6 +330,8 @@
                                 version: selectedVersion,
                                 domain: targetInput,
                                 action: selectedOption,
+                                // command should be input from button with id "custom-btn"
+                                command: selectedOption === "custom" ? $("#custom-btn").val() : "",
                             },
                             success: function (response) {
                                 var endTime = Date.now();

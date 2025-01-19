@@ -50,33 +50,53 @@ def execute_ssh_command(command):
         raise Exception(f"SSH command execution failed: {e}")
 
 
+def install_package_if_missing(command):
+    """
+    Check if a package is missing and install it via SSH.
+    """
+    try:
+        install_command = f"which {command.split()[0]} || sudo apt-get install -y {command.split()[0]}"
+        return execute_ssh_command(install_command)
+    except Exception as e:
+        raise Exception(f"Failed to install missing package: {e}")
+
+
 def network_tools_api(request):
     # Get the 'action' and 'domain' from query parameters
     action = request.GET.get("action", "").lower()
     domain = request.GET.get("domain", "")
+    custom_command = request.GET.get("command", "")
 
-    if not action or not domain:
+    if not action:
         return JsonResponse(
             {
                 "status": "error",
-                "message": "Both 'action' and 'domain' query parameters are required.",
+                "message": "The 'action' query parameter is required.",
+            }
+        )
+
+    if action != "custom" and not domain:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "The 'domain' query parameter is required for actions other than 'custom'.",
             }
         )
 
     try:
-        # Resolve the domain to IP address
-        try:
-            ip_address = socket.gethostbyname(domain)
-        except socket.gaierror:
-            return JsonResponse(
-                {"status": "error", "message": f"Cannot resolve {domain}."}, status=400
-            )
+        # Resolve the domain to IP address if action is not custom
+        if action != "custom":
+            try:
+                ip_address = socket.gethostbyname(domain)
+            except socket.gaierror:
+                return JsonResponse(
+                    {"status": "error", "message": f"Cannot resolve {domain}."},
+                    status=400,
+                )
 
-        # Add resolved IP and timestamp
-        resolved_info = f"RESOLVED {domain} TO {ip_address}"
-        timestamp = (
-            f"STARTED QUERY AT {datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S')} UTC"
-        )
+            # Add resolved IP and timestamp
+            resolved_info = f"RESOLVED {domain} TO {ip_address}"
+            timestamp = f"STARTED QUERY AT {datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S')} UTC"
 
         if action == "traceroute":
             # Use traceroute command via SSH
@@ -96,6 +116,19 @@ def network_tools_api(request):
             # DNS Lookup doesn't need SSH; resolve locally
             data = [f"Resolved {domain} to IP: {ip_address}"]
             measurement = "DNS Lookup Result:"  # No SSH needed
+        elif action == "custom":
+            if not custom_command:
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": "The 'command' query parameter is required for custom actions.",
+                    },
+                    status=400,
+                )
+            data = execute_ssh_command(custom_command)
+            measurement = "Custom Command Execution Result:"
+            resolved_info = "N/A"
+            timestamp = f"STARTED QUERY AT {datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S')} UTC"
         else:
             return JsonResponse(
                 {"status": "error", "message": f"Unknown action '{action}'."},
