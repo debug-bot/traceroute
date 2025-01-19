@@ -11,6 +11,10 @@ class SSHSettings(models.Model):
 
     def __str__(self):
         return f"SSH Settings for '{self.settings_name}'"
+    
+    class Meta:
+        verbose_name = "SSH Settings"
+        verbose_name_plural = "SSH Settings"
 
 class Router(models.Model):
     TYPE_CHOICES = [
@@ -25,8 +29,7 @@ class Router(models.Model):
         ("v6", "IPv6"),
     ]
     
-    ssh_settings = models.ForeignKey(SSHSettings, on_delete=models.CASCADE)
-
+    ssh_settings = models.ForeignKey(SSHSettings, verbose_name="SSH Settings", on_delete=models.CASCADE)
     type = models.CharField(
         max_length=20,
         choices=TYPE_CHOICES,

@@ -15,6 +15,7 @@ class RouterAdmin(admin.ModelAdmin):
 
     # Group related fields in the detail view
     fieldsets = (
+        ("Router SSH Settings", {"fields": ("ssh_settings")}),
         ("Router Details", {"fields": ("type", "name", "asn", "ip", "version")}),
         ("Location Information", {"fields": ("city", "state", "country")}),
     )
