@@ -186,9 +186,13 @@
                                         <td>{{ probe.ip }}</td>
                                         <td>
                                             {% if probe.city or probe.state or probe.country %}
-                                                {{ probe.city }}{% if probe.city and probe.state %}, {% endif %}
-                                                {{ probe.state }}{% if probe.state and probe.country %}, {% endif %}
-                                                {{ probe.country }}
+                                                {% if probe.city or probe.state or probe.country %}
+                                                    {{ probe.city|default:'' }}{% if probe.city and probe.state %}, {% endif %}
+                                                    {{ probe.state|default:'' }}{% if probe.state and probe.country %}, {% endif %}
+                                                    {{ probe.country|default:'' }}
+                                                {% else %}
+                                                    <!-- Empty string if all are None -->
+                                                {% endif %}
                                             {% else %}
                                                 <!-- Empty string if all are None -->
                                             {% endif %}
