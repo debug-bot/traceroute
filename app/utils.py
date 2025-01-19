@@ -8,10 +8,12 @@ ROUTER_SSH_DETAILS = {
     "username": "txfiber",
     "password": "southtx956",
 }
+
+
 def execute_ssh_command(command, wait=True):
     """
     Execute a command on the router via SSH and return the output.
-    If wait is True, it waits for the command to complete.
+    If wait is True, continuously read the output until the command completes.
     """
     try:
         client = paramiko.SSHClient()
@@ -25,18 +27,25 @@ def execute_ssh_command(command, wait=True):
 
         stdin, stdout, stderr = client.exec_command(command)
 
+        output_lines = []
         if wait:
-            stdout.channel.recv_exit_status()  # Wait for command to complete
+            # Read output in real-time
+            while not stdout.channel.exit_status_ready():
+                if stdout.channel.recv_ready():
+                    output = stdout.channel.recv(1024).decode()  # Read in chunks
+                    output_lines.extend(output.splitlines())
 
+        # Finalize reading after the command completes
         output = stdout.read().decode()
-        error = stderr.read().decode()
+        output_lines.extend(output.splitlines())
 
+        error = stderr.read().decode()
         client.close()
 
         if error:
             raise Exception(error)
 
-        return output.splitlines()
+        return output_lines
 
     except Exception as e:
         raise Exception(f"SSH command execution failed: {e}")
