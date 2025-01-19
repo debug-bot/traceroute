@@ -147,11 +147,11 @@
                             <table class="table table-bordered">
                                 <thead class="table-primary">
                                     <tr>
-                                        <th>Type</th>
-                                        <th>Name</th>
+                                        <th>Model</th>
+                                        <th>Hostname</th>
                                         <th>ASN</th>
                                         <th>IP</th>
-                                        <th>City</th>
+                                        <th>Location</th>
                                     </tr>
                                 </thead>
                                 <tbody id="probes-table">
@@ -161,7 +161,7 @@
                                         data-id="{{ probe.id }}"
                                     >
                                         <td>{{ probe.type }}</td>
-                                        <td>Router #{{ probe.name }}</td>
+                                        <td>{{ probe.name }}</td>
                                         <td>{{ probe.asn }}</td>
                                         <td>{{ probe.ip }}</td>
                                         <td>
@@ -318,9 +318,10 @@
                                 (Date.now() - startTime) /
                                 1000
                             ).toFixed(2);
-                            $liveTime.text(
-                                `Query running for ${elapsed} seconds...`
-                            );
+                            //$liveTime.text(
+                            //    `Query running for ${elapsed} seconds...`
+                            //);
+                            $liveTime.text("Executing query...");
                         }, 100); // Update every 100ms for smoother updates
 
                         $.ajax({
