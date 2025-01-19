@@ -90,10 +90,10 @@ def network_tools_api(request):
                 channel.exec_command(command)
 
                 # Wait for 30 seconds
-                time.sleep(30)
+                time.sleep(20)
 
                 # Send CTRL+C to stop the traceroute
-                channel.send("\x03")  # CTRL+C
+                # channel.send("\x03")  # CTRL+C
                 output = channel.recv(65535).decode()  # Get remaining output
 
                 data = output.splitlines()
