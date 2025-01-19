@@ -70,7 +70,7 @@ def network_tools_api(request):
 
         if action == "traceroute":
             # Ensure traceroute is installed
-            install_package_if_missing("traceroute")
+            # install_package_if_missing("traceroute")
             # Use traceroute command via SSH
             command = f"traceroute {domain}"
             data = execute_ssh_command(command)
@@ -78,7 +78,7 @@ def network_tools_api(request):
         elif action == "ping":
             # Use ping command via SSH
             command = (
-                f"ping -c 4 {domain}"
+                f"ping {domain} -w 5"
                 if platform.system() != "Windows"
                 else f"ping -n 4 {domain}"
             )
