@@ -32,6 +32,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "txfiber.dev",
     "www.txfiber.dev",
+    "fastcli.com"
 ]
 
 
