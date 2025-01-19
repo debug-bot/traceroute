@@ -148,7 +148,7 @@ def network_tools_api(request):
             data = [f"Resolved {domain} to IP: {ip_address}"]
             measurement = "BGP Lookup Result:"  # No SSH needed
         elif action == "bgp-lookup":
-            command = "show route protocol bgp table inet.0" + domain
+            command = "show route protocol bgp table inet.0 " + domain
             try:
                 client = paramiko.SSHClient()
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
