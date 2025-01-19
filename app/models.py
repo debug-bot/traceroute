@@ -90,8 +90,8 @@ class Router(models.Model):
             raise ValidationError("City name must contain only alphabetic characters.")
 
     class Meta:
-        verbose_name = "Probe"
-        verbose_name_plural = "Probes"
+        verbose_name = "Router"
+        verbose_name_plural = "Routers"
         ordering = ["type", "name"]
         constraints = [
             models.UniqueConstraint(fields=["asn", "ip"], name="unique_asn_ip"),
