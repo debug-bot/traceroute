@@ -78,7 +78,7 @@ def network_tools_api(request):
         elif action == "ping":
             # Use ping command via SSH
             command = (
-                f"ping {domain} -w 5"
+                f"ping {domain}"
                 if platform.system() != "Windows"
                 else f"ping -n 4 {domain}"
             )
