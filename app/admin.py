@@ -5,7 +5,7 @@ from .models import Router, SSHSettings
 @admin.register(Router)
 class RouterAdmin(admin.ModelAdmin):
     # Fields to display in the admin list view
-    list_display = ("type", "name", "asn", "ip", "version", "city", "state", "country")
+    list_display = ("ssh_settings", "type", "name", "asn", "ip", "version", "city", "state", "country")
 
     # Add filters for these fields
     list_filter = ("type", "version", "city", "state", "country")
