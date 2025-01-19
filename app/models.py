@@ -59,6 +59,8 @@ class Router(models.Model):
     )
     city = models.CharField(
         max_length=100,
+        blank=True,
+        null=True,
         help_text="Enter the city where the probe is located. Only alphabetic characters are allowed.",
         verbose_name="City",
     )
