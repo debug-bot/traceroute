@@ -4,7 +4,9 @@ import platform
 from django.http import JsonResponse
 import socket
 from datetime import datetime
-from .utils import execute_ssh_command, install_package_if_missing
+from .utils import execute_ssh_command, install_package_if_missing, ROUTER_SSH_DETAILS
+import time
+import paramiko
 
 
 def main(request):
@@ -77,13 +79,36 @@ def network_tools_api(request):
             measurement = "Traceroute from router to resolved IP:"
         elif action == "ping":
             # Use ping command via SSH
-            command = (
-                f"ping {domain}"
-                if platform.system() != "Windows"
-                else f"ping -n 4 {domain}"
-            )
-            data = execute_ssh_command(command)
-            measurement = "Ping statistics from router:"
+            command = f"ping {domain}"
+            try:
+                client = paramiko.SSHClient()
+                client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                client.connect(
+                    hostname=ROUTER_SSH_DETAILS["hostname"],
+                    port=ROUTER_SSH_DETAILS["port"],
+                    username=ROUTER_SSH_DETAILS["username"],
+                    password=ROUTER_SSH_DETAILS["password"],
+                )
+
+                # Execute the ping command
+                channel = client.get_transport().open_session()
+                channel.exec_command(command)
+
+                # Wait for a few seconds (e.g., 5 seconds)
+                time.sleep(5)
+
+                # Send CTRL+C to stop the ping
+                channel.send("\x03")  # CTRL+C
+                output = channel.recv(65535).decode()  # Get remaining output
+
+                data = output.splitlines()
+                measurement = "Ping statistics from router:"
+                channel.close()
+                client.close()
+            except Exception as e:
+                return JsonResponse(
+                    {"status": "error", "message": f"Ping command failed: {e}"}
+                )
         elif action == "dns-lookup":
             # DNS Lookup doesn't need SSH; resolve locally
             data = [f"Resolved {domain} to IP: {ip_address}"]
