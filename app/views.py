@@ -254,6 +254,6 @@ def dashboard(request):
 def get_devices_by_cities(request):
     if request.method == "GET":
         cities = request.GET.getlist("cities[]")  # Get the selected cities as a list
-        devices = Router.objects.filter(city__in=cities).values("id", "name")
+        devices = Router.objects.filter(city__in=cities).values("id", "name", "ip")
         return JsonResponse({"devices": list(devices)})
     return JsonResponse({"error": "Invalid request method"}, status=400)
