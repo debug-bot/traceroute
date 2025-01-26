@@ -1,0 +1,230 @@
+{% extends "base.html" %} {% block content %}
+<div class="container my-5">
+    <h3 class="mb-3">FastCLI</h3>
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card h-100 p-3 bg-light">
+                <div class="mb-3">
+                    <label for="cities-select" class="form-label"
+                        >Select your Datacenter(s)</label
+                    >
+                    <select id="cities-select" class="form-select" multiple>
+                        {% for item in unique_cities %}
+                        <option value="{{item}}">{{item}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="device-select" class="form-label"
+                        >Select your Device(s)</label
+                    >
+                    <select
+                        id="device-select"
+                        class="form-select"
+                        multiple
+                    ></select>
+                </div>
+                <div id="execute-command">
+                    <div class="mb-3">
+                        <label for="command-select" class="form-label"
+                            >Command Selection</label
+                        >
+                        <select id="command-select" class="form-select">
+                            <option value=""></option>
+                            <option value="ping">Ping</option>
+                            <option value="traceroute">Traceroute</option>
+                            <option value="bgp-lookup">BGP Lookup</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="interface-sel" class="form-label"
+                            >Interface Selection</label
+                        >
+                        <input
+                            id="interface-sel"
+                            class="form-control"
+                            placeholder="Enter Target"
+                        />
+                    </div>
+                </div>
+
+                <!-- Checkbox to toggle custom input -->
+                <div class="mb-3">
+                    <input
+                        type="checkbox"
+                        id="custom-input-toggle"
+                        class="form-check-input"
+                    />
+                    <label for="custom-input-toggle" class="form-check-label">
+                        Use Custom Input
+                    </label>
+                </div>
+
+                <!-- Custom Input -->
+                <div class="mb-3" id="custom-input-group" style="display: none">
+                    <label for="custom-input" class="form-label"
+                        >Custom Input</label
+                    >
+                    <input
+                        id="custom-input"
+                        class="form-control"
+                        placeholder="Enter Custom Command"
+                    />
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-sm btn-primary" id="run-btn">
+                        Run
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card p-3 h-100 bg-light">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link active"
+                            id="tab1-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#tab1"
+                            type="button"
+                            role="tab"
+                            aria-controls="tab1"
+                            aria-selected="true"
+                        >
+                            Tab 1
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link"
+                            id="tab2-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#tab2"
+                            type="button"
+                            role="tab"
+                            aria-controls="tab2"
+                            aria-selected="false"
+                        >
+                            Tab 2
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link"
+                            id="tab3-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#tab3"
+                            type="button"
+                            role="tab"
+                            aria-controls="tab3"
+                            aria-selected="false"
+                        >
+                            Tab 3
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content h-100" id="myTabContent">
+                    <div
+                        class="tab-pane fade show active h-100"
+                        id="tab1"
+                        role="tabpanel"
+                        aria-labelledby="tab1-tab"
+                    >
+                        <div class="card my-3 terminal">
+                            <div>Tab 1</div>
+                        </div>
+                    </div>
+
+                    <!-- Devices Tab -->
+                    <div
+                        class="tab-pane fade h-100"
+                        id="tab2"
+                        role="tabpanel"
+                        aria-labelledby="tab2-tab"
+                    >
+                        <div class="card my-3 terminal">
+                            <div>Tab 2</div>
+                        </div>
+                    </div>
+
+                    <!-- Commands Tab -->
+                    <div
+                        class="tab-pane fade h-100"
+                        id="tab3"
+                        role="tabpanel"
+                        aria-labelledby="tab3-tab"
+                    >
+                         <div class="card my-3 terminal">
+                            <div>Tab 3</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#cities-select").select2({
+            placeholder: "Select cities",
+            allowClear: true,
+            width: '100%'
+        });
+        $("#device-select").select2({
+            placeholder: "Select devices",
+            allowClear: true,
+            width: '100%'
+        });
+        $("#command-select").select2({
+            placeholder: "Select Command",
+            minimumResultsForSearch: -1,
+            width: '100%'
+        });
+
+        $("#cities-select").on("change", function () {
+            const selectedCities = $(this).val();
+            const deviceSelect = $("#device-select");
+            if (!selectedCities || selectedCities.length === 0) {
+                return;
+            }
+            $.ajax({
+                url: "/get-devices/",
+                method: "GET",
+                data: { cities: selectedCities },
+                success: function (data) {
+                    deviceSelect.empty();
+                    if (data.devices.length > 0) {
+                        data.devices.forEach((device) => {
+                            deviceSelect.append(
+                                `<option value="${device.id}">${device.name}</option>`
+                            );
+                        });
+                    } else {
+                        deviceSelect.append(
+                            `<option value="">No devices available</option>`
+                        );
+                    }
+                },
+                error: function () {
+                    alert("Failed to fetch devices.");
+                },
+            });
+        });
+
+        $("#custom-input-toggle").on("change", function () {
+            if ($(this).is(":checked")) {
+                $("#custom-input-group").show();
+                $("#execute-command").hide();
+            } else {
+                $("#command-select, #interface-sel").prop("disabled", false);
+                $("#custom-input-group").hide();
+                $("#execute-command").show();
+            }
+        });
+    });
+</script>
+
+{% endblock %}

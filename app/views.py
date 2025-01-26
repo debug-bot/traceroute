@@ -41,7 +41,7 @@ def network_tools_api(request):
     router_id = request.GET.get("router_id", "")
     # from the router_id, get the router object
     router = Router.objects.filter(id=router_id).first()
-    
+
     # get the router's ip address and add to the ROUTER_SSH_DETAILS
     if router:
         ROUTER_SSH_DETAILS["hostname"] = router.ip
@@ -179,7 +179,9 @@ def network_tools_api(request):
                 channel.close()
                 client.close()
             except Exception as e:
-                return JsonResponse({"status": "error", "message": f"BGP lookup failed: {e}"})
+                return JsonResponse(
+                    {"status": "error", "message": f"BGP lookup failed: {e}"}
+                )
 
         elif action == "custom":
             if not custom_command:
@@ -218,7 +220,9 @@ def network_tools_api(request):
                 channel.close()
                 client.close()
             except Exception as e:
-                return JsonResponse({"status": "error", "message": f"Custom command failed: {e}"})
+                return JsonResponse(
+                    {"status": "error", "message": f"Custom command failed: {e}"}
+                )
         else:
             return JsonResponse(
                 {"status": "error", "message": f"Unknown action '{action}'."},
@@ -237,3 +241,19 @@ def network_tools_api(request):
 
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+def dashboard(request):
+    unique_cities = (
+        Router.objects.values_list("city", flat=True).distinct().order_by("city")
+    )
+    unique_cities = [city for city in unique_cities if city]
+    return render(request, "dashboard.html", {"unique_cities": unique_cities})
+
+
+def get_devices_by_cities(request):
+    if request.method == "GET":
+        cities = request.GET.getlist("cities[]")  # Get the selected cities as a list
+        devices = Router.objects.filter(city__in=cities).values("id", "name")
+        return JsonResponse({"devices": list(devices)})
+    return JsonResponse({"error": "Invalid request method"}, status=400)
