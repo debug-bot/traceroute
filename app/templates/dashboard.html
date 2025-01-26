@@ -1,34 +1,42 @@
 {% extends "base.html" %} {% block content %}
 <div class="container my-5">
-    <h3 class="mb-3">FastCLI</h3>
+    <div class="row">
+        <div class="col-12 d-flex justify-content-end">
+            <!-- Light/Dark Mode Toggle -->
+            <div class="form-check form-switch">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="mode-toggle"
+                />
+                <label
+                    class="form-check-label"
+                    for="mode-toggle"
+                    id="mode-label"
+                >
+                    Dark Mode
+                </label>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-md-3">
-            <div class="card h-100 p-3 bg-light">
+            <div class="card h-100 p-3 bg-light mode-container">
                 <div class="mb-3">
-                    <label for="cities-select" class="form-label"
-                        >Select your Datacenter(s)</label
-                    >
+                    <label for="cities-select" class="form-label">Select your Datacenter(s)</label>
                     <select id="cities-select" class="form-select" multiple>
                         {% for item in unique_cities %}
-                        <option value="{{item}}">{{item}}</option>
+                        <option value="{{ item }}">{{ item }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label for="device-select" class="form-label"
-                        >Select your Device(s)</label
-                    >
-                    <select
-                        id="device-select"
-                        class="form-select"
-                        multiple
-                    ></select>
+                    <label for="device-select" class="form-label">Select your Device(s)</label>
+                    <select id="device-select" class="form-select" multiple></select>
                 </div>
                 <div id="execute-command">
                     <div class="mb-3">
-                        <label for="command-select" class="form-label"
-                            >Command Selection</label
-                        >
+                        <label for="command-select" class="form-label">Command Selection</label>
                         <select id="command-select" class="form-select">
                             <option value=""></option>
                             <option value="ping">Ping</option>
@@ -37,61 +45,31 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="interface-sel" class="form-label"
-                            >Interface Selection</label
-                        >
-                        <input
-                            id="interface-sel"
-                            class="form-control"
-                            placeholder="Enter Target"
-                        />
+                        <label for="interface-sel" class="form-label">Interface Selection</label>
+                        <input id="interface-sel" class="form-control" placeholder="Enter Target" />
                     </div>
                 </div>
-
-                <!-- Checkbox to toggle custom input -->
                 <div class="mb-3">
-                    <input
-                        type="checkbox"
-                        id="custom-input-toggle"
-                        class="form-check-input"
-                    />
-                    <label for="custom-input-toggle" class="form-check-label">
-                        Enter Custom Command
-                    </label>
+                    <input type="checkbox" id="custom-input-toggle" class="form-check-input" />
+                    <label for="custom-input-toggle" class="form-check-label">Enter Custom Command</label>
                 </div>
-
-                <!-- Custom Input -->
                 <div class="mb-3" id="custom-input-group" style="display: none">
-                    <label for="custom-input" class="form-label"
-                        >Custom Command</label
-                    >
-                    <input
-                        id="custom-input"
-                        class="form-control"
-                        placeholder="Enter Custom Command"
-                    />
+                    <label for="custom-input" class="form-label">Custom Command</label>
+                    <input id="custom-input" class="form-control" placeholder="Enter Custom Command" />
                 </div>
-
                 <div class="d-flex justify-content-end">
-                    <button class="btn btn-sm btn-primary" id="run-btn">
-                        Run
-                    </button>
+                    <button class="btn btn-sm btn-primary" id="run-btn">Run</button>
                 </div>
             </div>
         </div>
         <div class="col-md-9">
-            <div class="card p-3 h-100 bg-light">
+            <div class="card p-3 h-100 bg-light mode-container">
                 <div id="devices-tabs" class="h-100">
-                    <div
-                        class="d-flex flex-column justify-content-center align-items-center h-100"
-                    >
+                    <div class="d-flex flex-column justify-content-center align-items-center h-100">
                         <p class="text-center">Select Devices to show tabs</p>
                     </div>
                 </div>
-                <div
-                    id="download-device"
-                    class="mt-3 d-flex w-100 justify-content-end d-none"
-                >
+                <div id="download-device" class="mt-3 d-flex w-100 justify-content-end d-none">
                     <button class="btn btn-sm btn-success">Download</button>
                 </div>
             </div>
@@ -100,7 +78,41 @@
 </div>
 
 <script>
+     $(document).ready(function () {
+        // Dark Mode Toggle
+        const modeToggle = $("#mode-toggle");
+        const modeLabel = $("#mode-label");
+
+        function applyMode(mode) {
+            if (mode === "dark") {
+                $("body").addClass("bg-dark text-white");
+                $(".mode-container").removeClass("bg-light").addClass("bg-dark text-white");
+                $(".mode-navbar").removeClass("bg-light navbar-light").addClass("bg-dark navbar-dark");
+                modeLabel.text("Light Mode");
+                localStorage.setItem("theme", "dark");
+            } else {
+                $("body").removeClass("bg-dark text-white");
+                $(".mode-container").removeClass("bg-dark text-white").addClass("bg-light");
+                $(".mode-navbar").removeClass("bg-dark navbar-dark").addClass("bg-light navbar-light");
+                modeLabel.text("Dark Mode");
+                localStorage.setItem("theme", "light");
+            }
+        }
+
+        // Check for saved theme in localStorage
+        const savedTheme = localStorage.getItem("theme") || "light";
+        if (savedTheme === "dark") {
+            modeToggle.prop("checked", true);
+            applyMode("dark");
+        }
+
+        modeToggle.on("change", function () {
+            const mode = $(this).is(":checked") ? "dark" : "light";
+            applyMode(mode);
+        });
+    });
     $(document).ready(function () {
+        
         $("#cities-select").select2({
             placeholder: "Select datacenters",
             allowClear: true,
@@ -236,7 +248,6 @@
                 $("#custom-input-group").show();
                 $("#execute-command").hide();
             } else {
-                $("#command-select, #interface-sel").prop("disabled", false);
                 $("#custom-input-group").hide();
                 $("#execute-command").show();
             }
@@ -255,10 +266,10 @@
                 .get();
             const command = $("#custom-input-toggle").is(":checked")
                 ? $("#custom-input").val()
-                : $("#command-select").val();
+                : ""
             const target = $("#interface-sel").val();
 
-            if (!command || !selectedDevices.length) {
+            if (!selectedDevices.length) {
                 alert("Please select devices and a command before running.");
                 return;
             }
@@ -268,15 +279,41 @@
                 tabResponse.html('<div class="text-center">Running...</div>');
 
                 $.ajax({
-                    url: "/run-command/",
-                    method: "POST",
+                    url: "{% url 'network_tools_api' %}",
                     data: {
-                        device_id: device.id,
+                        router_id: device.id,
+                        action: $("#command-select").val(),
                         command: command,
                         target: target,
                     },
                     success: function (response) {
-                        tabResponse.html(`<pre>${response.data}</pre>`);
+                        tabResponse.empty();
+                        tabResponse.append(
+                            `<div class="command">${response.resolved}</div>`
+                        );
+                        tabResponse.append(
+                            `<div class="command">${response.timestamp}</div>`
+                        );
+                        tabResponse.append(
+                            `<div class="command mb-3">${response.measurement}</div>`
+                        );
+                        if (Array.isArray(response.data)) {
+                            response.data.forEach((line, index) => {
+                                if (line.trim()) {
+                                    tabResponse.append(
+                                        `<div class="command">${line}</div>`
+                                    );
+                                } else {
+                                    tabResponse.append(
+                                        `<div class="command">***</div>`
+                                    );
+                                }
+                            });
+                        } else {
+                            tabResponse.append(
+                                `<div class="command text-danger">Query failed: Try another query.</div>`
+                            );
+                        }
                     },
                     error: function () {
                         tabResponse.html(
