@@ -16,6 +16,62 @@ class SSHSettings(models.Model):
         verbose_name = "SSH Settings"
         verbose_name_plural = "SSH Settings"
 
+class DataCenter(models.Model):
+    city = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Enter the city where the probe is located. Only alphabetic characters are allowed",
+        verbose_name="City",
+    )
+    state = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Enter the state where the probe is located (optional)",
+        verbose_name="State",
+    )
+    country = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Enter the country where the probe is located (optional)",
+        verbose_name="Country",
+    )
+
+class Category(models.Model):
+    name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Enter the command category",
+        verbose_name="Category Name",
+    )
+
+class Command(models.Model):
+    category = models.ForeignKey(Category, null=True, on_delete=models.CASCADE)
+    label = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Enter the command label",
+        verbose_name="Label",
+    )
+    command = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Enter the command",
+        verbose_name="Command",
+    )
+    purpose = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Enter the purpose",
+        verbose_name="Purpose",
+    )
+
 class Router(models.Model):
     TYPE_CHOICES = [
         ("JUNIPER", "Juniper"),

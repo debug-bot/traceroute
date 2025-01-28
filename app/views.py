@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Router, SSHSettings
+from .models import Category, Router, SSHSettings
 import platform
 from django.http import JsonResponse
 import socket
@@ -248,7 +248,16 @@ def dashboard(request):
         Router.objects.values_list("city", flat=True).distinct().order_by("city")
     )
     unique_cities = [city for city in unique_cities if city]
-    return render(request, "dashboard.html", {"unique_cities": unique_cities})
+    categories = (
+        Category.objects.prefetch_related("command_set")
+        .filter(command__isnull=False)
+        .distinct()
+    )
+    return render(
+        request,
+        "dashboard.html",
+        {"unique_cities": unique_cities, "categories": categories},
+    )
 
 
 def get_devices_by_cities(request):

@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Router, SSHSettings
-
+from .models import Router, SSHSettings, DataCenter, Category, Command
 
 @admin.register(Router)
 class RouterAdmin(admin.ModelAdmin):
@@ -29,3 +28,23 @@ class RouterAdmin(admin.ModelAdmin):
 @admin.register(SSHSettings)
 class SSHSettingsAdmin(admin.ModelAdmin):
     list_display = ("settings_name", "port", "username", "password")
+
+
+@admin.register(DataCenter)
+class DataCenterAdmin(admin.ModelAdmin):
+    list_display = ("city", "state", "country")
+    search_fields = ("city", "state", "country")
+    list_filter = ("country", "state")
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ("name",)
+    search_fields = ("name",)
+
+
+@admin.register(Command)
+class CommandAdmin(admin.ModelAdmin):
+    list_display = ("label", "command", "purpose", "category")
+    search_fields = ("label", "command", "purpose")
+    list_filter = ("category",)

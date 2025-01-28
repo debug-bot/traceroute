@@ -23,7 +23,9 @@
         <div class="col-md-3">
             <div class="card h-100 p-3 bg-light mode-container">
                 <div class="mb-3">
-                    <label for="cities-select" class="form-label">Select your Datacenter(s)</label>
+                    <label for="cities-select" class="form-label"
+                        >Select your Datacenter(s)</label
+                    >
                     <select id="cities-select" class="form-select" multiple>
                         {% for item in unique_cities %}
                         <option value="{{ item }}">{{ item }}</option>
@@ -31,54 +33,143 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label for="device-select" class="form-label">Select your Device(s)</label>
-                    <select id="device-select" class="form-select" multiple></select>
+                    <label for="device-select" class="form-label"
+                        >Select your Device(s)</label
+                    >
+                    <select
+                        id="device-select"
+                        class="form-select"
+                        multiple
+                    ></select>
                 </div>
                 <div id="execute-command">
                     <div class="mb-3">
-                        <label for="command-select" class="form-label">Command Selection</label>
+                        <label for="command-select" class="form-label"
+                            >Select Command</label
+                        >
                         <select id="command-select" class="form-select">
-                            <option value=""></option>
-                            <option value="ping">Ping</option>
-                            <option value="traceroute">Traceroute</option>
-                            <option value="bgp-lookup">BGP Lookup</option>
+                            <option value="">Select a command</option>
+                            {% for category in categories %}
+                            <optgroup label="{{ category.name }}">
+                                {% for command in category.command_set.all %}
+                                <option value="{{ command.label }}">
+                                    {{ command.label }}
+                                </option>
+                                {% endfor %}
+                            </optgroup>
+                            {% endfor %}
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="interface-sel" class="form-label">Interface Selection</label>
-                        <input id="interface-sel" class="form-control" placeholder="Enter Target" />
+                        <label for="interface-sel" class="form-label"
+                            >Interface Selection</label
+                        >
+                        <input
+                            id="interface-sel"
+                            class="form-control"
+                            placeholder="Enter Target"
+                        />
                     </div>
                 </div>
                 <div class="mb-3">
-                    <input type="checkbox" id="custom-input-toggle" class="form-check-input" />
-                    <label for="custom-input-toggle" class="form-check-label">Enter Custom Command</label>
+                    <input
+                        type="checkbox"
+                        id="custom-input-toggle"
+                        class="form-check-input"
+                    />
+                    <label for="custom-input-toggle" class="form-check-label"
+                        >Enter Custom Command</label
+                    >
                 </div>
                 <div class="mb-3" id="custom-input-group" style="display: none">
-                    <label for="custom-input" class="form-label">Custom Command</label>
-                    <input id="custom-input" class="form-control" placeholder="Enter Custom Command" />
+                    <label for="custom-input" class="form-label"
+                        >Custom Command</label
+                    >
+                    <input
+                        id="custom-input"
+                        class="form-control"
+                        placeholder="Enter Custom Command"
+                    />
                 </div>
                 <div class="d-flex justify-content-end">
-                    <button class="btn btn-sm btn-primary" id="run-btn">Run</button>
+                    <button class="btn btn-sm btn-primary" id="run-btn">
+                        Run
+                    </button>
                 </div>
             </div>
         </div>
         <div class="col-md-9">
             <div class="card p-3 h-100 bg-light mode-container">
                 <div id="devices-tabs" class="h-100">
-                    <div class="d-flex flex-column justify-content-center align-items-center h-100">
+                    <div
+                        class="d-flex flex-column justify-content-center align-items-center h-100"
+                    >
                         <p class="text-center">Select Devices to show tabs</p>
                     </div>
                 </div>
-                <div id="download-device" class="mt-3 d-flex w-100 justify-content-end d-none">
+                <div
+                    id="download-device"
+                    class="mt-3 d-flex w-100 justify-content-end d-none"
+                >
                     <button class="btn btn-sm btn-success">Download</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<style>
+    .select2-results__group {
+        cursor: pointer !important;
+        padding-right: 20px;
+        position: relative;
+    }
 
+    .select2-results__group:hover {
+        background-color: #f0f0f0;
+    }
+
+    .select2-results__group:after {
+        content: "🞂";
+        position: absolute;
+        right: 5%;
+        top: 30%;
+        font-size: 12px;
+        pointer-events: none;
+        transition: transform 0.2s ease;
+    }
+
+    .select2-results__group.collapsed:after {
+        transform: rotate(90deg);
+    }
+</style>
 <script>
-     $(document).ready(function () {
+    $(document).ready(function () {
+        $("#command-select").select2({
+            placeholder: "Select Command",
+            width: "100%",
+        });
+
+        $("#command-select").on("select2:open", function () {
+            setTimeout(function () {
+                $(".select2-results__group").each(function () {
+                    const $group = $(this);
+                    $group.addClass("collapsed");
+                    $group.nextUntil(".select2-results__group").hide();
+                });
+
+                $(".select2-results__group")
+                    .off("click")
+                    .on("click", function () {
+                        const $group = $(this);
+                        $group.toggleClass("collapsed");
+                        $group
+                            .nextUntil(".select2-results__group")
+                            .slideToggle(200);
+                    });
+            }, 0);
+        });
+    });
+    $(document).ready(function () {
         // Dark Mode Toggle
         const modeToggle = $("#mode-toggle");
         const modeLabel = $("#mode-label");
@@ -86,14 +177,22 @@
         function applyMode(mode) {
             if (mode === "dark") {
                 $("body").addClass("bg-dark text-white");
-                $(".mode-container").removeClass("bg-light").addClass("bg-dark text-white");
-                $(".mode-navbar").removeClass("bg-light navbar-light").addClass("bg-dark navbar-dark");
+                $(".mode-container")
+                    .removeClass("bg-light")
+                    .addClass("bg-dark text-white");
+                $(".mode-navbar")
+                    .removeClass("bg-light navbar-light")
+                    .addClass("bg-dark navbar-dark");
                 modeLabel.text("Light Mode");
                 localStorage.setItem("theme", "dark");
             } else {
                 $("body").removeClass("bg-dark text-white");
-                $(".mode-container").removeClass("bg-dark text-white").addClass("bg-light");
-                $(".mode-navbar").removeClass("bg-dark navbar-dark").addClass("bg-light navbar-light");
+                $(".mode-container")
+                    .removeClass("bg-dark text-white")
+                    .addClass("bg-light");
+                $(".mode-navbar")
+                    .removeClass("bg-dark navbar-dark")
+                    .addClass("bg-light navbar-light");
                 modeLabel.text("Dark Mode");
                 localStorage.setItem("theme", "light");
             }
@@ -112,7 +211,6 @@
         });
     });
     $(document).ready(function () {
-        
         $("#cities-select").select2({
             placeholder: "Select datacenters",
             allowClear: true,
@@ -266,7 +364,7 @@
                 .get();
             const command = $("#custom-input-toggle").is(":checked")
                 ? $("#custom-input").val()
-                : ""
+                : "";
             const target = $("#interface-sel").val();
 
             if (!selectedDevices.length) {
