@@ -52,7 +52,7 @@
                             {% for category in categories %}
                             <optgroup label="{{ category.name }}">
                                 {% for command in category.command_set.all %}
-                                <option value="{{ command.label }}">
+                                <option value="{{ command.command }}">
                                     {{ command.label }}
                                 </option>
                                 {% endfor %}
@@ -60,7 +60,11 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="mb-3">
+                    <div
+                        class="mb-3"
+                        id="interface-selection"
+                        style="display: none"
+                    >
                         <label for="interface-sel" class="form-label"
                             >Interface Selection</label
                         >
@@ -147,6 +151,18 @@
         $("#command-select").select2({
             placeholder: "Select Command",
             width: "100%",
+        });
+
+        $("#command-select").change(function () {
+            var selectedCommand = $(this).val();
+            if (
+                selectedCommand.includes(">") ||
+                selectedCommand.includes("<")
+            ) {
+                $("#interface-selection").slideDown();
+            } else {
+                $("#interface-selection").slideUp();
+            }
         });
 
         $("#command-select").on("select2:open", function () {
@@ -362,14 +378,36 @@
                     };
                 })
                 .get();
-            const command = $("#custom-input-toggle").is(":checked")
-                ? $("#custom-input").val()
-                : "";
-            const target = $("#interface-sel").val();
 
             if (!selectedDevices.length) {
                 alert("Please select devices and a command before running.");
                 return;
+            }
+            let commandValue = "";
+            const customInput = $("#custom-input-toggle").is(":checked");
+            if (customInput) {
+                commandValue = $("#custom-input").val();
+            } else {
+                const commandSelect = $("#command-select").val();
+                if (
+                    commandSelect.includes("<") ||
+                    commandSelect.includes(">")
+                ) {
+                    const targetInput = $("#interface-sel").val();
+                    if (!targetInput) {
+                        alert("Please enter target.");
+                    }
+                    commandValue = commandSelect.replace(
+                        /<([^>]*)>/g,
+                        targetInput
+                    );
+                } else {
+                    commandValue = commandSelect;
+                }
+            }
+
+            if (!commandValue) {
+                alert("Please enter command.");
             }
 
             selectedDevices.forEach((device) => {
@@ -380,14 +418,12 @@
                     url: "{% url 'network_tools_api' %}",
                     data: {
                         router_id: device.id,
-                        action: $("#command-select").val(),
-                        command: command,
-                        domain: target,
+                        command: commandValue,
                     },
                     success: function (response) {
                         tabResponse.empty();
                         tabResponse.append(
-                            `<div class="command">${response.resolved}</div>`
+                            `<div class="command">${commandValue}</div>`
                         );
                         tabResponse.append(
                             `<div class="command">${response.timestamp}</div>`
