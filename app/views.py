@@ -112,15 +112,18 @@ def network_tools_api(request):
 
 
 def dashboard(request):
-    unique_cities = (
-        DataCenter.objects.values_list("city", flat=True).distinct().order_by("city")
-    )
-    unique_cities = [city for city in unique_cities if city]
+    unique_cities =  [
+    f"{city}, {state}" if state else f"{city}"
+    for city, state in DataCenter.objects.values_list("city", "state").distinct().order_by("city")
+]
+    print(unique_cities)
+    # unique_cities = [city  for city in unique_cities if city]
     categories = (
         Category.objects.prefetch_related("command_set")
         .filter(command__isnull=False)
         .distinct()
     )
+    print({"unique_cities": unique_cities, "categories": categories})
     return render(
         request,
         "dashboard.html",
@@ -131,6 +134,8 @@ def dashboard(request):
 def get_devices_by_cities(request):
     if request.method == "GET":
         cities = request.GET.getlist("cities[]")  # Get the selected cities as a list
-        devices = Router.objects.filter(datacenter__city__in=cities).values("id", "name", "ip")
+        city_names = [entry.split(",")[0] for entry in cities]  # Extract only city names
+
+        devices = Router.objects.filter(datacenter__city__in=city_names).values("id", "name", "ip")
         return JsonResponse({"devices": list(devices)})
     return JsonResponse({"error": "Invalid request method"}, status=400)
