@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Category, Router, SSHSettings
+from .models import Category, DataCenter, Router, SSHSettings
 import platform
 from django.http import JsonResponse
 import socket
@@ -113,7 +113,7 @@ def network_tools_api(request):
 
 def dashboard(request):
     unique_cities = (
-        Router.objects.values_list("city", flat=True).distinct().order_by("city")
+        DataCenter.objects.values_list("city", flat=True).distinct().order_by("city")
     )
     unique_cities = [city for city in unique_cities if city]
     categories = (
@@ -131,6 +131,6 @@ def dashboard(request):
 def get_devices_by_cities(request):
     if request.method == "GET":
         cities = request.GET.getlist("cities[]")  # Get the selected cities as a list
-        devices = Router.objects.filter(city__in=cities).values("id", "name", "ip")
+        devices = Router.objects.filter(datacenter__city__in=cities).values("id", "name", "ip")
         return JsonResponse({"devices": list(devices)})
     return JsonResponse({"error": "Invalid request method"}, status=400)
