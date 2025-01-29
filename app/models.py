@@ -60,6 +60,10 @@ class Category(models.Model):
         help_text="Enter the command category",
         verbose_name="Category Name",
     )
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+        ordering = ["name"]
 
 class Command(models.Model):
     category = models.ForeignKey(Category, null=True, on_delete=models.CASCADE)
