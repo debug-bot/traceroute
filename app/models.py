@@ -15,6 +15,9 @@ class SSHSettings(models.Model):
     class Meta:
         verbose_name = "SSH Settings"
         verbose_name_plural = "SSH Settings"
+        constraints = [
+            models.UniqueConstraint(fields=["port","username", "password"], name="unique_settings"),
+        ]
 
 class DataCenter(models.Model):
     city = models.CharField(
@@ -52,7 +55,7 @@ class DataCenter(models.Model):
         verbose_name_plural = "Data Centers"
         ordering = ["city"]
         constraints = [
-            models.UniqueConstraint(fields=["city", "state", "country"], name="unique_datacenter"),
+            models.UniqueConstraint(fields=["city", "state"], name="unique_datacenter"),
         ]
 
 class Category(models.Model):
