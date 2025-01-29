@@ -51,6 +51,9 @@ class DataCenter(models.Model):
         verbose_name = "Data Center"
         verbose_name_plural = "Data Centers"
         ordering = ["city"]
+        constraints = [
+            models.UniqueConstraint(fields=["city", "state", "country"], name="unique_datacenter"),
+        ]
 
 class Category(models.Model):
     name = models.CharField(

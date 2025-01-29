@@ -113,17 +113,14 @@ def network_tools_api(request):
 
 def dashboard(request):
     unique_cities =  [
-    f"{city}, {state}" if state else f"{city}"
-    for city, state in DataCenter.objects.values_list("city", "state").distinct().order_by("city")
-]
-    print(unique_cities)
-    # unique_cities = [city  for city in unique_cities if city]
+                    f"{city}, {state}" if state else f"{city}"
+                    for city, state in DataCenter.objects.values_list("city", "state").distinct().order_by("city")
+                ]
     categories = (
         Category.objects.prefetch_related("command_set")
         .filter(command__isnull=False)
         .distinct()
     )
-    print({"unique_cities": unique_cities, "categories": categories})
     return render(
         request,
         "dashboard.html",
