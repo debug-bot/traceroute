@@ -1,26 +1,27 @@
 from django.contrib import admin
 from .models import Router, SSHSettings, DataCenter, Category, Command
 
+
 @admin.register(Router)
 class RouterAdmin(admin.ModelAdmin):
     # Fields to display in the admin list view
-    list_display = ("ssh_settings", "type", "name", "asn", "ip", "version", "city", "state", "country")
+    list_display = ("ssh_settings", "type", "name", "asn", "ip", "version", "datacenter")
 
     # Add filters for these fields
-    list_filter = ("type", "version", "city", "state", "country")
+    list_filter = ("type", "version", "datacenter")
 
     # Add a search bar for these fields
-    search_fields = ("name", "ip", "city", "state", "country")
+    search_fields = ("name", "ip", "datacenter")
 
     # Group related fields in the detail view
     fieldsets = (
         ("Router SSH Settings", {"fields": ("ssh_settings",)}),
         ("Router Details", {"fields": ("type", "name", "asn", "ip", "version")}),
-        ("Location Information", {"fields": ("city", "state", "country")}),
+        ("Location Information", {"fields": ("datacenter",)}),
     )
 
     # Enable ordering by fields
-    ordering = ("name", "type")
+    ordering = ("type",)
 
     # Pagination in the admin list view
     list_per_page = 20

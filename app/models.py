@@ -10,7 +10,7 @@ class SSHSettings(models.Model):
     password = models.CharField(max_length=255, default="southtx956")
 
     def __str__(self):
-        return f"SSH Settings for '{self.settings_name}'"
+        return f"SSH Settings: '{self.settings_name}'"
     
     class Meta:
         verbose_name = "SSH Settings"
@@ -19,8 +19,7 @@ class SSHSettings(models.Model):
 class DataCenter(models.Model):
     city = models.CharField(
         max_length=100,
-        blank=True,
-        null=True,
+        default="Harlington",
         help_text="Enter the city where the probe is located. Only alphabetic characters are allowed",
         verbose_name="City",
     )
@@ -38,6 +37,20 @@ class DataCenter(models.Model):
         help_text="Enter the country where the probe is located (optional)",
         verbose_name="Country",
     )
+    
+    def __str__(self):
+        state = ", " + self.state if self.state else ""
+        country = ", "+ self.country if self.country else ""
+        return self.city + state + country
+    def clean(self):
+        # Ensure the city contains only alphabetic characters
+        if not self.city.replace(" ", "").isalpha():
+            raise ValidationError("City name must contain only alphabetic characters")
+        
+    class Meta:
+        verbose_name = "Data Center"
+        verbose_name_plural = "Data Centers"
+        ordering = ["city"]
 
 class Category(models.Model):
     name = models.CharField(
@@ -113,30 +126,10 @@ class Router(models.Model):
         help_text="Specify whether the IP version is IPv4 or IPv6. Ensure it matches the IP format.",
         verbose_name="IP Version",
     )
-    city = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        help_text="Enter the city where the probe is located. Only alphabetic characters are allowed.",
-        verbose_name="City",
-    )
-    state = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        help_text="Enter the state where the probe is located (optional).",
-        verbose_name="State",
-    )
-    country = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        help_text="Enter the country where the probe is located (optional).",
-        verbose_name="Country",
-    )
+    datacenter = models.ForeignKey(DataCenter, verbose_name="Data Center Location", default=None, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.name} - {self.city}, {self.state or ''}, {self.country or ''}"
+        return f"{self.name} - {self.datacenter}"
 
     def clean(self):
         """Custom validation logic for advanced constraints."""
@@ -146,9 +139,7 @@ class Router(models.Model):
         if self.version == "v6" and "." in self.ip:
             raise ValidationError("IPv6 address cannot contain periods (.).")
 
-        # Ensure the city contains only alphabetic characters
-        if not self.city.replace(" ", "").isalpha():
-            raise ValidationError("City name must contain only alphabetic characters.")
+        
 
     class Meta:
         verbose_name = "Router"
