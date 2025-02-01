@@ -63,8 +63,6 @@ def network_tools_api(request):
         print("Custom Command")
 
     try:
-        # Record the initial timestamp
-        timestamp = datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S")
 
         # Set up the SSH client and connect using the router's details
         client = paramiko.SSHClient()
@@ -80,33 +78,47 @@ def network_tools_api(request):
         channel = client.get_transport().open_session()
         channel.exec_command(command)
 
+        try:
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect(
+                hostname=ROUTER_SSH_DETAILS["hostname"],
+                port=ROUTER_SSH_DETAILS["port"],
+                username=ROUTER_SSH_DETAILS["username"],
+                password=ROUTER_SSH_DETAILS["password"],
+            )
+            channel = client.get_transport().open_session()
+            channel.exec_command(command)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": f"Command failed: {e}"}, status=400)
+
+        # Define the generator to stream output
         def stream_output():
-            """Generator that yields output chunks every second, auto-closing the channel after 20 seconds."""
+            """Generator that yields output chunks every second, auto-closing after 20 seconds."""
             collected_output = ""
-            # Send initial status messages
-            yield f"STARTED QUERY AT {timestamp} UTC\n"
+            yield f"STARTED QUERY AT {datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S')} UTC\n"
             yield "Statistics from router:\n"
 
-            start_time = time.time()  # Record the start time for the timeout
+            start_time = time.time()  # Record the start time for timeout
 
             # Stream output while the command is running
             while True:
-                # If new output is available, read and yield it
                 if channel.recv_ready():
                     chunk = channel.recv(1024).decode()
                     collected_output += chunk
                     yield chunk
 
-                # Check if the command has finished executing
                 if channel.exit_status_ready():
                     break
 
-                # Check if 20 seconds have elapsed; if so, break out of the loop
+                # If 20 seconds have passed, break out of the loop
                 if time.time() - start_time >= 20:
                     yield "\nTimeout reached (20 seconds). Closing connection...\n"
                     break
 
-                time.sleep(1)  # Wait for 1 second before checking again
+                # Yield a newline to help force a flush (some servers require data to flush)
+                yield "\n"
+                time.sleep(1)
 
             # Flush any remaining output
             while channel.recv_ready():
@@ -130,9 +142,12 @@ def network_tools_api(request):
                     output=output_data,
                 )
 
+        response = StreamingHttpResponse(stream_output(), content_type="text/plain")
+        # Disable caching and (if behind nginx) disable its buffering
+        response['Cache-Control'] = 'no-cache'
+        response['X-Accel-Buffering'] = 'no'  # This header works with nginx
 
-        # Return the streaming response with a content type of plain text
-        return StreamingHttpResponse(stream_output(), content_type="text/plain")
+        return response
 
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)

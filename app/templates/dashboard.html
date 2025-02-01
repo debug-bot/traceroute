@@ -399,9 +399,15 @@
             // For each selected device, stream the command response live.
             selectedDevices.forEach((device) => {
                 const tabResponse = $(`#device-response-${device.id}`);
-                // Show initial "Running..." message with a loader spinner.
+                // Show "Running..." with a loader
                 tabResponse.html(
-                    '<div class="text-center">Running... <span class="loader"></span></div>'
+                    `
+                        <div class="text-center" id="runningStatus">
+                            <div class="loader-container">
+                                Running... <span class="loader"></span>
+                            </div>
+                        </div>
+                    `
                 );
 
                 // Build the URL for the streaming view.
@@ -414,16 +420,12 @@
                 // Create a new XMLHttpRequest for streaming
                 const xhr = new XMLHttpRequest();
                 xhr.open("GET", url, true);
-                let processed = 0; // Keeps track of the number of characters already processed
+                let processed = 0; // Number of characters already processed
 
-                // onprogress event fires as new data arrives
                 xhr.onprogress = function () {
-                    // Get the full response received so far
                     const responseText = xhr.responseText;
-                    // Extract the new part that hasn't been processed yet
                     const newData = responseText.substring(processed);
                     processed = responseText.length;
-                    // Split the new data into lines and append each one
                     newData.split("\n").forEach((line) => {
                         if (line.trim()) {
                             tabResponse.append(
@@ -433,7 +435,10 @@
                     });
                 };
 
+                // onload is called when the full response has been received
                 xhr.onload = function () {
+                    // Remove the "Running..." message and loader when streaming is complete
+                    tabResponse.find("#runningStatus").remove();
                     console.log("Streaming complete for device: " + device.id);
                 };
 
