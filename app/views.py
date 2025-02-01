@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from .models import Category, DataCenter, Router, SSHSettings
+from .models import Category, CommandHistory, DataCenter, Router, SSHSettings
 import platform
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 import socket
 from datetime import datetime
 from .utils import execute_ssh_command, install_package_if_missing, ROUTER_SSH_DETAILS
@@ -34,21 +34,22 @@ def test_ssh_connection(request):
 
 
 def network_tools_api(request):
-    # Get the 'action' and 'domain' from query parameters
+    # Get query parameters
     router_id = request.GET.get("router_id", "")
     command = request.GET.get("command", "")
     custom = request.GET.get("custom", False)
 
-    # from the router_id, get the router object
+    # Retrieve the router object based on router_id
     router = Router.objects.filter(id=router_id).first()
 
-    # get the router's ip address and add to the ROUTER_SSH_DETAILS
+    # Update the SSH details if router is found
     if router:
         ROUTER_SSH_DETAILS["hostname"] = router.ip
         ROUTER_SSH_DETAILS["password"] = router.ssh_settings.password
         ROUTER_SSH_DETAILS["username"] = router.ssh_settings.username
         ROUTER_SSH_DETAILS["port"] = router.ssh_settings.port
 
+    # Validate that the 'command' parameter is provided
     if not command:
         return JsonResponse(
             {
@@ -62,54 +63,69 @@ def network_tools_api(request):
         print("Custom Command")
 
     try:
-        # Resolve the domain to IP address if action is not custom
+        # Record the initial timestamp
+        timestamp = datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S")
 
-        timestamp = (
-            f"STARTED QUERY AT {datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S')} UTC"
+        # Set up the SSH client and connect using the router's details
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(
+            hostname=ROUTER_SSH_DETAILS["hostname"],
+            port=ROUTER_SSH_DETAILS["port"],
+            username=ROUTER_SSH_DETAILS["username"],
+            password=ROUTER_SSH_DETAILS["password"],
         )
 
-        try:
-            client = paramiko.SSHClient()
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            client.connect(
-                hostname=ROUTER_SSH_DETAILS["hostname"],
-                port=ROUTER_SSH_DETAILS["port"],
-                username=ROUTER_SSH_DETAILS["username"],
-                password=ROUTER_SSH_DETAILS["password"],
-            )
+        # Open an SSH session and execute the command
+        channel = client.get_transport().open_session()
+        channel.exec_command(command)
 
-            # Execute the traceroute command
-            channel = client.get_transport().open_session()
-            channel.exec_command(command)
+        def stream_output():
+            """Generator that yields output chunks every second."""
+            collected_output = ""
+            # Send initial status messages
+            yield f"STARTED QUERY AT {timestamp} UTC\n"
+            yield "Statistics from router:\n"
 
-            # Wait for 20 seconds
-            time.sleep(20)
+            # Stream output while the command is running
+            while True:
+                # If new output is available, read and yield it
+                if channel.recv_ready():
+                    chunk = channel.recv(1024).decode()
+                    collected_output += chunk
+                    yield chunk
+                # Check if the command has finished executing
+                if channel.exit_status_ready():
+                    break
+                time.sleep(1)  # Wait for 1 second before checking again
 
-            # Send CTRL+C to stop the traceroute
-            # channel.send("\x03")  # CTRL+C
-            output = channel.recv(65535).decode()  # Get remaining output
+            # Flush any remaining output
+            while channel.recv_ready():
+                chunk = channel.recv(1024).decode()
+                collected_output += chunk
+                yield chunk
 
-            data = output.splitlines()
-            measurement = "Statistics from router:"
+            # Clean up the SSH connection
             channel.close()
             client.close()
-        except Exception as e:
-            return JsonResponse(
-                {"status": "error", "message": f"Command failed: {e}"}, status=400
-            )
 
-        # Format the output
-        response = {
-            "status": "success",
-            "timestamp": timestamp,
-            "measurement": measurement,
-            "data": data,
-        }
-        return JsonResponse(response)
+            # After streaming is complete, record the command history if the user is authenticated.
+            if request.user.is_authenticated:
+                output_data = {
+                    "raw": collected_output,
+                    "lines": collected_output.splitlines(),
+                }
+                CommandHistory.objects.create(
+                    user=request.user,
+                    command=command,
+                    output=output_data,
+                )
+
+        # Return the streaming response with a content type of plain text
+        return StreamingHttpResponse(stream_output(), content_type="text/plain")
 
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
-
 
 def dashboard(request):
     unique_cities =  [
@@ -136,3 +152,15 @@ def get_devices_by_cities(request):
         devices = Router.objects.filter(datacenter__city__in=city_names).values("id", "name", "ip")
         return JsonResponse({"devices": list(devices)})
     return JsonResponse({"error": "Invalid request method"}, status=400)
+
+from django.contrib.auth.decorators import login_required
+
+
+@login_required
+def command_history_view(request):
+    """
+    View to display the command history for the logged-in user.
+    """
+    # Retrieve command histories for the current user, ordered by most recent
+    histories = CommandHistory.objects.filter(user=request.user).order_by("-timestamp")
+    return render(request, "command_history.html", {"histories": histories})

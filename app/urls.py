@@ -8,4 +8,5 @@ urlpatterns = [
     path("test-ssh/", views.test_ssh_connection, name="test_ssh_connection"),
     path("test-ssh/", views.test_ssh_connection, name="test_ssh_connection"),
     path("get-devices/", views.get_devices_by_cities, name="get_devices_by_cities"),
+    path("history/", views.command_history_view, name="command_history"),
 ]

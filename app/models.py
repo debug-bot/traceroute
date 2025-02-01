@@ -1,5 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 # Django model for SSH settings
@@ -107,7 +110,7 @@ class Router(models.Model):
         ("v4", "IPv4"),
         ("v6", "IPv6"),
     ]
-    
+
     ssh_settings = models.ForeignKey(SSHSettings, verbose_name="SSH Settings", on_delete=models.CASCADE)
     type = models.CharField(
         max_length=20,
@@ -149,8 +152,6 @@ class Router(models.Model):
         if self.version == "v6" and "." in self.ip:
             raise ValidationError("IPv6 address cannot contain periods (.).")
 
-        
-
     class Meta:
         verbose_name = "Router"
         verbose_name_plural = "Routers"
@@ -158,3 +159,33 @@ class Router(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["asn", "ip"], name="unique_asn_ip"),
         ]
+
+
+class CommandHistory(models.Model):
+    """
+    Model to store a history of commands executed by a user.
+    """
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="command_histories",
+        help_text="User who executed the command",
+    )
+    command = models.TextField(help_text="Command executed by the user")
+    timestamp = models.DateTimeField(
+        auto_now_add=True, help_text="Timestamp when the command was executed"
+    )
+    output = models.JSONField(
+        blank=True,
+        null=True,
+        help_text="Output result of the command execution stored as JSON",
+    )
+
+    class Meta:
+        verbose_name = "Command History"
+        verbose_name_plural = "Command Histories"
+        ordering = ["-timestamp"]
+
+    def __str__(self):
+        return f"Command by {self.user.username} on {self.timestamp:%Y-%m-%d %H:%M:%S}"

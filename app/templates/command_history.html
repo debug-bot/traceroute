@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Command History</h1>
+
+  {% if histories %}
+    <table border="1" cellpadding="5" cellspacing="0">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Command</th>
+          <th>Output</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for history in histories %}
+          <tr>
+            <td>{{ history.timestamp|date:"Y-m-d H:i:s" }}</td>
+            <td>{{ history.command }}</td>
+            <td>
+              {% if history.output %}
+                <pre>
+{% if history.output|default_if_none:"" %}
+{{ history.output|json_script:"history_output" }}
+                </pre>
+{% else %}
+                No output.
+              {% endif %}
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No command history available.</p>
+  {% endif %}
+{% endblock %}

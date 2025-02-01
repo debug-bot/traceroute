@@ -1,25 +1,6 @@
 {% extends "base.html" %} {% block content %}
 <div class="container my-5">
     <div class="row">
-        <div class="col-12 d-flex justify-content-end">
-            <!-- Light/Dark Mode Toggle -->
-            <div class="form-check form-switch">
-                <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="mode-toggle"
-                />
-                <label
-                    class="form-check-label"
-                    for="mode-toggle"
-                    id="mode-label"
-                >
-                    Dark Mode
-                </label>
-            </div>
-        </div>
-    </div>
-    <div class="row">
         <div class="col-md-3">
             <div class="card h-100 p-3 bg-light mode-container">
                 <div class="mb-3">
@@ -368,6 +349,7 @@
         });
 
         $("#run-btn").on("click", function () {
+            // Get the selected devices
             const selectedDevices = $("#device-select")
                 .find(":selected")
                 .map(function () {
@@ -383,6 +365,8 @@
                 alert("Please select devices and a command before running.");
                 return;
             }
+
+            // Determine the command value
             let commandValue = "";
             const customInput = $("#custom-input-toggle").is(":checked");
             if (customInput) {
@@ -396,6 +380,7 @@
                     const targetInput = $("#interface-sel").val();
                     if (!targetInput) {
                         alert("Please enter target.");
+                        return;
                     }
                     commandValue = commandSelect.replace(
                         /<([^>]*)>/g,
@@ -408,53 +393,57 @@
 
             if (!commandValue) {
                 alert("Please enter command.");
+                return;
             }
 
+            // For each selected device, stream the command response live.
             selectedDevices.forEach((device) => {
                 const tabResponse = $(`#device-response-${device.id}`);
-                tabResponse.html('<div class="text-center">Running...</div>');
+                // Show initial "Running..." message with a loader spinner.
+                tabResponse.html(
+                    '<div class="text-center">Running... <span class="loader"></span></div>'
+                );
 
-                $.ajax({
-                    url: "{% url 'network_tools_api' %}",
-                    data: {
-                        router_id: device.id,
-                        command: commandValue,
-                    },
-                    success: function (response) {
-                        tabResponse.empty();
-                        tabResponse.append(
-                            `<div class="command">${commandValue}</div>`
-                        );
-                        tabResponse.append(
-                            `<div class="command">${response.timestamp}</div>`
-                        );
-                        tabResponse.append(
-                            `<div class="command mb-3">${response.measurement}</div>`
-                        );
-                        if (Array.isArray(response.data)) {
-                            response.data.forEach((line, index) => {
-                                if (line.trim()) {
-                                    tabResponse.append(
-                                        `<div class="command">${line}</div>`
-                                    );
-                                } else {
-                                    tabResponse.append(
-                                        `<div class="command">***</div>`
-                                    );
-                                }
-                            });
-                        } else {
+                // Build the URL for the streaming view.
+                const url =
+                    "{% url 'network_tools_api' %}?router_id=" +
+                    encodeURIComponent(device.id) +
+                    "&command=" +
+                    encodeURIComponent(commandValue);
+
+                // Create a new XMLHttpRequest for streaming
+                const xhr = new XMLHttpRequest();
+                xhr.open("GET", url, true);
+                let processed = 0; // Keeps track of the number of characters already processed
+
+                // onprogress event fires as new data arrives
+                xhr.onprogress = function () {
+                    // Get the full response received so far
+                    const responseText = xhr.responseText;
+                    // Extract the new part that hasn't been processed yet
+                    const newData = responseText.substring(processed);
+                    processed = responseText.length;
+                    // Split the new data into lines and append each one
+                    newData.split("\n").forEach((line) => {
+                        if (line.trim()) {
                             tabResponse.append(
-                                `<div class="command text-danger">Query failed: Try another query.</div>`
+                                `<div class="command">${line}</div>`
                             );
                         }
-                    },
-                    error: function () {
-                        tabResponse.html(
-                            '<div class="text-danger">Failed to execute command.</div>'
-                        );
-                    },
-                });
+                    });
+                };
+
+                xhr.onload = function () {
+                    console.log("Streaming complete for device: " + device.id);
+                };
+
+                xhr.onerror = function () {
+                    tabResponse.html(
+                        '<div class="text-danger">Failed to execute command.</div>'
+                    );
+                };
+
+                xhr.send();
             });
         });
     });

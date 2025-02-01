@@ -1,6 +1,25 @@
 from django.contrib import admin
 from .models import Router, SSHSettings, DataCenter, Category, Command
 
+from django.contrib import admin
+from .models import CommandHistory
+
+
+@admin.register(CommandHistory)
+class CommandHistoryAdmin(admin.ModelAdmin):
+    list_display = ("user", "timestamp", "command_summary")
+    list_filter = ("user", "timestamp")
+    search_fields = ("user__username", "command")
+    readonly_fields = ("timestamp",)
+
+    def command_summary(self, obj):
+        """Return a truncated version of the command for display."""
+        if obj.command:
+            return (obj.command[:50] + "...") if len(obj.command) > 50 else obj.command
+        return ""
+
+    command_summary.short_description = "Command Summary"
+
 
 @admin.register(Router)
 class RouterAdmin(admin.ModelAdmin):
