@@ -1,9 +1,12 @@
 from django.contrib import admin
 from .models import Router, SSHSettings, DataCenter, Category, Command
-
+from django.conf import settings
 from django.contrib import admin
 from .models import CommandHistory
 
+admin.site.site_header = f"{settings.PROJECT_NAME} Administration"
+admin.site.site_title = f"{settings.PROJECT_NAME} Admin Dashboard"
+admin.site.index_title = f"Welcome to the {settings.PROJECT_NAME} Management System"
 
 @admin.register(CommandHistory)
 class CommandHistoryAdmin(admin.ModelAdmin):

@@ -5,7 +5,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>FastCLI</title>
+        <title>{{PROJECT_NAME}}</title>
         <link rel="icon" type="image/png" href="{% static 'logo.png' %}" />
         <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
@@ -48,12 +48,52 @@
                 100% { transform: rotate(360deg); }
             }
 
+            /* Single select */
+.dark-mode .select2-container--default .select2-selection--single {
+  background-color: #1f1f1f;
+  border: 1px solid #444;
+  color: #e0e0e0;
+}
+.dark-mode .select2-container--default .select2-selection--single .select2-selection__rendered {
+  color: #e0e0e0;
+}
+.dark-mode .select2-container--default .select2-selection--single .select2-selection__arrow b {
+  border-color: #e0e0e0 transparent transparent transparent;
+}
+
+/* Multiple select */
+.dark-mode .select2-container--default .select2-selection--multiple {
+  background-color: #1f1f1f;
+  border: 1px solid #444;
+  color: #e0e0e0;
+}
+.dark-mode .select2-container--default .select2-selection--multiple .select2-selection__choice {
+  background-color: #333;
+  border: 1px solid #555;
+  color: #e0e0e0;
+}
+
+/* Dropdown options */
+.dark-mode .select2-container--default .select2-results__option {
+  background-color: #1f1f1f;
+  color: #e0e0e0;
+}
+.dark-mode .select2-container--default .select2-results__option--highlighted {
+  background-color: #333;
+  color: #ffffff;
+}
+
+.dark-mode input, .dark-mode textarea {
+    background-color: #333;
+  color: #ffffff;
+}
+
         </style>
     </head>
     <body>
-        <nav class="navbar mode-navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="#">FastCLI</a>
+        <nav class="navbar mode-navbar navbar-expand-lg navbar-light bg-light border-bottom">
+            <div class="container">
+                <a class="navbar-brand" href="{% url 'dashboard' %}">{{PROJECT_NAME}}</a>
                 <button
                     class="navbar-toggler"
                     type="button"
@@ -72,14 +112,48 @@
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                         <li class="nav-item">
                             <a
-                                class="nav-link active"
-                                aria-current="page"
-                                href="#"
+                                class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                                href="{% url 'dashboard' %}"
                                 >Home</a
                             >
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Link</a>
+                            <a class="nav-link {% if request.resolver_match.url_name == 'command_history' %}active{% endif %}" href="{% url 'command_history' %}">History</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a
+                                class="nav-link dropdown-toggle"
+                                href="#"
+                                id="navbarDropdown"
+                                role="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                            >
+                                Profile
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                <li>
+                                    <a
+                                        class="dropdown-item {% if request.resolver_match.url_name == 'update_profile' %}active{% endif %}"
+                                        href="{% url 'update_profile' %}"
+                                    >Update Profile</a>
+                                </li>
+                                <li>
+                                    <a
+                                        class="dropdown-item {% if request.resolver_match.url_name == 'change_password' %}active{% endif %}"
+                                        href="{% url 'change_password' %}"
+                                    >Change Password</a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <a
+                                        class="dropdown-item text-danger {% if request.resolver_match.url_name == 'logout' %}active{% endif %}"
+                                        href="{% url 'logout' %}"
+                                    >Logout</a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#">
@@ -104,6 +178,47 @@
             </div>
         </nav>
         {% block content %}{% endblock %}
+        <script>
+            $(document).ready(function () {
+        // Dark Mode Toggle
+        const modeToggle = $("#mode-toggle");
+        const modeLabel = $("#mode-label");
+
+        function applyMode(mode) {
+            if (mode === "dark") {
+                $("body").addClass("bg-dark text-white dark-mode");
+                $(".mode-container")
+                    .removeClass("bg-light")
+                    .addClass("bg-dark text-white border");
+                $(".mode-navbar")
+                    .removeClass("bg-light navbar-light")
+                    .addClass("bg-dark navbar-dark");
+                localStorage.setItem("theme", "dark");
+            } else {
+                $("body").removeClass("bg-dark text-white dark-mode");
+                $(".mode-container")
+                    .removeClass("bg-dark text-white")
+                    .addClass("bg-light");
+                $(".mode-navbar")
+                    .removeClass("bg-dark navbar-dark")
+                    .addClass("bg-light navbar-light");
+                localStorage.setItem("theme", "light");
+            }
+        }
+
+        // Check for saved theme in localStorage
+        const savedTheme = localStorage.getItem("theme") || "light";
+        if (savedTheme === "dark") {
+            modeToggle.prop("checked", true);
+            applyMode("dark");
+        }
+
+        modeToggle.on("change", function () {
+            const mode = $(this).is(":checked") ? "dark" : "light";
+            applyMode(mode);
+        });
+    });
+        </script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>

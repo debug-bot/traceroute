@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+import environ
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,6 +26,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-7l(dsx6eig1du4#x%-gad4ct!@*9q^xg&mpc*7)!%$_%s#($^0"
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
+env = environ.Env(
+    # Set casting, default values, etc.
+    DEBUG=(bool, False)
+)
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+
+
 DEBUG = True
 
 ALLOWED_HOSTS = [
@@ -32,7 +42,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "txfiber.dev",
     "www.txfiber.dev",
-    "fastcli.com"
+    "fastcli.com",
 ]
 
 
@@ -45,7 +55,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "widget_tweaks",
     "app.apps.AppConfig",
+    "authentication.apps.AuthenticationConfig",
 ]
 
 MIDDLEWARE = [
@@ -71,6 +83,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "core.context_processors.project_name",
             ],
         },
     },
@@ -120,6 +133,8 @@ USE_I18N = True
 
 USE_TZ = True
 
+PROJECT_NAME = "FastCLI"
+LOGGED_IN_REDIRECT = "dashboard"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -137,3 +152,14 @@ STATICFILES_DIRS = [
 ]
 # static root directory
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles/")
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+EMAIL_BACKEND = env(
+    "EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
+)
+EMAIL_HOST = env("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")

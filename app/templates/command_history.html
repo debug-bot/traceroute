@@ -1,38 +1,38 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>Command History</h1>
+<div class="container my-4">
+  <h1 class="mb-4">Command History</h1>
 
   {% if histories %}
-    <table border="1" cellpadding="5" cellspacing="0">
-      <thead>
-        <tr>
-          <th>Timestamp</th>
-          <th>Command</th>
-          <th>Output</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for history in histories %}
+    <div class="table-responsive">
+      <table class="table table-striped table-hover align-middle">
+        <thead class="table-light">
           <tr>
-            <td>{{ history.timestamp|date:"Y-m-d H:i:s" }}</td>
-            <td>{{ history.command }}</td>
-            <td>
-              {% if history.output %}
-                <pre>
-{% if history.output|default_if_none:"" %}
-{{ history.output|json_script:"history_output" }}
-                </pre>
-{% else %}
-                No output.
-              {% endif %}
-              {% endif %}
-            </td>
+            <th scope="col">Timestamp</th>
+            <th scope="col">Command</th>
+            <th scope="col">Output</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for history in histories %}
+            <tr>
+              <td>{{ history.timestamp|date:"Y-m-d H:i:s" }}</td>
+              <td>{{ history.command }}</td>
+              <td>
+                {% if history.output %}
+                  <pre class="mb-0">{{ history.output }}</pre>
+                {% else %}
+                  <span class="text-muted">No output.</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   {% else %}
-    <p>No command history available.</p>
+    <div class="alert alert-info">No command history available.</div>
   {% endif %}
+</div>
 {% endblock %}

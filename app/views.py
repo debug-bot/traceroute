@@ -1,17 +1,14 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Category, CommandHistory, DataCenter, Router, SSHSettings
-import platform
 from django.http import JsonResponse, StreamingHttpResponse
-import socket
 from datetime import datetime
-from .utils import execute_ssh_command, install_package_if_missing, ROUTER_SSH_DETAILS
+from .utils import execute_ssh_command, ROUTER_SSH_DETAILS
 import time
 import paramiko
-
+from django.contrib.auth.decorators import login_required
 
 def main(request):
-    routers = Router.objects.all()
-    return render(request, "main.html", {"routers": routers})
+    return redirect('login')
 
 
 def test_ssh_connection(request):
@@ -33,6 +30,7 @@ def test_ssh_connection(request):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
+@login_required(login_url="/login")
 def network_tools_api(request):
     # Get query parameters
     router_id = request.GET.get("router_id", "")
@@ -152,6 +150,8 @@ def network_tools_api(request):
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
+
+@login_required(login_url="/login")
 def dashboard(request):
     unique_cities =  [
                     f"{city}, {state}" if state else f"{city}"
@@ -181,7 +181,7 @@ def get_devices_by_cities(request):
 from django.contrib.auth.decorators import login_required
 
 
-@login_required
+@login_required(login_url="/login")
 def command_history_view(request):
     """
     View to display the command history for the logged-in user.
