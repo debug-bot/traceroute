@@ -1,0 +1,137 @@
+.terminal {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    font-family: "Courier New", Courier, monospace;
+    padding: 10px;
+    border-radius: 5px;
+    height: 85%;
+    overflow-y: auto;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+.loader-container {
+    display: inline-flex;
+    align-items: center;
+}
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-left: 5px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ------------------------ */
+
+
+.select2-results__group {
+    cursor: pointer !important;
+    padding-right: 20px;
+    position: relative;
+}
+
+.select2-results__group:hover {
+    background-color: #f0f0f0;
+}
+
+.select2-results__group:after {
+    content: "🞂";
+    position: absolute;
+    right: 5%;
+    top: 30%;
+    font-size: 12px;
+    pointer-events: none;
+    transition: transform 0.2s ease;
+}
+
+.select2-results__group.collapsed:after {
+    transform: rotate(90deg);
+}
+
+.dark-mode .select2-container--default .select2-selection--single {
+    background-color: #1f1f1f;
+    border: 1px solid #444;
+    color: #e0e0e0;
+}
+.dark-mode
+    .select2-container--default
+    .select2-selection--single
+    .select2-selection__rendered {
+    color: #e0e0e0;
+}
+.dark-mode
+    .select2-container--default
+    .select2-selection--single
+    .select2-selection__arrow
+    b {
+    border-color: #e0e0e0 transparent transparent transparent;
+}
+
+.dark-mode .select2-container--default .select2-selection--multiple {
+    background-color: #1f1f1f;
+    border: 1px solid #444;
+    color: #e0e0e0;
+}
+.dark-mode
+    .select2-container--default
+    .select2-selection--multiple
+    .select2-selection__choice {
+    background-color: #333;
+    border: 1px solid #555;
+    color: #e0e0e0;
+}
+
+.dark-mode .select2-container--default .select2-results__option {
+    background-color: #1f1f1f;
+    color: #e0e0e0;
+}
+.dark-mode .select2-container--default .select2-results__option--highlighted {
+    background-color: #333;
+    color: #ffffff;
+}
+
+.dark-mode input,
+.dark-mode textarea {
+    background-color: #333;
+    color: #ffffff;
+}
+
+
+/* ------------------------ */
+
+.command-container {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 8px;
+    gap: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #aaa transparent;
+}
+
+.command-btn {
+    flex: 0 0 auto;
+    padding: 3px 6px;
+    border: 1.5px solid #007bff;
+    border-radius: 5px;
+    background-color: white;
+    color: #007bff;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.command-btn:hover,
+.command-btn.active {
+    background-color: #007bff;
+    color: white;
+}

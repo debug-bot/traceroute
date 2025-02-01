@@ -1,4 +1,5 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %} {% load static %}
+ {% block content %}
 <div class="container my-5">
     <div class="row">
         <div class="col-md-3">
@@ -22,6 +23,16 @@
                         class="form-select"
                         multiple
                     ></select>
+                </div>
+                <div className="mb-3">
+                    <span>Select Popular Commands</span>
+                    <div class="command-container">
+                           {% for command in popular_commands %}
+                                <button class="command-btn" data-command="{{ command.command }}">
+                                    {{ command.label }}
+                                </button>
+                            {% endfor %}
+                    </div>
                 </div>
                 <div id="execute-command">
                     <div class="mb-3">
@@ -102,71 +113,22 @@
         </div>
     </div>
 </div>
-<style>
-    .select2-results__group {
-        cursor: pointer !important;
-        padding-right: 20px;
-        position: relative;
-    }
-
-    .select2-results__group:hover {
-        background-color: #f0f0f0;
-    }
-
-    .select2-results__group:after {
-        content: "🞂";
-        position: absolute;
-        right: 5%;
-        top: 30%;
-        font-size: 12px;
-        pointer-events: none;
-        transition: transform 0.2s ease;
-    }
-
-    .select2-results__group.collapsed:after {
-        transform: rotate(90deg);
-    }
-</style>
+<script src="{% static 'js/dashboard.js' %}"></script>
 <script>
-    $(document).ready(function () {
-        $("#command-select").select2({
-            placeholder: "Select Command",
-            width: "100%",
-        });
+    document.addEventListener("DOMContentLoaded", function () {
+        const buttons = document.querySelectorAll(".command-btn");
+        const selectedCommand = document.getElementById("selectedCommand");
 
-        $("#command-select").change(function () {
-            var selectedCommand = $(this).val();
-            if (
-                selectedCommand.includes(">") ||
-                selectedCommand.includes("<")
-            ) {
-                $("#interface-selection").slideDown();
-            } else {
-                $("#interface-selection").slideUp();
-            }
-        });
-
-        $("#command-select").on("select2:open", function () {
-            setTimeout(function () {
-                $(".select2-results__group").each(function () {
-                    const $group = $(this);
-                    $group.addClass("collapsed");
-                    $group.nextUntil(".select2-results__group").hide();
-                });
-
-                $(".select2-results__group")
-                    .off("click")
-                    .on("click", function () {
-                        const $group = $(this);
-                        $group.toggleClass("collapsed");
-                        $group
-                            .nextUntil(".select2-results__group")
-                            .slideToggle(200);
-                    });
-            }, 0);
+        buttons.forEach(btn => {
+            btn.addEventListener("click", function () {
+                buttons.forEach(b => b.classList.remove("active"));
+                this.classList.add("active");
+                selectedCommand.textContent = this.dataset.command;
+            });
         });
     });
-    
+</script>
+<script>
     $(document).ready(function () {
         $("#cities-select").select2({
             placeholder: "Select datacenters",

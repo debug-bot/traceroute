@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import Category, CommandHistory, DataCenter, Router, SSHSettings
+from .models import Category, CommandHistory, DataCenter, PopularCommand, Router, SSHSettings
 from django.http import JsonResponse, StreamingHttpResponse
 from datetime import datetime
 from .utils import execute_ssh_command, ROUTER_SSH_DETAILS
@@ -162,10 +162,16 @@ def dashboard(request):
         .filter(command__isnull=False)
         .distinct()
     )
+    popular_commands = PopularCommand.objects.all()
+
     return render(
         request,
         "dashboard.html",
-        {"unique_cities": unique_cities, "categories": categories},
+        {
+            "unique_cities": unique_cities,
+            "categories": categories,
+            "popular_commands": popular_commands,
+        },
     )
 
 

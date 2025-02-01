@@ -189,3 +189,27 @@ class CommandHistory(models.Model):
 
     def __str__(self):
         return f"Command by {self.user.username} on {self.timestamp:%Y-%m-%d %H:%M:%S}"
+
+
+class PopularCommand(models.Model):
+    label = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Enter the command label",
+        verbose_name="Label",
+    )
+    command = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Enter the command",
+        verbose_name="Command",
+    )
+    purpose = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Enter the purpose",
+        verbose_name="Purpose",
+    )

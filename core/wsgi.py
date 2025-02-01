@@ -359,9 +359,6 @@ application = get_wsgi_application()
 #             asn=random.randint(100, 999),
 #             ip=f"{random.randint(1, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}",
 #             version="v4",
-#             city=city,
-#             state=state,
-#             country=country,
 #             ssh_settings=ssh_settings,
 #         )
 
@@ -374,9 +371,6 @@ application = get_wsgi_application()
 #             asn=random.randint(100, 999),
 #             ip=f"{random.randint(1, 65535):x}:{random.randint(1, 65535):x}:{random.randint(1, 65535):x}:{random.randint(1, 65535):x}:{random.randint(1, 65535):x}:{random.randint(1, 65535):x}:{random.randint(1, 65535):x}:{random.randint(1, 65535):x}",
 #             version="v6",
-#             city=city,
-#             state=state,
-#             country=country,
 #             ssh_settings=ssh_settings,
 #         )
 

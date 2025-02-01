@@ -1,8 +1,7 @@
 from django.contrib import admin
-from .models import Router, SSHSettings, DataCenter, Category, Command
+from .models import Router, SSHSettings, DataCenter, Category, Command, PopularCommand, CommandHistory
 from django.conf import settings
 from django.contrib import admin
-from .models import CommandHistory
 
 admin.site.site_header = f"{settings.PROJECT_NAME} Administration"
 admin.site.site_title = f"{settings.PROJECT_NAME} Admin Dashboard"
@@ -71,3 +70,9 @@ class CommandAdmin(admin.ModelAdmin):
     list_display = ("label", "command", "purpose", "category")
     search_fields = ("label", "command", "purpose")
     list_filter = ("category",)
+
+
+@admin.register(PopularCommand)
+class PopularCommandAdmin(admin.ModelAdmin):
+    list_display = ("label", "command", "purpose")
+    search_fields = ("label", "command", "purpose")
