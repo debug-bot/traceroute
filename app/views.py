@@ -81,11 +81,13 @@ def network_tools_api(request):
         channel.exec_command(command)
 
         def stream_output():
-            """Generator that yields output chunks every second."""
+            """Generator that yields output chunks every second, auto-closing the channel after 20 seconds."""
             collected_output = ""
             # Send initial status messages
             yield f"STARTED QUERY AT {timestamp} UTC\n"
             yield "Statistics from router:\n"
+
+            start_time = time.time()  # Record the start time for the timeout
 
             # Stream output while the command is running
             while True:
@@ -94,9 +96,16 @@ def network_tools_api(request):
                     chunk = channel.recv(1024).decode()
                     collected_output += chunk
                     yield chunk
+
                 # Check if the command has finished executing
                 if channel.exit_status_ready():
                     break
+
+                # Check if 20 seconds have elapsed; if so, break out of the loop
+                if time.time() - start_time >= 20:
+                    yield "\nTimeout reached (20 seconds). Closing connection...\n"
+                    break
+
                 time.sleep(1)  # Wait for 1 second before checking again
 
             # Flush any remaining output
@@ -120,6 +129,7 @@ def network_tools_api(request):
                     command=command,
                     output=output_data,
                 )
+
 
         # Return the streaming response with a content type of plain text
         return StreamingHttpResponse(stream_output(), content_type="text/plain")
