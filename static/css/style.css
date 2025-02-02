@@ -122,26 +122,29 @@
 
 .command-btn {
     flex: 0 0 auto;
-    padding: 3px 6px;
-    border: 1.5px solid #007bff;
-    border-radius: 5px;
-    background-color: white;
-    color: #007bff;
+    padding: 5px 12px;
+    border: 1.5px solid #6c757d; /* Grey border */
+    border-radius: 20px; /* More rounded (pill shape) */
+    background-color: #6c757d; /* Grey background */
+    color: white;
     cursor: pointer;
     transition: 0.3s;
 }
+
 .command-btn:hover,
 .command-btn.active {
-    background-color: #007bff;
-    color: white;
+    background-color: #5a6268; /* Darker grey on hover */
+    border-color: #545b62;
 }
 
 .dark-mode .command-btn {
-    background-color: #333;
+    background-color: #444; /* Slightly darker grey for dark mode */
+    border-color: #666;
 }
 
 .dark-mode .command-btn:hover,
 .dark-mode .command-btn.active {
-    background-color: #007bff;
+    background-color: #5a6268;
+    border-color: #545b62;
     color: white;
 }

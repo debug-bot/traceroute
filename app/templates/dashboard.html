@@ -375,12 +375,25 @@
                     });
                 };
 
-                // onload is called when the full response has been received
-                xhr.onload = function () {
-                    // Remove the "Running..." message and loader when streaming is complete
-                    tabResponse.find("#runningStatus").remove();
-                    console.log("Streaming complete for device: " + device.id);
-                };
+                   // onload is called when the full response has been received
+    xhr.onload = function () {
+        if (xhr.status === 400) {
+            try {
+                const errorResponse = JSON.parse(xhr.responseText);
+                tabResponse.html(
+                    `<div class="text-danger">Error: ${errorResponse.message}</div>`
+                );
+            } catch (error) {
+                tabResponse.html(
+                    '<div class="text-danger">Error: Failed to execute command.</div>'
+                );
+            }
+        } else {
+            // Remove the "Running..." message and loader when streaming is complete
+            tabResponse.find("#runningStatus").remove();
+            console.log("Streaming complete for device: " + device.id);
+        }
+    };
 
                 xhr.onerror = function () {
                     tabResponse.html(
