@@ -16,26 +16,29 @@
             </thead>
             <tbody>
                 {% for history in histories %}
-                <tr class="history-row" data-output-id="output-{{ forloop.counter }}">
-                    <td>{{ history.timestamp|date:"Y-m-d H:i:s" }}</td>
-                    <td>{{ history.command }}</td>
-                    <td>
-                        {% if history.output %}
-                            {% with truncated_output=history.output|slice:":100" %}
-                                <span class="limited-text">
-                                    {{ truncated_output }}{% if history.output|length > 100 %}...{% endif %}
-                                </span>
-                                <span class="text-primary small fw-bold d-inline-block ms-2">[View More]</span>
-                            {% endwith %}
-                        {% else %}
-                            <span class="text-muted">No output</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                <script type="application/json" id="output-{{ forloop.counter }}">
-                    {{ history.output|safe }}
-                </script>
+                  <tr class="history-row" data-output-id="output-{{ forloop.counter }}">
+                      <td>{{ history.timestamp|date:"Y-m-d H:i:s" }}</td>
+                      <td>{{ history.command }}</td>
+                      <td>
+                          {% if history.output %}
+                              {% with output_str=history.output|join:"\n" %} {# Convert list to string with new lines #}
+                                  {% with truncated_output=output_str|slice:":100" %} {# Show first 100 characters #}
+                                      <span class="limited-text">
+                                          {{ truncated_output|linebreaksbr }}{% if output_str|length > 100 %}...{% endif %}
+                                      </span>
+                                      <span class="text-primary small fw-bold d-inline-block ms-2">[View More]</span>
+                                  {% endwith %}
+                              {% endwith %}
+                          {% else %}
+                              <span class="text-muted">No output</span>
+                          {% endif %}
+                      </td>
+                  </tr>
+                  <script type="application/json" id="output-{{ forloop.counter }}">
+                      {{ history.output|safe }}
+                  </script>
                 {% endfor %}
+
             </tbody>
         </table>
     </div>
