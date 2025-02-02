@@ -6,6 +6,7 @@ from .utils import execute_ssh_command, ROUTER_SSH_DETAILS
 import time
 import paramiko
 from django.contrib.auth.decorators import login_required
+import json
 
 def main(request):
     return redirect('login')
@@ -192,4 +193,30 @@ def command_history_view(request):
     """
     # Retrieve command histories for the current user, ordered by most recent
     histories = CommandHistory.objects.filter(user=request.user).order_by("-timestamp")
-    return render(request, "command_history.html", {"histories": histories})
+    import json
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import CommandHistory
+
+@login_required(login_url="/login")
+def command_history_view(request):
+    """
+    View to display the command history for the logged-in user.
+    """
+    histories = CommandHistory.objects.filter(user=request.user).order_by("-timestamp")
+
+    # Convert each history.output to JSON format
+    formatted_histories = []
+    for history in histories:
+        try:
+            output_data = json.loads(history.output)  # Try parsing JSON if already formatted
+        except (json.JSONDecodeError, TypeError):
+            output_data = history.output  # Use raw output if parsing fails
+
+        formatted_histories.append({
+            "timestamp": history.timestamp,
+            "command": history.command,
+            "output": json.dumps(output_data)  # Ensure it's a valid JSON string
+        })
+
+    return render(request, "command_history.html", {"histories": formatted_histories})
