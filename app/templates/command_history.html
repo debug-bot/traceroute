@@ -21,10 +21,17 @@
                     <td>{{ history.command }}</td>
                     <td>
                         {% if history.output %}
-                            {% with truncated_output=history.output|slice:":100" %}
-                                <span class="limited-text">
-                                    {{ truncated_output }}{% if history.output|length > 100 %}...{% endif %}
-                                </span>
+                            {% with output_list=history.output|safe %}
+                                {% with first_100_chars="" %}
+                                    {% for line in output_list %}
+                                        {% if first_100_chars|length < 100 %}
+                                            {% with first_100_chars=first_100_chars|add:line|slice:":100" %}
+                                                <div>{{ line }}</div>
+                                            {% endwith %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if first_100_chars|length > 100 %}...{% endif %}
+                                {% endwith %}
                                 <span class="text-primary small fw-bold d-inline-block ms-2">[View More]</span>
                             {% endwith %}
                         {% else %}
@@ -59,6 +66,7 @@
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function () {
     $(".history-row").on("click", function () {
@@ -75,8 +83,8 @@ $(document).ready(function () {
 
         try {
             let parsedOutput = JSON.parse(output);
-            if(typeof parsedOutput == 'string')
-              parsedOutput = JSON.parse(parsedOutput.replace(/'/g, '"'))
+            if (typeof parsedOutput == 'string')
+                parsedOutput = JSON.parse(parsedOutput.replace(/'/g, '"'));
 
             // Clear previous content
             $("#jsonOutput").empty();
