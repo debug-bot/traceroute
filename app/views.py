@@ -1,5 +1,12 @@
 from django.shortcuts import render, redirect
-from .models import Category, CommandHistory, DataCenter, PopularCommand, Router, SSHSettings
+from .models import (
+    Category,
+    CommandHistory,
+    DataCenter,
+    PopularCommand,
+    Router,
+    SSHSettings,
+)
 from django.http import JsonResponse, StreamingHttpResponse
 from datetime import datetime
 from .utils import execute_ssh_command, ROUTER_SSH_DETAILS
@@ -8,8 +15,9 @@ import paramiko
 from django.contrib.auth.decorators import login_required
 import json
 
+
 def main(request):
-    return redirect('login')
+    return redirect("login")
 
 
 def test_ssh_connection(request):
@@ -89,7 +97,9 @@ def network_tools_api(request):
             channel = client.get_transport().open_session()
             channel.exec_command(command)
         except Exception as e:
-            return JsonResponse({"status": "error", "message": f"Command failed: {e}"}, status=400)
+            return JsonResponse(
+                {"status": "error", "message": f"Command failed: {e}"}, status=400
+            )
 
         # Define the generator to stream output
         def stream_output():
@@ -132,7 +142,7 @@ def network_tools_api(request):
             # After streaming is complete, record the command history if the user is authenticated.
             if request.user.is_authenticated:
                 output_data = collected_output.splitlines()
-                
+
                 CommandHistory.objects.create(
                     user=request.user,
                     command=command,
@@ -141,8 +151,8 @@ def network_tools_api(request):
 
         response = StreamingHttpResponse(stream_output(), content_type="text/plain")
         # Disable caching and (if behind nginx) disable its buffering
-        response['Cache-Control'] = 'no-cache'
-        response['X-Accel-Buffering'] = 'no'  # This header works with nginx
+        response["Cache-Control"] = "no-cache"
+        response["X-Accel-Buffering"] = "no"  # This header works with nginx
 
         return response
 
@@ -152,10 +162,12 @@ def network_tools_api(request):
 
 @login_required(login_url="/login")
 def dashboard(request):
-    unique_cities =  [
-                    f"{city}, {state}" if state else f"{city}"
-                    for city, state in DataCenter.objects.values_list("city", "state").distinct().order_by("city")
-                ]
+    unique_cities = [
+        f"{city}, {state}" if state else f"{city}"
+        for city, state in DataCenter.objects.values_list("city", "state")
+        .distinct()
+        .order_by("city")
+    ]
     categories = (
         Category.objects.prefetch_related("command_set")
         .filter(command__isnull=False)
@@ -177,11 +189,16 @@ def dashboard(request):
 def get_devices_by_cities(request):
     if request.method == "GET":
         cities = request.GET.getlist("cities[]")  # Get the selected cities as a list
-        city_names = [entry.split(",")[0] for entry in cities]  # Extract only city names
+        city_names = [
+            entry.split(",")[0] for entry in cities
+        ]  # Extract only city names
 
-        devices = Router.objects.filter(datacenter__city__in=city_names).values("id", "name", "ip")
+        devices = Router.objects.filter(datacenter__city__in=city_names).values(
+            "id", "name", "ip"
+        )
         return JsonResponse({"devices": list(devices)})
     return JsonResponse({"error": "Invalid request method"}, status=400)
+
 
 from django.contrib.auth.decorators import login_required
 
@@ -194,9 +211,12 @@ def command_history_view(request):
     # Retrieve command histories for the current user, ordered by most recent
     histories = CommandHistory.objects.filter(user=request.user).order_by("-timestamp")
     import json
+
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import CommandHistory
+
 
 @login_required(login_url="/login")
 def command_history_view(request):
@@ -209,14 +229,19 @@ def command_history_view(request):
     formatted_histories = []
     for history in histories:
         try:
-            output_data = json.loads(history.output)  # Try parsing JSON if already formatted
+            output_data = json.loads(
+                history.output
+            )  # Try parsing JSON if already formatted
         except (json.JSONDecodeError, TypeError):
             output_data = history.output  # Use raw output if parsing fails
 
-        formatted_histories.append({
-            "timestamp": history.timestamp,
-            "command": history.command,
-            "output": json.dumps(output_data)  # Ensure it's a valid JSON string
-        })
+        formatted_histories.append(
+            {
+                "timestamp": history.timestamp,
+                "command": history.command,
+                "output": json.dumps(output_data),  # Ensure it's a valid JSON string
+                "output_list": output_data,
+            }
+        )
 
     return render(request, "command_history.html", {"histories": formatted_histories})
