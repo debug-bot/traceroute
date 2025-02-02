@@ -49,20 +49,22 @@
     {% endif %}
 </div>
 
-<!-- Modal for Showing JSON Output -->
+<!-- Modal for Showing Command Output -->
 <div class="modal fade" id="jsonModal" tabindex="-1" aria-labelledby="jsonModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="jsonModalLabel">Full JSON Output</h5>
+                <h5 class="modal-title" id="jsonModalLabel">Full Command Output</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <pre id="jsonOutput" class="bg-light p-3 rounded border"></pre>
+                <ul id="jsonOutput" class="list-group"></ul> <!-- Use list for output -->
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function () {
     $(".history-row").on("click", function () {
@@ -70,20 +72,22 @@ $(document).ready(function () {
 
         try {
             let parsedOutput = JSON.parse(output);
-            
-            // Formatting raw and lines separately
-            let formattedOutput = "";
-            if (parsedOutput.raw) {
-                formattedOutput += "Raw Output:\n" + parsedOutput.raw + "\n\n";
-            }
-            if (parsedOutput.lines) {
-                formattedOutput += "Lines:\n" + JSON.stringify(parsedOutput.lines, null, 4);
-            }
 
-            $("#jsonOutput").text(formattedOutput);
+            // Clear previous content
+            $("#jsonOutput").empty();
+
+            // If output contains "lines", show them in a list
+            if (parsedOutput.lines && Array.isArray(parsedOutput.lines)) {
+                parsedOutput.lines.forEach(line => {
+                    $("#jsonOutput").append(`<li class="list-group-item">${line}</li>`);
+                });
+            } else {
+                // Fallback: Show raw text if no lines exist
+                $("#jsonOutput").append(`<li class="list-group-item">${parsedOutput.raw || output}</li>`);
+            }
         } catch (e) {
-            // If parsing fails, show raw output as is
-            $("#jsonOutput").text(output);
+            // If parsing fails, display the output as a single list item
+            $("#jsonOutput").html(`<li class="list-group-item">${output}</li>`);
         }
 
         $("#jsonModal").modal("show");
@@ -91,5 +95,3 @@ $(document).ready(function () {
 });
 </script>
 {% endblock %}
-
-
