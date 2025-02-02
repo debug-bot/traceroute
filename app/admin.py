@@ -74,5 +74,7 @@ class CommandAdmin(admin.ModelAdmin):
 
 @admin.register(PopularCommand)
 class PopularCommandAdmin(admin.ModelAdmin):
-    list_display = ("label", "command", "purpose")
-    search_fields = ("label", "command", "purpose")
+    list_display = ("command", "timestamp")
+    search_fields = ("command__label", "command__command")
+    list_filter = ("timestamp",)
+    ordering = ("-timestamp",)

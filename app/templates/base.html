@@ -63,7 +63,7 @@
                         </li>
                         <li class="nav-item dropdown">
                             <a
-                                class="nav-link dropdown-toggle"
+                                class="nav-link dropdown-toggle {% if request.resolver_match.url_name == 'update_profile' or request.resolver_match.url_name == 'change_password' %}active{% endif %}"
                                 href="#"
                                 id="navbarDropdown"
                                 role="button"
@@ -73,7 +73,7 @@
                                 Profile
                             </a>
                             <ul
-                                class="dropdown-menu dropdown-menu-end"
+                                class="dropdown-menu dropdown-menu-end {% if request.resolver_match.url_name == 'update_profile' or request.resolver_match.url_name == 'change_password' %}show{% endif %}"
                                 aria-labelledby="navbarDropdown"
                             >
                                 <li>

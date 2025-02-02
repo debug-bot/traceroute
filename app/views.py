@@ -148,7 +148,7 @@ def network_tools_api(request):
         return response
 
     except Exception as e:
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
 
 @login_required(login_url="/login")

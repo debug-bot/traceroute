@@ -48,6 +48,8 @@ class DataCenter(models.Model):
         state = ", " + self.state if self.state else ""
         country = ", "+ self.country if self.country else ""
         return self.city + state + country
+    
+    
     def clean(self):
         # Ensure the city contains only alphabetic characters
         if not self.city.replace(" ", "").isalpha():
@@ -97,6 +99,10 @@ class Command(models.Model):
         help_text="Enter the purpose",
         verbose_name="Purpose",
     )
+
+    def __str__(self):
+        return f"{self.label or 'Unnamed Command'} - {self.command or 'No Command'}"
+
 
 class Router(models.Model):
     TYPE_CHOICES = [
@@ -192,24 +198,15 @@ class CommandHistory(models.Model):
 
 
 class PopularCommand(models.Model):
-    label = models.CharField(
-        max_length=100,
-        blank=True,
+    command = models.OneToOneField(
+        "Command",
         null=True,
-        help_text="Enter the command label",
-        verbose_name="Label",
+        on_delete=models.CASCADE,
+        help_text="Each command can be executed only once in the popular commands list.",
     )
-    command = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        help_text="Enter the command",
-        verbose_name="Command",
+    timestamp = models.DateTimeField(
+        auto_now_add=True, help_text="Timestamp when the command was executed"
     )
-    purpose = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        help_text="Enter the purpose",
-        verbose_name="Purpose",
-    )
+
+    def __str__(self):
+        return f"Popular Command: {self.command.label if self.command else 'Unknown'} ({self.timestamp.strftime('%Y-%m-%d %H:%M:%S')})"

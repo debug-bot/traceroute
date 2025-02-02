@@ -6,10 +6,18 @@ $(document).ready(function () {
 
     $("#command-select").change(function () {
         var selectedCommand = $(this).val();
+        $(".command-btn").removeClass("active");
+        $(".command-btn").each(function () {
+            if ($(this).data("command") === selectedCommand) {
+                $(this).addClass("active");
+            }
+        });
         if (selectedCommand.includes(">") || selectedCommand.includes("<")) {
             $("#interface-selection").slideDown();
+            $("#run-btn").prop("disabled", true);
         } else {
             $("#interface-selection").slideUp();
+            $("#run-btn").prop("disabled", false);
         }
     });
 
@@ -31,5 +39,10 @@ $(document).ready(function () {
                         .slideToggle(200);
                 });
         }, 0);
+    });
+    $(".command-btn").on("click", function () {
+        $(".command-btn").removeClass("active");
+        $(this).addClass("active");
+        $("#command-select").val($(this).data("command")).trigger("change");
     });
 });

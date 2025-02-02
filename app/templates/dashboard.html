@@ -1,12 +1,11 @@
-{% extends "base.html" %} {% load static %}
- {% block content %}
+{% extends "base.html" %} {% load static %} {% block content %}
 <div class="container my-5">
     <div class="row">
         <div class="col-md-3">
             <div class="card h-100 p-3 bg-light mode-container">
                 <div class="mb-3">
                     <label for="cities-select" class="form-label"
-                        >Select your Datacenter(s)</label
+                        >Datacenter(s)</label
                     >
                     <select id="cities-select" class="form-select" multiple>
                         {% for item in unique_cities %}
@@ -16,30 +15,37 @@
                 </div>
                 <div class="mb-3">
                     <label for="device-select" class="form-label"
-                        >Select your Device(s)</label
+                        >Device(s)</label
                     >
                     <select
                         id="device-select"
                         class="form-select"
                         multiple
+                        disabled
                     ></select>
                 </div>
-                <div className="mb-3">
-                    <span>Select Popular Commands</span>
-                    <div class="command-container">
-                           {% for command in popular_commands %}
-                                <button class="command-btn" data-command="{{ command.command }}">
-                                    {{ command.label }}
-                                </button>
-                            {% endfor %}
-                    </div>
-                </div>
                 <div id="execute-command">
+                    {% if popular_commands %}
+                    <div id="popular_commands" className="mb-4" style="display: none;">
+                        <span>Popular Commands</span>
+                        <div class="command-container">
+                            {% for command in popular_commands %}
+                            <button
+                                class="command-btn"
+                                data-command="{{ command.command.command }}"
+                            >
+                                {{ command.command.label }}
+                            </button>
+                            {% endfor %}
+
+                        </div>
+                    </div>
+                    {% endif %}
                     <div class="mb-3">
                         <label for="command-select" class="form-label"
-                            >Select Command</label
+                            >Commands</label
                         >
-                        <select id="command-select" class="form-select">
+                        <select id="command-select" class="form-select" disabled>
                             <option value="">Select a command</option>
                             {% for category in categories %}
                             <optgroup label="{{ category.name }}">
@@ -72,9 +78,10 @@
                         type="checkbox"
                         id="custom-input-toggle"
                         class="form-check-input"
+                        disabled
                     />
                     <label for="custom-input-toggle" class="form-check-label"
-                        >Enter Custom Command</label
+                        >Custom Command</label
                     >
                 </div>
                 <div class="mb-3" id="custom-input-group" style="display: none">
@@ -88,7 +95,7 @@
                     />
                 </div>
                 <div class="d-flex justify-content-end">
-                    <button class="btn btn-sm btn-primary" id="run-btn">
+                    <button class="btn btn-sm btn-primary" id="run-btn" disabled>
                         Run
                     </button>
                 </div>
@@ -114,20 +121,6 @@
     </div>
 </div>
 <script src="{% static 'js/dashboard.js' %}"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const buttons = document.querySelectorAll(".command-btn");
-        const selectedCommand = document.getElementById("selectedCommand");
-
-        buttons.forEach(btn => {
-            btn.addEventListener("click", function () {
-                buttons.forEach(b => b.classList.remove("active"));
-                this.classList.add("active");
-                selectedCommand.textContent = this.dataset.command;
-            });
-        });
-    });
-</script>
 <script>
     $(document).ready(function () {
         $("#cities-select").select2({
@@ -234,6 +227,7 @@
                                 `<option value="${device.id}">${device.name} (${device.ip})</option>`
                             );
                         });
+                        $("#device-select").prop("disabled", false);
                     } else {
                         deviceSelect.append(
                             `<option value="">No devices available</option>`
@@ -247,6 +241,9 @@
         });
 
         $("#device-select").on("change", function () {
+            $("#popular_commands").show()
+            $("#command-select").prop("disabled", false)
+            $("#custom-input-toggle").prop("disabled", false)
             const selectedDevices = $("#device-select")
                 .find(":selected")
                 .map(function () {
@@ -260,10 +257,31 @@
             createTabs(selectedDevices);
         });
 
+        $("#interface-sel").on("input", function () {
+            let selectedValue = $(this).val().trim();
+
+            if (selectedValue) {
+                $("#run-btn").prop("disabled", false);
+            } else {
+                $("#run-btn").prop("disabled", true);
+            }
+        });
+
+        $("#custom-input").on("input", function () {
+            let selectedValue = $(this).val().trim();
+
+            if (selectedValue) {
+                $("#run-btn").prop("disabled", false);
+            } else {
+                $("#run-btn").prop("disabled", true);
+            }
+        });
+
         $("#custom-input-toggle").on("change", function () {
             if ($(this).is(":checked")) {
                 $("#custom-input-group").show();
                 $("#execute-command").hide();
+                $("#run-btn").prop("disabled", true);
             } else {
                 $("#custom-input-group").hide();
                 $("#execute-command").show();
