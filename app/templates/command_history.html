@@ -15,8 +15,7 @@
             </thead>
             <tbody>
                 {% for history in histories %}
-                {% with full_output=history.output|escape %}
-                <tr class="history-row" data-output='{{ full_output|safe }}'>
+                <tr class="history-row" data-output-id="output-{{ forloop.counter }}">
                     <td>{{ history.timestamp|date:"Y-m-d H:i:s" }}</td>
                     <td>{{ history.command }}</td>
                     <td>
@@ -39,7 +38,9 @@
                         {% endif %}
                     </td>
                 </tr>
-                {% endwith %}
+                <script type="application/json" id="output-{{ forloop.counter }}">
+                    {{ history.output|safe }}
+                </script>
                 {% endfor %}
             </tbody>
         </table>
@@ -68,10 +69,18 @@
 <script>
 $(document).ready(function () {
     $(".history-row").on("click", function () {
-        let output = $(this).data("output");
+        let outputId = $(this).attr("data-output-id");
+        let outputElement = document.getElementById(outputId);
 
-        try {
-            let parsedOutput = output;
+        if (!outputElement) {
+            $("#jsonOutput").html('<li class="list-group-item text-danger">No output available.</li>');
+            $("#jsonModal").modal("show");
+            return;
+        }
+
+        let output = outputElement.textContent;
+
+            let parsedOutput = JSON.parse(output);
 
             // Clear previous content
             $("#jsonOutput").empty();
@@ -85,10 +94,7 @@ $(document).ready(function () {
                 // Fallback: Show raw text if no lines exist
                 $("#jsonOutput").append(`<li class="list-group-item">${parsedOutput.raw || output}</li>`);
             }
-        } catch (e) {
             // If parsing fails, display the output as a single list item
-            $("#jsonOutput").html(`<li class="list-group-item">${output}</li>`);
-        }
 
         $("#jsonModal").modal("show");
     });

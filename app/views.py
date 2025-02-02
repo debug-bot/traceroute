@@ -130,10 +130,8 @@ def network_tools_api(request):
 
             # After streaming is complete, record the command history if the user is authenticated.
             if request.user.is_authenticated:
-                output_data = {
-                    "raw": collected_output,
-                    "lines": collected_output.splitlines(),
-                }
+                output_data = collected_output.splitlines()
+                
                 CommandHistory.objects.create(
                     user=request.user,
                     command=command,
