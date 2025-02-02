@@ -148,3 +148,39 @@
     border-color: #545b62;
     color: white;
 }
+
+
+.dark-mode .modal-content {
+    background-color: #222; /* Dark background */
+    color: #f8f9fa; /* Light text */
+    border: 1px solid #444; /* Border for contrast */
+}
+
+.dark-mode .modal-header {
+    background-color: #333; /* Slightly lighter dark */
+    border-bottom: 1px solid #555;
+}
+
+.dark-mode .modal-title {
+    color: #f8f9fa;
+}
+
+.dark-mode .modal-body {
+    background-color: #222;
+    color: #ddd;
+}
+
+.dark-mode .modal-footer {
+    background-color: #333;
+    border-top: 1px solid #555;
+}
+
+.dark-mode .btn-close {
+    filter: invert(1); /* Makes the close button visible */
+}
+
+.dark-mode pre#jsonOutput {
+    background-color: #1e1e1e !important; /* Dark background for preformatted text */
+    color: #c9d1d9 !important; /* Light text */
+    border: 1px solid #555 !important;
+}

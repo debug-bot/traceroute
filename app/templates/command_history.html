@@ -1,38 +1,95 @@
-{% extends "base.html" %}
-
+{% extends "base.html" %} 
 {% block content %}
 <div class="container my-4">
-  <h1 class="mb-4">Command History</h1>
+    <h1 class="mb-4">Command History</h1>
 
-  {% if histories %}
+    {% if histories %}
     <div class="table-responsive">
-      <table class="table table-striped table-hover align-middle">
-        <thead class="table-light">
-          <tr>
-            <th scope="col">Timestamp</th>
-            <th scope="col">Command</th>
-            <th scope="col">Output</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for history in histories %}
-            <tr>
-              <td>{{ history.timestamp|date:"Y-m-d H:i:s" }}</td>
-              <td>{{ history.command }}</td>
-              <td>
-                {% if history.output %}
-                  <pre class="mb-0">{{ history.output }}</pre>
-                {% else %}
-                  <span class="text-muted">No output.</span>
-                {% endif %}
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+        <table class="table table-striped table-hover align-middle" id="historyTable">
+            <thead>
+                <tr>
+                    <th scope="col">Timestamp</th>
+                    <th scope="col">Command</th>
+                    <th scope="col">Output</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for history in histories %}
+                {% with full_output=history.output|escape %}
+                <tr class="history-row" data-output='{{ full_output|safe }}'>
+                    <td>{{ history.timestamp|date:"Y-m-d H:i:s" }}</td>
+                    <td>{{ history.command }}</td>
+                    <td>
+                        {% if history.output %}
+                            {% if history.output.raw %}
+                                {% with truncated_output=history.output.raw|slice:":100" %}
+                                    <span class="limited-text">
+                                        {{ truncated_output }}{% if history.output.raw|length > 100 %}...{% endif %}
+                                    </span>
+                                    <span class="text-primary small fw-bold d-inline-block ms-2">[View More]</span>
+                                {% endwith %}
+                            {% else %}
+                                <span class="limited-text">
+                                    {{ history.output|slice:":100" }}{% if history.output|length > 100 %}...{% endif %}
+                                </span>
+                                <span class="text-primary small fw-bold d-inline-block ms-2">[View More]</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted">No output</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-  {% else %}
+    {% else %}
     <div class="alert alert-info">No command history available.</div>
-  {% endif %}
+    {% endif %}
 </div>
+
+<!-- Modal for Showing JSON Output -->
+<div class="modal fade" id="jsonModal" tabindex="-1" aria-labelledby="jsonModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="jsonModalLabel">Full JSON Output</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="jsonOutput" class="bg-light p-3 rounded border"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+$(document).ready(function () {
+    $(".history-row").on("click", function () {
+        let output = $(this).attr("data-output");
+
+        try {
+            let parsedOutput = JSON.parse(output);
+            
+            // Formatting raw and lines separately
+            let formattedOutput = "";
+            if (parsedOutput.raw) {
+                formattedOutput += "Raw Output:\n" + parsedOutput.raw + "\n\n";
+            }
+            if (parsedOutput.lines) {
+                formattedOutput += "Lines:\n" + JSON.stringify(parsedOutput.lines, null, 4);
+            }
+
+            $("#jsonOutput").text(formattedOutput);
+        } catch (e) {
+            // If parsing fails, show raw output as is
+            $("#jsonOutput").text(output);
+        }
+
+        $("#jsonModal").modal("show");
+    });
+});
+</script>
 {% endblock %}
+
+

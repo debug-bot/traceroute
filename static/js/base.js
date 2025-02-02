@@ -10,6 +10,7 @@ $(document).ready(function () {
             $(".mode-navbar")
                 .removeClass("bg-light navbar-light")
                 .addClass("bg-dark navbar-dark");
+            $(".table").removeClass("table-light").addClass("table-dark");
             localStorage.setItem("theme", "dark");
         } else {
             $("body").removeClass("bg-dark text-white dark-mode");
@@ -19,6 +20,7 @@ $(document).ready(function () {
             $(".mode-navbar")
                 .removeClass("bg-dark navbar-dark")
                 .addClass("bg-light navbar-light");
+            $(".table").removeClass("table-dark").addClass("table-light");
             localStorage.setItem("theme", "light");
         }
     }
