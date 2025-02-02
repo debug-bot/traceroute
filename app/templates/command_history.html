@@ -68,10 +68,10 @@
 <script>
 $(document).ready(function () {
     $(".history-row").on("click", function () {
-        let output = $(this).attr("data-output");
+        let output = $(this).data("output");
 
         try {
-            let parsedOutput = JSON.parse(output);
+            let parsedOutput = output;
 
             // Clear previous content
             $("#jsonOutput").empty();
