@@ -20,7 +20,7 @@
     <td>{{ history.timestamp|date:"Y-m-d H:i:s" }}</td>
     <td>{{ history.command }}</td>
     <td>
-        {% if history.output_list %}
+        {% if history.truncated_output %}
             <span class="limited-text">
                 {{ history.truncated_output|safe }} 
             </span>
