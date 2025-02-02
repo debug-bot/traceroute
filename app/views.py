@@ -216,6 +216,7 @@ def command_history_view(request):
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import CommandHistory
+from django.utils.html import format_html
 
 
 @login_required(login_url="/login")
@@ -235,12 +236,16 @@ def command_history_view(request):
         except (json.JSONDecodeError, TypeError):
             output_data = history.output  # Use raw output if parsing fails
 
+        truncated_output = format_html("<br>".join(output_data))[:100]
+        if len(history.output) > 105:
+            truncated_output += format_html("...")
+
         formatted_histories.append(
             {
                 "timestamp": history.timestamp,
                 "command": history.command,
                 "output": json.dumps(output_data),  # Ensure it's a valid JSON string
-                "output_list": output_data,
+                "truncated_output": truncated_output,
             }
         )
 

@@ -21,14 +21,12 @@
     <td>{{ history.command }}</td>
     <td>
         {% if history.output_list %}
-            {% with output_str=history.output_list|join:"\n" %} {# Convert list to string with new lines #}
-                {% with truncated_output=output_str|slice:":100" %} {# Show first 100 characters #}
-                    <span class="limited-text">
-                        {{ truncated_output|linebreaksbr }}{% if output_str|length > 100 %}...{% endif %}
-                    </span>
-                    <span class="text-primary small fw-bold d-inline-block ms-2">[View More]</span>
-                {% endwith %}
-            {% endwith %}
+            <span class="limited-text">
+                {{ history.truncated_output|safe }} 
+            </span>
+            {% if history.output|length > 105 %}
+                <span class="text-primary small fw-bold d-inline-block ms-2">[View More]</span>
+            {% endif %}
         {% else %}
             <span class="text-muted">No output</span>
         {% endif %}
