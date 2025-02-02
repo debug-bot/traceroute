@@ -15,24 +15,18 @@
             </thead>
             <tbody>
                 {% for history in histories %}
+                {% with full_output=history.output|escape %}
                 <tr class="history-row" data-output-id="output-{{ forloop.counter }}">
                     <td>{{ history.timestamp|date:"Y-m-d H:i:s" }}</td>
                     <td>{{ history.command }}</td>
                     <td>
                         {% if history.output %}
-                            {% if history.output.raw %}
-                                {% with truncated_output=history.output.raw|slice:":100" %}
-                                    <span class="limited-text">
-                                        {{ truncated_output }}{% if history.output.raw|length > 100 %}...{% endif %}
-                                    </span>
-                                    <span class="text-primary small fw-bold d-inline-block ms-2">[View More]</span>
-                                {% endwith %}
-                            {% else %}
+                            {% with truncated_output=history.output|slice:":100" %}
                                 <span class="limited-text">
-                                    {{ history.output|slice:":100" }}{% if history.output|length > 100 %}...{% endif %}
+                                    {{ truncated_output }}{% if history.output|length > 100 %}...{% endif %}
                                 </span>
                                 <span class="text-primary small fw-bold d-inline-block ms-2">[View More]</span>
-                            {% endif %}
+                            {% endwith %}
                         {% else %}
                             <span class="text-muted">No output</span>
                         {% endif %}
@@ -41,6 +35,7 @@
                 <script type="application/json" id="output-{{ forloop.counter }}">
                     {{ history.output|safe }}
                 </script>
+                {% endwith %}
                 {% endfor %}
             </tbody>
         </table>
@@ -65,7 +60,6 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function () {
     $(".history-row").on("click", function () {
@@ -78,26 +72,36 @@ $(document).ready(function () {
             return;
         }
 
-        let output = outputElement.textContent;
+        let output = outputElement.textContent.trim();
 
+        try {
+            // Ensure the output is an actual array
             let parsedOutput = JSON.parse(output);
 
             // Clear previous content
             $("#jsonOutput").empty();
 
-            // If output contains "lines", show them in a list
-            if (parsedOutput.lines && Array.isArray(parsedOutput.lines)) {
-                parsedOutput.lines.forEach(line => {
+            if (Array.isArray(parsedOutput)) {
+                // If it's an array, display each item as a separate <li>
+                parsedOutput.forEach(line => {
                     $("#jsonOutput").append(`<li class="list-group-item">${line}</li>`);
                 });
             } else {
-                // Fallback: Show raw text if no lines exist
-                $("#jsonOutput").append(`<li class="list-group-item">${parsedOutput.raw || output}</li>`);
+                // If not an array (in case of raw text), show it as a single item
+                $("#jsonOutput").append(`<li class="list-group-item">${output}</li>`);
             }
-            // If parsing fails, display the output as a single list item
+        } catch (e) {
+            // If JSON parsing fails, treat it as a raw string and split it into lines
+            let lines = output.split("\n"); // Split by new lines just in case
+            $("#jsonOutput").empty();
+            lines.forEach(line => {
+                $("#jsonOutput").append(`<li class="list-group-item">${line}</li>`);
+            });
+        }
 
         $("#jsonModal").modal("show");
     });
 });
 </script>
+
 {% endblock %}
