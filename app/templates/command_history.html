@@ -10,33 +10,34 @@
             <thead>
                 <tr>
                     <th scope="col">Timestamp</th>
+                    <th scope="col">Device</th>
                     <th scope="col">Command</th>
                     <th scope="col">Output</th>
                 </tr>
             </thead>
             <tbody>
                 {% for history in histories %}
-<tr class="history-row" data-output-id="output-{{ forloop.counter }}">
-    <td>{{ history.timestamp|date:"Y-m-d H:i:s" }}</td>
-    <td>{{ history.command }}</td>
-    <td>
-        {% if history.truncated_output %}
-            <span class="limited-text">
-                {{ history.truncated_output|safe }} 
-            </span>
-            {% if history.output|length > 105 %}
-                <span class="text-primary small fw-bold d-inline-block ms-2">[View More]</span>
-            {% endif %}
-        {% else %}
-            <span class="text-muted">No output</span>
-        {% endif %}
-    </td>
-</tr>
-<script type="application/json" id="output-{{ forloop.counter }}">
-    {{ history.output|safe }}
-</script>
-{% endfor %}
-
+                    <tr class="history-row" data-output-id="output-{{ forloop.counter }}" data-device-name="{{ history.device_name }}">
+                        <td>{{ history.timestamp|date:"Y-m-d H:i:s" }}</td>
+                        <td>{{ history.device_name }}</td>
+                        <td>{{ history.command }}</td>
+                        <td>
+                            {% if history.truncated_output %}
+                                <span class="limited-text">
+                                    {{ history.truncated_output|safe }} 
+                                </span>
+                                {% if history.output|length > 105 %}
+                                    <span class="text-primary cursor-pointer small fw-bold d-inline-block ms-2">[View More]</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">No output</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <script type="application/json" id="output-{{ forloop.counter }}">
+                        {{ history.output|safe }}
+                    </script>
+                {% endfor %}
             </tbody>
         </table>
     </div>
@@ -50,7 +51,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="jsonModalLabel">Full Command Output</h5>
+                <h5 class="modal-title" id="jsonModalLabel"></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -64,6 +65,8 @@
 $(document).ready(function () {
     $(".history-row").on("click", function () {
         let outputId = $(this).attr("data-output-id");
+        let deviceName = $(this).attr("data-device-name");
+        $("jsonModalLabel").text(deviceName);
         let outputElement = document.getElementById(outputId);
 
         if (!outputElement) {

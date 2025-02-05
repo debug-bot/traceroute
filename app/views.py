@@ -133,6 +133,7 @@ def network_tools_api(request):
                     output_data = collected_output.splitlines()
                     CommandHistory.objects.create(
                         user=request.user,
+                        device=router,
                         command=command,
                         output=output_data,
                     )
@@ -233,6 +234,7 @@ def command_history_view(request):
         formatted_histories.append(
             {
                 "timestamp": history.timestamp,
+                "device_name": history.device.name,
                 "command": history.command,
                 "output": json.dumps(output_data),  # Ensure it's a valid JSON string
                 "truncated_output": truncated_output,

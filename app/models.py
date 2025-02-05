@@ -178,6 +178,14 @@ class CommandHistory(models.Model):
         related_name="command_histories",
         help_text="User who executed the command",
     )
+    device = models.ForeignKey(
+        Router, 
+        on_delete=models.CASCADE,
+        null=True,
+        default=None,
+        related_name="command_history_devices",
+        help_text="Device where command was executed",
+    )
     command = models.TextField(help_text="Command executed by the user")
     timestamp = models.DateTimeField(
         auto_now_add=True, help_text="Timestamp when the command was executed"
