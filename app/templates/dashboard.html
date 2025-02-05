@@ -204,8 +204,8 @@
                         }" class="card my-3 terminal">
                             <div>Click run button to show response</div>
                         </div>
-                        <div class="text-end mt-2">
-                            <button class="btn btn-sm btn-success download-log" data-device-id="${device.id}" style="display: none;">Download Log</button>
+                        <div class="text-end my-2">
+                            <button class="btn btn-sm btn-success download-log" data-device-id="${device.id}" data-device-name="${device.name}" style="display: none;">Download Log</button>
                         </div>
                     </div>
                 `);
@@ -411,8 +411,6 @@
                             );
                         }
                     });
-                    // Show the download button once output is available
-                    $(`#device-response-${device.id}`).siblings('.text-end').find('.download-log').show();
                 };
 
                 xhr.onload = function () {
@@ -432,6 +430,8 @@
                         tabResponse.find("#runningStatus").remove();
                         console.log("Streaming complete for device: " + device.id);
                     }
+                    // Show the download button only after loading has finished
+                    $(`#device-response-${device.id}`).siblings('.text-end').find('.download-log').show();
                     // Remove this xhr from activeXhrs.
                     activeXhrs = activeXhrs.filter((item) => item !== xhr);
                     // If no more active requests remain, reset the button.
@@ -446,6 +446,8 @@
                     tabResponse.html(
                         '<div class="text-danger">Failed to execute command.</div>'
                     );
+                    // Also show the download button in error cases
+                    $(`#device-response-${device.id}`).siblings('.text-end').find('.download-log').show();
                     // Remove this xhr from activeXhrs.
                     activeXhrs = activeXhrs.filter((item) => item !== xhr);
                     if (activeXhrs.length === 0) {
@@ -462,6 +464,8 @@
                     // Remove the "Running..." message when streaming is stopped.
                     tabResponse.find("#runningStatus").remove();
                     console.log("Streaming stopped for device: " + device.id);
+                    // Show the download button when the request is aborted
+                    $(`#device-response-${device.id}`).siblings('.text-end').find('.download-log').show();
                     // Remove this xhr from activeXhrs.
                     activeXhrs = activeXhrs.filter((item) => item !== xhr);
                     if (activeXhrs.length === 0) {
@@ -476,12 +480,13 @@
 
         $(document).on("click", ".download-log", function(){
             const deviceId = $(this).data("device-id");
+            const deviceName = $(this).data("device-name");
             const logContent = $(`#device-response-${deviceId}`).text();
             const blob = new Blob([logContent], { type: "text/plain" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `device_${deviceId}_log.txt`;
+            a.download = `device_${deviceName}_log.txt`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
