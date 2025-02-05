@@ -468,7 +468,7 @@
                     tabResponse.find("#runningStatus").remove();
                     console.log("Streaming stopped for device: " + device.id);
                     // Show the download button when the request is aborted
-                    $(`#device-response-${device.id}`).siblings('.text-end').find('.download-log').show();
+                    $(`#device-response-${device.id}`).children('.download-log').show();
                     // Remove this xhr from activeXhrs.
                     activeXhrs = activeXhrs.filter((item) => item !== xhr);
                     if (activeXhrs.length === 0) {
