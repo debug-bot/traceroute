@@ -204,6 +204,9 @@
                         }" class="card my-3 terminal">
                             <div>Click run button to show response</div>
                         </div>
+                        <div class="text-end mt-2">
+                            <button class="btn btn-sm btn-success download-log" data-device-id="${device.id}" style="display: none;">Download Log</button>
+                        </div>
                     </div>
                 `);
             });
@@ -259,6 +262,22 @@
                 })
                 .get();
             createTabs(selectedDevices);
+        });
+
+        $("#command-select").on("change", function () {
+            let selectedCommand = $(this).val();
+            // If the command includes a parameter placeholder
+            if (selectedCommand.includes("<") || selectedCommand.includes(">")) {
+                // Enable run button only if #interface-sel already has a non-empty value
+                if ($("#interface-sel").val().trim() !== "") {
+                $("#run-btn").prop("disabled", false);
+                } else {
+                $("#run-btn").prop("disabled", true);
+                }
+            } else {
+                // If no parameter is needed, enable the run button immediately
+                $("#run-btn").prop("disabled", false);
+            }
         });
 
         $("#interface-sel").on("input", function () {
@@ -320,7 +339,7 @@
                 .get();
 
             if (!selectedDevices.length) {
-                alert("Please select devices and a command before running.");
+                alert("Please select device(s) and a command before running!");
                 return;
             }
 
@@ -392,6 +411,8 @@
                             );
                         }
                     });
+                    // Show the download button once output is available
+                    $(`#device-response-${device.id}`).siblings('.text-end').find('.download-log').show();
                 };
 
                 xhr.onload = function () {
@@ -451,6 +472,20 @@
 
                 xhr.send();
             });
+        });
+
+        $(document).on("click", ".download-log", function(){
+            const deviceId = $(this).data("device-id");
+            const logContent = $(`#device-response-${deviceId}`).text();
+            const blob = new Blob([logContent], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `device_${deviceId}_log.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         });
     });
 </script>
