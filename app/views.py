@@ -110,44 +110,46 @@ def network_tools_api(request):
 
             start_time = time.time()  # Record the start time for timeout
 
-            # Stream output while the command is running
-            while True:
-                if channel.recv_ready():
+            try:
+                # Stream output while the command is running
+                while True:
+                    if channel.recv_ready():
+                        chunk = channel.recv(1024).decode()
+                        collected_output += chunk
+                        yield chunk
+
+                    if channel.exit_status_ready():
+                        break
+
+                    # If 20 seconds have passed, break out of the loop
+                    if time.time() - start_time >= 20:
+                        yield "\nTimeout reached (20 seconds). Closing connection...\n"
+                        break
+
+                    # Yield a newline to force a flush
+                    yield "\n"
+                    time.sleep(1)
+
+                # Flush any remaining output
+                while channel.recv_ready():
                     chunk = channel.recv(1024).decode()
                     collected_output += chunk
                     yield chunk
+            except Exception as e:
+                yield "\nConnection aborted. Terminating SSH session.\n"
+            finally:
+                # Immediately close the SSH channel and client on disconnect
+                channel.close()
+                client.close()
 
-                if channel.exit_status_ready():
-                    break
+                if request.user.is_authenticated:
+                    output_data = collected_output.splitlines()
+                    CommandHistory.objects.create(
+                        user=request.user,
+                        command=command,
+                        output=output_data,
+                    )
 
-                # If 20 seconds have passed, break out of the loop
-                if time.time() - start_time >= 20:
-                    yield "\nTimeout reached (20 seconds). Closing connection...\n"
-                    break
-
-                # Yield a newline to help force a flush (some servers require data to flush)
-                yield "\n"
-                time.sleep(1)
-
-            # Flush any remaining output
-            while channel.recv_ready():
-                chunk = channel.recv(1024).decode()
-                collected_output += chunk
-                yield chunk
-
-            # Clean up the SSH connection
-            channel.close()
-            client.close()
-
-            # After streaming is complete, record the command history if the user is authenticated.
-            if request.user.is_authenticated:
-                output_data = collected_output.splitlines()
-
-                CommandHistory.objects.create(
-                    user=request.user,
-                    command=command,
-                    output=output_data,
-                )
 
         response = StreamingHttpResponse(stream_output(), content_type="text/plain")
         # Disable caching and (if behind nginx) disable its buffering
@@ -155,6 +157,7 @@ def network_tools_api(request):
         response["X-Accel-Buffering"] = "no"  # This header works with nginx
 
         return response
+    
 
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=400)

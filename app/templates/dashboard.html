@@ -139,6 +139,10 @@
             width: "100%",
         });
 
+        // Global variables to manage active requests and command state
+        let activeXhrs = [];
+        let commandRunning = false;
+
         function createDevicesTabsContainer() {
             const devicesTabsContainer = $("#devices-tabs");
             devicesTabsContainer.empty();
@@ -288,8 +292,22 @@
             }
         });
 
+
         $("#run-btn").on("click", function () {
-            // Get the selected devices
+            // If a command is already running, treat this click as a stop command.
+            if (commandRunning) {
+                // Abort all active requests.
+                activeXhrs.forEach(function (xhr) {
+                    xhr.abort();
+                });
+                activeXhrs = [];
+                commandRunning = false;
+                $("#run-btn").text("Run");
+                return;
+            }
+
+            // Otherwise, this is a "Run" command:
+            // Validate that devices and command are selected, build the command string, etc.
             const selectedDevices = $("#device-select")
                 .find(":selected")
                 .map(function () {
@@ -306,26 +324,20 @@
                 return;
             }
 
-            // Determine the command value
+            // Determine the command value.
             let commandValue = "";
             const customInput = $("#custom-input-toggle").is(":checked");
             if (customInput) {
                 commandValue = $("#custom-input").val();
             } else {
                 const commandSelect = $("#command-select").val();
-                if (
-                    commandSelect.includes("<") ||
-                    commandSelect.includes(">")
-                ) {
+                if (commandSelect.includes("<") || commandSelect.includes(">")) {
                     const targetInput = $("#interface-sel").val();
                     if (!targetInput) {
                         alert("Please enter target.");
                         return;
                     }
-                    commandValue = commandSelect.replace(
-                        /<([^>]*)>/g,
-                        targetInput
-                    );
+                    commandValue = commandSelect.replace(/<([^>]*)>/g, targetInput);
                 } else {
                     commandValue = commandSelect;
                 }
@@ -336,19 +348,21 @@
                 return;
             }
 
+            // Change button to "Stop" and mark command as running.
+            commandRunning = true;
+            $("#run-btn").text("Stop");
+
             // For each selected device, stream the command response live.
             selectedDevices.forEach((device) => {
                 const tabResponse = $(`#device-response-${device.id}`);
-                // Show "Running..." with a loader
-                tabResponse.html(
-                    `
-                        <div class="text-center" id="runningStatus">
-                            <div class="loader-container">
-                                Running... <span class="loader"></span>
-                            </div>
+                // Show "Running..." with a loader.
+                tabResponse.html(`
+                    <div class="text-center" id="runningStatus">
+                        <div class="loader-container">
+                            Running... <span class="loader"></span>
                         </div>
-                    `
-                );
+                    </div>
+                `);
 
                 // Build the URL for the streaming view.
                 const url =
@@ -357,10 +371,14 @@
                     "&command=" +
                     encodeURIComponent(commandValue);
 
-                // Create a new XMLHttpRequest for streaming
+                // Create a new XMLHttpRequest for streaming.
                 const xhr = new XMLHttpRequest();
                 xhr.open("GET", url, true);
-                let processed = 0; // Number of characters already processed
+
+                // Save this xhr in our activeXhrs array.
+                activeXhrs.push(xhr);
+
+                let processed = 0; // Keep track of processed characters
 
                 xhr.onprogress = function () {
                     const responseText = xhr.responseText;
@@ -375,30 +393,55 @@
                     });
                 };
 
-                   // onload is called when the full response has been received
-    xhr.onload = function () {
-        if (xhr.status === 400) {
-            try {
-                const errorResponse = JSON.parse(xhr.responseText);
-                tabResponse.html(
-                    `<div class="text-danger">Error: ${errorResponse.message}</div>`
-                );
-            } catch (error) {
-                tabResponse.html(
-                    '<div class="text-danger">Error: Failed to execute command.</div>'
-                );
-            }
-        } else {
-            // Remove the "Running..." message and loader when streaming is complete
-            tabResponse.find("#runningStatus").remove();
-            console.log("Streaming complete for device: " + device.id);
-        }
-    };
+                xhr.onload = function () {
+                    if (xhr.status === 400) {
+                        try {
+                            const errorResponse = JSON.parse(xhr.responseText);
+                            tabResponse.html(
+                                `<div class="text-danger">Error: ${errorResponse.message}</div>`
+                            );
+                        } catch (error) {
+                            tabResponse.html(
+                                '<div class="text-danger">Error: Failed to execute command.</div>'
+                            );
+                        }
+                    } else {
+                        // Remove the "Running..." message when streaming is complete.
+                        tabResponse.find("#runningStatus").remove();
+                        console.log("Streaming complete for device: " + device.id);
+                    }
+                    // Remove this xhr from activeXhrs.
+                    activeXhrs = activeXhrs.filter((item) => item !== xhr);
+                    // If no more active requests remain, reset the button.
+                    if (activeXhrs.length === 0) {
+                        commandRunning = false;
+                        $("#run-btn").text("Run");
+                    }
+                };
 
                 xhr.onerror = function () {
                     tabResponse.html(
                         '<div class="text-danger">Failed to execute command.</div>'
                     );
+                    // Remove this xhr from activeXhrs.
+                    activeXhrs = activeXhrs.filter((item) => item !== xhr);
+                    if (activeXhrs.length === 0) {
+                        commandRunning = false;
+                        $("#run-btn").text("Run");
+                    }
+                };
+
+                // Handle the abort event to display a message that the command was stopped.
+                xhr.onabort = function () {
+                    tabResponse.append(
+                        '<div class="text-warning">Command aborted by user.</div>'
+                    );
+                    // Remove this xhr from activeXhrs.
+                    activeXhrs = activeXhrs.filter((item) => item !== xhr);
+                    if (activeXhrs.length === 0) {
+                        commandRunning = false;
+                        $("#run-btn").text("Run");
+                    }
                 };
 
                 xhr.send();
