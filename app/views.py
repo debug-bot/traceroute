@@ -13,6 +13,7 @@ from .utils import execute_ssh_command, ROUTER_SSH_DETAILS
 import time
 import paramiko
 from django.contrib.auth.decorators import login_required
+from django.utils.html import format_html
 import json
 
 
@@ -189,26 +190,6 @@ def get_devices_by_cities(request):
         )
         return JsonResponse({"devices": list(devices)})
     return JsonResponse({"error": "Invalid request method"}, status=400)
-
-
-from django.contrib.auth.decorators import login_required
-
-
-@login_required(login_url="/login")
-def command_history_view(request):
-    """
-    View to display the command history for the logged-in user.
-    """
-    # Retrieve command histories for the current user, ordered by most recent
-    histories = CommandHistory.objects.filter(user=request.user).order_by("-timestamp")
-    import json
-
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from .models import CommandHistory
-from django.utils.html import format_html
-
 
 @login_required(login_url="/login")
 def command_history_view(request):

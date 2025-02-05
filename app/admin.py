@@ -21,6 +21,11 @@ class CommandHistoryAdmin(admin.ModelAdmin):
         return ""
 
     command_summary.short_description = "Command Summary"
+    
+    ordering = ("-timestamp",)
+    
+    # Pagination in the admin list view
+    list_per_page = 20
 
 
 @admin.register(Router)
