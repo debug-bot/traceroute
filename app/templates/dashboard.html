@@ -436,6 +436,9 @@
                     tabResponse.append(
                         '<div class="text-warning">Command aborted by user.</div>'
                     );
+                    // Remove the "Running..." message when streaming is stopped.
+                    tabResponse.find("#runningStatus").remove();
+                    console.log("Streaming stopped for device: " + device.id);
                     // Remove this xhr from activeXhrs.
                     activeXhrs = activeXhrs.filter((item) => item !== xhr);
                     if (activeXhrs.length === 0) {
