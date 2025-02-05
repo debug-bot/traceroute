@@ -350,7 +350,8 @@
 
             // Change button to "Stop" and mark command as running.
             commandRunning = true;
-            $("#run-btn").text("Stop");
+            $("#run-btn").text("Stop Command");
+
 
             // For each selected device, stream the command response live.
             selectedDevices.forEach((device) => {
@@ -416,6 +417,7 @@
                     if (activeXhrs.length === 0) {
                         commandRunning = false;
                         $("#run-btn").text("Run");
+                        $("#run-btn")..prop("disabled", false);
                     }
                 };
 
