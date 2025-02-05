@@ -199,13 +199,9 @@
                         role="tabpanel"
                         aria-labelledby="${tabId}"
                     >
-                        <div id="device-response-${
-                            device.id
-                        }" class="card my-3 terminal">
+                        <div id="device-response-${device.id}" class="card my-3 terminal" style="position: relative;">
                             <div>Click run button to show response</div>
-                        </div>
-                        <div class="text-end my-2">
-                            <button class="btn btn-sm btn-success download-log" data-device-id="${device.id}" data-device-name="${device.name}" style="display: none;">Download Log</button>
+                            <button class="btn btn-sm btn-success download-log" data-device-id="${device.id}" data-device-name="${device.name}" style="display: none; position: absolute; bottom: 5px; right: 5px;">Download Log</button>
                         </div>
                     </div>
                 `);
@@ -481,12 +477,16 @@
         $(document).on("click", ".download-log", function(){
             const deviceId = $(this).data("device-id");
             const deviceName = $(this).data("device-name");
-            const logContent = $(`#device-response-${deviceId}`).text();
+            // Gather each output line and join them with newline characters.
+            const logLines = $(`#device-response-${deviceId}`).find('.output-line').map(function(){
+                return $(this).text();
+            }).get();
+            const logContent = logLines.join('\n');
             const blob = new Blob([logContent], { type: "text/plain" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `device_${deviceName}_log.txt`;
+            a.download = `${deviceName}_log.txt`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
