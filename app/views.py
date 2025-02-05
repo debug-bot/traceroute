@@ -71,21 +71,8 @@ def network_tools_api(request):
 
     try:
 
-        # Set up the SSH client and connect using the router's details
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(
-            hostname=ROUTER_SSH_DETAILS["hostname"],
-            port=ROUTER_SSH_DETAILS["port"],
-            username=ROUTER_SSH_DETAILS["username"],
-            password=ROUTER_SSH_DETAILS["password"],
-        )
-
-        # Open an SSH session and execute the command
-        channel = client.get_transport().open_session()
-        channel.exec_command(command)
-
         try:
+            # Set up the SSH client and connect using the router's details 
             client = paramiko.SSHClient()
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             client.connect(
