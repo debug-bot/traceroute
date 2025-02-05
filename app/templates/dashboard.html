@@ -485,7 +485,7 @@
             const deviceId = $(this).data("device-id");
             const deviceName = $(this).data("device-name");
             // Gather each output line and join them with newline characters.
-            const logLines = $(`#device-response-${deviceId}`).find('.output-line').map(function(){
+            const logLines = $(`#device-response-${deviceId}`).find('.command').map(function(){
                 return $(this).text();
             }).get();
             const logContent = logLines.join('\n');
