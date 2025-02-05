@@ -434,7 +434,7 @@
                         console.log("Streaming complete for device: " + device.id);
                     }
                     // Show the download button only after loading has finished
-                    $(`#device-response-${device.id}`).siblings('.text-end').find('.download-log').show();
+                    $(`#device-response-${device.id}`).children('.download-log').show();
                     // Remove this xhr from activeXhrs.
                     activeXhrs = activeXhrs.filter((item) => item !== xhr);
                     // If no more active requests remain, reset the button.
@@ -450,7 +450,7 @@
                         '<div class="text-danger">Failed to execute command.</div>'
                     );
                     // Also show the download button in error cases
-                    $(`#device-response-${device.id}`).siblings('.text-end').find('.download-log').show();
+                    $(`#device-response-${device.id}`).children('.download-log').show();
                     // Remove this xhr from activeXhrs.
                     activeXhrs = activeXhrs.filter((item) => item !== xhr);
                     if (activeXhrs.length === 0) {
