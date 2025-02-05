@@ -230,11 +230,16 @@ def command_history_view(request):
         truncated_output = format_html("<br>".join(output_data))[:100]
         if len(history.output) > 105:
             truncated_output += format_html("...")
+            
+        if history.device:
+            device_name = history.device.name
+        else:
+            device_name = "No device hostname found!"
 
         formatted_histories.append(
             {
                 "timestamp": history.timestamp,
-                "device_name": history.device.name,
+                "device_name": device_name,
                 "command": history.command,
                 "output": json.dumps(output_data),  # Ensure it's a valid JSON string
                 "truncated_output": truncated_output,
