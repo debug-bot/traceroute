@@ -1,6 +1,6 @@
 import random
 from django.core.management.base import BaseCommand
-from app.models import Category, Command
+from app.models import Category, Command as CommandModel
 
 
 class Command(BaseCommand):
@@ -315,7 +315,7 @@ class Command(BaseCommand):
             category, created = Category.objects.get_or_create(name=category_name)
 
             for label, command, purpose in command_list:
-                Command.objects.get_or_create(
+                CommandModel.objects.get_or_create(
                     category=category,
                     label=label,
                     command=command,
