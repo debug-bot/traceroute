@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: django_app
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    expose:
+      - "8000"
+    environment:
+      - DEBUG=0
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_server
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - static_volume:/app/staticfiles
+    depends_on:
+      - web
+
+volumes:
+  static_volume:
