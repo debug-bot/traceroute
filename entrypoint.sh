@@ -4,6 +4,9 @@ set -e
 echo "Running Django migrations..."
 python manage.py migrate
 
+echo "Creating default superuser..."
+python manage.py create_default_superuser
+
 echo "Populating random router data..."
 python manage.py populate_random_router_data
 

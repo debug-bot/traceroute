@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "app.apps.AppConfig",
     "authentication.apps.AuthenticationConfig",
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
