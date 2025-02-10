@@ -35,7 +35,9 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 
 DEBUG = os.environ.get("DEBUG", False)
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-7l(dsx6eig1du4#x%-gad4ct!@*9q^xg&mpc*7)!%$_%s#($^0")
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY", "django-insecure-7l(dsx6eig1du4#x%-gad4ct!@*9q^xg&mpc*7)!%$_%s#($^0"
+)
 
 ALLOWED_HOSTS = [
     "23.141.136.104",
@@ -59,7 +61,7 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "app.apps.AppConfig",
     "authentication.apps.AuthenticationConfig",
-    'rest_framework',
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
