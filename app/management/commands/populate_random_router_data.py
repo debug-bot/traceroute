@@ -15,12 +15,15 @@ class Command(BaseCommand):
         # Create Data Centers
         data_centers = []
         for _ in range(5):  # Creating 5 data centers
-            dc = DataCenter.objects.create(
-                city=fake.city(),
-                state=fake.state(),
-                country=fake.country(),
-            )
-            data_centers.append(dc)
+            try:
+                dc = DataCenter.objects.create(
+                    city=fake.city(),
+                    state=fake.state(),
+                    country=fake.country(),
+                )
+                data_centers.append(dc)
+            except:
+                pass
 
         self.stdout.write(
             self.style.SUCCESS(f"✅ Created {len(data_centers)} Data Centers")
@@ -29,13 +32,16 @@ class Command(BaseCommand):
         # Create SSH Settings
         ssh_settings_list = []
         for _ in range(5):  # Creating 5 SSH settings
-            ssh = SSHSettings.objects.create(
-                settings_name=fake.unique.word(),
-                port=random.choice([22, 2222, 8022]),
-                username=fake.user_name(),
-                password=fake.password(),
-            )
-            ssh_settings_list.append(ssh)
+            try:
+                ssh = SSHSettings.objects.create(
+                    settings_name=fake.unique.word(),
+                    port=random.choice([22, 2222, 8022]),
+                    username=fake.user_name(),
+                    password=fake.password(),
+                )
+                ssh_settings_list.append(ssh)
+            except:
+                pass
 
         self.stdout.write(
             self.style.SUCCESS(f"✅ Created {len(ssh_settings_list)} SSH Settings")
@@ -48,15 +54,18 @@ class Command(BaseCommand):
         for _ in range(10):  # Creating 10 routers
             ip_version = random.choice(ip_versions)
             ip_address = fake.ipv4() if ip_version == "v4" else fake.ipv6()
-
-            Router.objects.create(
-                ssh_settings=random.choice(ssh_settings_list),
-                type=random.choice(router_types),
-                name=fake.unique.word().upper(),
-                asn=random.randint(1000, 99999),
-                ip=ip_address,
-                version=ip_version,
-                datacenter=random.choice(data_centers),
-            )
+            
+            try:
+                Router.objects.create(
+                    ssh_settings=random.choice(ssh_settings_list),
+                    type=random.choice(router_types),
+                    name=fake.unique.word().upper(),
+                    asn=random.randint(1000, 99999),
+                    ip=ip_address,
+                    version=ip_version,
+                    datacenter=random.choice(data_centers),
+                )
+            except:
+                pass
 
         self.stdout.write(self.style.SUCCESS("✅ Successfully populated routers!"))
