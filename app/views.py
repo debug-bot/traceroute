@@ -15,6 +15,8 @@ import paramiko
 from django.contrib.auth.decorators import login_required
 from django.utils.html import format_html
 import json
+from django.utils.html import format_html, escape
+from django.utils.safestring import mark_safe
 
 
 def main(request):
@@ -236,38 +238,46 @@ def get_devices_by_cities(request):
         return JsonResponse({"devices": list(devices)})
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
+
 @login_required(login_url="/login")
 def command_history_view(request):
     """
     View to display the command history for the logged-in user.
     """
     histories = CommandHistory.objects.filter(user=request.user).order_by("-timestamp")
-
-    # Convert each history.output to JSON format
     formatted_histories = []
-    for history in histories:
-        try:
-            output_data = json.loads(
-                history.output
-            )  # Try parsing JSON if already formatted
-        except (json.JSONDecodeError, TypeError):
-            output_data = history.output  # Use raw output if parsing fails
 
-        truncated_output = format_html("<br>".join(output_data))[:100]
-        if len(history.output) > 105:
-            truncated_output += format_html("...")
-            
-        if history.device:
-            device_name = history.device.name
+    for history in histories:
+        # Try parsing history.output as JSON
+        try:
+            output_data = json.loads(history.output)
+        except (json.JSONDecodeError, TypeError):
+            output_data = history.output  # Fall back to the raw output
+
+        # If output_data is a list, join its elements with <br>
+        if isinstance(output_data, list):
+            # Escape each line to ensure safety and join with <br>
+            joined_output = mark_safe("<br>".join(escape(line) for line in output_data))
         else:
-            device_name = "No device hostname found!"
+            # If it's not a list, treat it as a string
+            joined_output = escape(output_data)
+
+        # Use a placeholder in format_html to avoid formatting issues with curly braces
+        truncated_output = format_html("{}", joined_output)[:100]
+        if len(joined_output) > 105:
+            truncated_output += "..."
+
+        # Get device name or a default message
+        device_name = (
+            history.device.name if history.device else "No device hostname found!"
+        )
 
         formatted_histories.append(
             {
                 "timestamp": history.timestamp,
                 "device_name": device_name,
                 "command": history.command,
-                "output": json.dumps(output_data),  # Ensure it's a valid JSON string
+                "output": json.dumps(output_data),  # Ensure a valid JSON string
                 "truncated_output": truncated_output,
             }
         )
