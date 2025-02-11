@@ -72,9 +72,9 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Command)
 class CommandAdmin(admin.ModelAdmin):
-    list_display = ("label", "command", "purpose", "category")
+    list_display = ("label", "command", "purpose", "category__name")
     search_fields = ("label", "command", "purpose")
-    list_filter = ("category",)
+    list_filter = ("category__name",)
 
 
 @admin.register(PopularCommand)
