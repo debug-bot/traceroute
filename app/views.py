@@ -7,7 +7,7 @@ from .models import (
     Router,
     SSHSettings,
 )
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from datetime import datetime
 from .utils import execute_ssh_command, ROUTER_SSH_DETAILS
 import time
@@ -15,6 +15,8 @@ import paramiko
 from django.contrib.auth.decorators import login_required
 from django.utils.html import format_html
 import json
+from django.utils.html import format_html, escape
+from django.utils.safestring import mark_safe
 
 
 def main(request):
@@ -45,19 +47,28 @@ def network_tools_api(request):
     # Get query parameters
     router_id = request.GET.get("router_id", "")
     command = request.GET.get("command", "")
-    custom = request.GET.get("custom", False)
+    # Convert custom parameter to boolean.
+    # (Assumes custom is passed as "true" or "false".)
+    custom_param = request.GET.get("custom", "false").lower() == "true"
 
     # Retrieve the router object based on router_id
     router = Router.objects.filter(id=router_id).first()
-
-    # Update the SSH details if router is found
     if router:
         ROUTER_SSH_DETAILS["hostname"] = router.ip
         ROUTER_SSH_DETAILS["password"] = router.ssh_settings.password
         ROUTER_SSH_DETAILS["username"] = router.ssh_settings.username
         ROUTER_SSH_DETAILS["port"] = router.ssh_settings.port
+    else:
+        return JsonResponse(
+            {"status": "error", "message": "Router not found."}, status=404
+        )
 
-    # Validate that the 'command' parameter is provided
+    # If custom is True, override the command with our fixed custom command.
+    if custom_param:
+        command = "show configuration | display set"
+        print("Custom Command: running fixed command for log file download.")
+
+    # Validate that the 'command' parameter is provided (unless overridden by custom).
     if not command:
         return JsonResponse(
             {
@@ -67,29 +78,26 @@ def network_tools_api(request):
             status=400,
         )
 
-    if custom:
-        print("Custom Command")
-
     try:
+        # Set up the SSH client and connect using the router's details
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(
+            hostname=ROUTER_SSH_DETAILS["hostname"],
+            port=ROUTER_SSH_DETAILS["port"],
+            username=ROUTER_SSH_DETAILS["username"],
+            password=ROUTER_SSH_DETAILS["password"],
+        )
+        channel = client.get_transport().open_session()
+        channel.exec_command(command)
+    except Exception as e:
+        return JsonResponse(
+            {"status": "error", "message": f"Command failed: {e}"}, status=400
+        )
 
-        try:
-            # Set up the SSH client and connect using the router's details 
-            client = paramiko.SSHClient()
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            client.connect(
-                hostname=ROUTER_SSH_DETAILS["hostname"],
-                port=ROUTER_SSH_DETAILS["port"],
-                username=ROUTER_SSH_DETAILS["username"],
-                password=ROUTER_SSH_DETAILS["password"],
-            )
-            channel = client.get_transport().open_session()
-            channel.exec_command(command)
-        except Exception as e:
-            return JsonResponse(
-                {"status": "error", "message": f"Command failed: {e}"}, status=400
-            )
+    # --- Non-custom case: stream the command output ---
+    if not custom_param:
 
-        # Define the generator to stream output
         def stream_output():
             """Generator that yields output chunks every second, auto-closing after 20 seconds."""
             collected_output = ""
@@ -124,12 +132,12 @@ def network_tools_api(request):
                     collected_output += chunk
                     yield chunk
             except Exception as e:
-                yield "\nConnection aborted. Terminating SSH session.\n"
+                yield f"\nConnection aborted: {e}. Terminating SSH session.\n"
             finally:
-                # Immediately close the SSH channel and client on disconnect
                 channel.close()
                 client.close()
 
+                # Save the command history for authenticated users.
                 if request.user.is_authenticated:
                     output_data = collected_output.splitlines()
                     CommandHistory.objects.create(
@@ -139,17 +147,56 @@ def network_tools_api(request):
                         output=output_data,
                     )
 
-
         response = StreamingHttpResponse(stream_output(), content_type="text/plain")
         # Disable caching and (if behind nginx) disable its buffering
         response["Cache-Control"] = "no-cache"
-        response["X-Accel-Buffering"] = "no"  # This header works with nginx
-
+        response["X-Accel-Buffering"] = "no"
         return response
-    
 
-    except Exception as e:
-        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+    # --- Custom case: run custom command and return a downloadable log file ---
+    else:
+        collected_output = ""
+        start_time = time.time()
+        try:
+            # Loop until the command finishes or a 20-second timeout is reached.
+            while True:
+                if channel.recv_ready():
+                    chunk = channel.recv(1024).decode()
+                    collected_output += chunk
+                if channel.exit_status_ready():
+                    break
+                if time.time() - start_time >= 20:
+                    collected_output += (
+                        "\nTimeout reached (20 seconds). Closing connection...\n"
+                    )
+                    break
+                time.sleep(1)
+            # Flush any remaining output.
+            while channel.recv_ready():
+                chunk = channel.recv(1024).decode()
+                collected_output += chunk
+        except Exception as e:
+            collected_output += f"\nConnection aborted: {e}. Terminating SSH session.\n"
+        finally:
+            channel.close()
+            client.close()
+
+            # Save the command history for authenticated users.
+            if request.user.is_authenticated:
+                output_data = collected_output.splitlines()
+                CommandHistory.objects.create(
+                    user=request.user,
+                    device=router,
+                    command=command,
+                    output=output_data,
+                )
+
+        # Return the full output as a downloadable text file.
+        response = HttpResponse(collected_output, content_type="text/plain")
+        response["Content-Disposition"] = 'attachment; filename="router_config_log.txt"'
+        return response
+
+    return JsonResponse({"status": "error", "message": "Unexpected error."}, status=500)
 
 
 @login_required(login_url="/login")
@@ -191,38 +238,46 @@ def get_devices_by_cities(request):
         return JsonResponse({"devices": list(devices)})
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
+
 @login_required(login_url="/login")
 def command_history_view(request):
     """
     View to display the command history for the logged-in user.
     """
     histories = CommandHistory.objects.filter(user=request.user).order_by("-timestamp")
-
-    # Convert each history.output to JSON format
     formatted_histories = []
-    for history in histories:
-        try:
-            output_data = json.loads(
-                history.output
-            )  # Try parsing JSON if already formatted
-        except (json.JSONDecodeError, TypeError):
-            output_data = history.output  # Use raw output if parsing fails
 
-        truncated_output = format_html("<br>".join(output_data))[:100]
-        if len(history.output) > 105:
-            truncated_output += format_html("...")
-            
-        if history.device:
-            device_name = history.device.name
+    for history in histories:
+        # Try parsing history.output as JSON
+        try:
+            output_data = json.loads(history.output)
+        except (json.JSONDecodeError, TypeError):
+            output_data = history.output  # Fall back to the raw output
+
+        # If output_data is a list, join its elements with <br>
+        if isinstance(output_data, list):
+            # Escape each line to ensure safety and join with <br>
+            joined_output = mark_safe("<br>".join(escape(line) for line in output_data))
         else:
-            device_name = "No device hostname found!"
+            # If it's not a list, treat it as a string
+            joined_output = escape(output_data)
+
+        # Use a placeholder in format_html to avoid formatting issues with curly braces
+        truncated_output = format_html("{}", joined_output)[:100]
+        if len(joined_output) > 105:
+            truncated_output += "..."
+
+        # Get device name or a default message
+        device_name = (
+            history.device.name if history.device else "No device hostname found!"
+        )
 
         formatted_histories.append(
             {
                 "timestamp": history.timestamp,
                 "device_name": device_name,
                 "command": history.command,
-                "output": json.dumps(output_data),  # Ensure it's a valid JSON string
+                "output": json.dumps(output_data),  # Ensure a valid JSON string
                 "truncated_output": truncated_output,
             }
         )

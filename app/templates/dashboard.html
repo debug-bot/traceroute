@@ -26,7 +26,11 @@
                 </div>
                 <div id="execute-command">
                     {% if popular_commands %}
-                    <div id="popular_commands" className="mb-4" style="display: none;">
+                    <div
+                        id="popular_commands"
+                        className="mb-4"
+                        style="display: none"
+                    >
                         <span>Popular Commands</span>
                         <div class="command-container">
                             {% for command in popular_commands %}
@@ -37,7 +41,6 @@
                                 {{ command.command.label }}
                             </button>
                             {% endfor %}
-
                         </div>
                     </div>
                     {% endif %}
@@ -45,7 +48,11 @@
                         <label for="command-select" class="form-label"
                             >Commands</label
                         >
-                        <select id="command-select" class="form-select" disabled>
+                        <select
+                            id="command-select"
+                            class="form-select"
+                            disabled
+                        >
                             <option value="">Select a command</option>
                             {% for category in categories %}
                             <optgroup label="{{ category.name }}">
@@ -81,21 +88,23 @@
                         disabled
                     />
                     <label for="custom-input-toggle" class="form-check-label"
-                        >Custom Command</label
+                        >Device Configuration</label
                     >
                 </div>
                 <div class="mb-3" id="custom-input-group" style="display: none">
-                    <label for="custom-input" class="form-label"
-                        >Custom Command</label
-                    >
                     <input
                         id="custom-input"
-                        class="form-control"
-                        placeholder="Enter Custom Command"
+                        type="hidden"
+                        value="show configuration | display set"
+                        disabled
                     />
                 </div>
                 <div class="d-flex justify-content-end">
-                    <button class="btn btn-sm btn-primary" id="run-btn" disabled>
+                    <button
+                        class="btn btn-sm btn-primary"
+                        id="run-btn"
+                        disabled
+                    >
                         Run
                     </button>
                 </div>
@@ -199,7 +208,9 @@
                         role="tabpanel"
                         aria-labelledby="${tabId}"
                     >
-                        <div id="device-response-${device.id}" class="card my-3 terminal" style="position: relative;">
+                        <div id="device-response-${
+                            device.id
+                        }" class="card my-3 terminal" style="position: relative;">
                             <div>Click run button to show response</div>
                         </div>
                     </div>
@@ -243,9 +254,9 @@
         });
 
         $("#device-select").on("change", function () {
-            $("#popular_commands").show()
-            $("#command-select").prop("disabled", false)
-            $("#custom-input-toggle").prop("disabled", false)
+            $("#popular_commands").show();
+            $("#command-select").prop("disabled", false);
+            $("#custom-input-toggle").prop("disabled", false);
             const selectedDevices = $("#device-select")
                 .find(":selected")
                 .map(function () {
@@ -262,12 +273,15 @@
         $("#command-select").on("change", function () {
             let selectedCommand = $(this).val();
             // If the command includes a parameter placeholder
-            if (selectedCommand.includes("<") || selectedCommand.includes(">")) {
+            if (
+                selectedCommand.includes("<") ||
+                selectedCommand.includes(">")
+            ) {
                 // Enable run button only if #interface-sel already has a non-empty value
                 if ($("#interface-sel").val().trim() !== "") {
-                $("#run-btn").prop("disabled", false);
+                    $("#run-btn").prop("disabled", false);
                 } else {
-                $("#run-btn").prop("disabled", true);
+                    $("#run-btn").prop("disabled", true);
                 }
             } else {
                 // If no parameter is needed, enable the run button immediately
@@ -299,13 +313,20 @@
             if ($(this).is(":checked")) {
                 $("#custom-input-group").show();
                 $("#execute-command").hide();
-                $("#run-btn").prop("disabled", true);
+                $("#run-btn").prop("disabled", false);
+                $("#run-btn").text("Download");
+                $(".terminal").html(
+                    "<div>Click download button to download device Configuration file</div>"
+                );
             } else {
                 $("#custom-input-group").hide();
                 $("#execute-command").show();
+                $("#run-btn").text("Run");
+                $(".terminal").html(
+                    "<div>Click run button to show response</div>"
+                );
             }
         });
-
 
         $("#run-btn").on("click", function () {
             // If a command is already running, treat this click as a stop command.
@@ -345,13 +366,19 @@
                 commandValue = $("#custom-input").val();
             } else {
                 const commandSelect = $("#command-select").val();
-                if (commandSelect.includes("<") || commandSelect.includes(">")) {
+                if (
+                    commandSelect.includes("<") ||
+                    commandSelect.includes(">")
+                ) {
                     const targetInput = $("#interface-sel").val();
                     if (!targetInput) {
                         alert("Please enter target.");
                         return;
                     }
-                    commandValue = commandSelect.replace(/<([^>]*)>/g, targetInput);
+                    commandValue = commandSelect.replace(
+                        /<([^>]*)>/g,
+                        targetInput
+                    );
                 } else {
                     commandValue = commandSelect;
                 }
@@ -365,7 +392,6 @@
             // Change button to "Stop" and mark command as running.
             commandRunning = true;
             $("#run-btn").text("Stop Command");
-
 
             // For each selected device, stream the command response live.
             selectedDevices.forEach((device) => {
@@ -387,12 +413,30 @@
 
                 `);
 
+                const is_custom = $("#custom-input-toggle").is(":checked");
                 // Build the URL for the streaming view.
                 const url =
                     "{% url 'network_tools_api' %}?router_id=" +
                     encodeURIComponent(device.id) +
                     "&command=" +
-                    encodeURIComponent(commandValue);
+                    encodeURIComponent(commandValue) +
+                    "&custom=" +
+                    is_custom;
+
+                if (is_custom) {
+                    const downloadLink = document.createElement("a");
+                    downloadLink.href = url;
+                    downloadLink.download = "router_config_log.txt";
+
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    commandRunning = false;
+                    $("#run-btn").text("Download");
+                    $("#run-btn").prop("disabled", false);
+                    $(".terminal").html("<div>Your file is downloaded</div>")
+                    return;
+                }
 
                 // Create a new XMLHttpRequest for streaming.
                 const xhr = new XMLHttpRequest();
@@ -431,10 +475,14 @@
                     } else {
                         // Remove the "Running..." message when streaming is complete.
                         tabResponse.find("#runningStatus").remove();
-                        console.log("Streaming complete for device: " + device.id);
+                        console.log(
+                            "Streaming complete for device: " + device.id
+                        );
                     }
                     // Show the download button only after loading has finished
-                    $(`#device-response-${device.id}`).children('.download-log').show();
+                    $(`#device-response-${device.id}`)
+                        .children(".download-log")
+                        .show();
                     // Remove this xhr from activeXhrs.
                     activeXhrs = activeXhrs.filter((item) => item !== xhr);
                     // If no more active requests remain, reset the button.
@@ -450,7 +498,9 @@
                         '<div class="text-danger">Failed to execute command.</div>'
                     );
                     // Also show the download button in error cases
-                    $(`#device-response-${device.id}`).children('.download-log').show();
+                    $(`#device-response-${device.id}`)
+                        .children(".download-log")
+                        .show();
                     // Remove this xhr from activeXhrs.
                     activeXhrs = activeXhrs.filter((item) => item !== xhr);
                     if (activeXhrs.length === 0) {
@@ -468,7 +518,9 @@
                     tabResponse.find("#runningStatus").remove();
                     console.log("Streaming stopped for device: " + device.id);
                     // Show the download button when the request is aborted
-                    $(`#device-response-${device.id}`).children('.download-log').show();
+                    $(`#device-response-${device.id}`)
+                        .children(".download-log")
+                        .show();
                     // Remove this xhr from activeXhrs.
                     activeXhrs = activeXhrs.filter((item) => item !== xhr);
                     if (activeXhrs.length === 0) {
@@ -481,14 +533,17 @@
             });
         });
 
-        $(document).on("click", ".download-log", function(){
+        $(document).on("click", ".download-log", function () {
             const deviceId = $(this).data("device-id");
             const deviceName = $(this).data("device-name");
             // Gather each output line and join them with newline characters.
-            const logLines = $(`#device-response-${deviceId}`).find('.command').map(function(){
-                return $(this).text();
-            }).get();
-            const logContent = logLines.join('\n');
+            const logLines = $(`#device-response-${deviceId}`)
+                .find(".command")
+                .map(function () {
+                    return $(this).text();
+                })
+                .get();
+            const logContent = logLines.join("\n");
             const blob = new Blob([logContent], { type: "text/plain" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
