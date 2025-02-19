@@ -283,3 +283,7 @@ def command_history_view(request):
         )
 
     return render(request, "command_history.html", {"histories": formatted_histories})
+
+
+def temp(request):
+    return render(request, "temp/base.html")
