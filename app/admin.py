@@ -72,9 +72,14 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Command)
 class CommandAdmin(admin.ModelAdmin):
-    list_display = ("label", "command", "purpose", "category__name")
+    list_display = ("label", "command", "purpose", "category_name",)
     search_fields = ("label", "command", "purpose")
     list_filter = ("category__name",)
+    
+    def category_name(self, obj):
+        return obj.category.name if obj.category else "No Category"
+    
+    category_name.short_description = "Category"
 
 
 @admin.register(PopularCommand)

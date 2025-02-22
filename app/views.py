@@ -200,7 +200,7 @@ def network_tools_api(request):
 
 
 @login_required(login_url="/login")
-def dashboard(request):
+def dashboard2(request):
     unique_cities = [
         f"{city}, {state}" if state else f"{city}"
         for city, state in DataCenter.objects.values_list("city", "state")
@@ -287,3 +287,7 @@ def command_history_view(request):
 
 def temp(request):
     return render(request, "temp/base.html")
+
+def dashboard(request):
+    context = {'title': 'Dashboard'}
+    return render(request, "temp/dashboard.html", context)

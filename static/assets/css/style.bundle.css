@@ -19448,8 +19448,14 @@ textarea.form-control-lg {
   .h-lg-15px {
     height: 15px !important;
   }
+  .h-lg-16px {
+    height: 16px !important;
+  }
   .h-lg-20px {
     height: 20px !important;
+  }
+  .h-lg-24px {
+    height: 24px !important;
   }
   .h-lg-25px {
     height: 25px !important;
