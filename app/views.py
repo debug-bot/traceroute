@@ -291,3 +291,25 @@ def temp(request):
 def dashboard(request):
     context = {'title': 'Dashboard'}
     return render(request, "temp/dashboard.html", context)
+
+@login_required(login_url="/login")
+def devices(request):
+    unique_cities = [
+        f"{city}, {state}" if state else f"{city}"
+        for city, state in DataCenter.objects.values_list("city", "state")
+        .distinct()
+        .order_by("city")
+    ]
+    categories = (
+        Category.objects.prefetch_related("command_set")
+        .filter(command__isnull=False)
+        .distinct()
+    )
+    popular_commands = PopularCommand.objects.all()
+    context = {
+            'title': 'Devices',
+            "unique_cities": unique_cities,
+            "categories": categories,
+            "popular_commands": popular_commands,
+        }
+    return render(request, "temp/devices.html", context)

@@ -11,4 +11,5 @@ urlpatterns = [
     path("history/", views.command_history_view, name="command_history"),
     path("temp/", views.temp, name="temp"),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("devices/", views.devices, name="devices"),
 ]
