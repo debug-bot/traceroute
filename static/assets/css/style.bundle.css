@@ -28597,7 +28597,7 @@ textarea.form-control-lg {
   --bs-text-gray-700: #4B5675;
   --bs-text-gray-800: #252F4A;
   --bs-text-gray-900: #071437;
-  --bs-border-color: #F1F1F4;
+  --bs-border-color: #E5E7EB;
   --bs-border-dashed-color: #DBDFE9;
   --bs-component-active-color: #ffffff;
   --bs-component-active-bg: #1B84FF;
@@ -48326,8 +48326,8 @@ body,
 
 @media (min-width: 992px) {
   .app-container {
-    padding-left: 30px !important;
-    padding-right: 30px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
   }
   .app-container-fit-desktop {
     padding-left: 0 !important;
