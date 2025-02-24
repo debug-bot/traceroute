@@ -19,3 +19,32 @@
 	z-index: 1000;
 	display: none; /* hidden by default */
 }
+/* A container for console-like text */
+.console-view {
+	padding: 1rem;
+	font-family: "Courier New", Courier, monospace;
+	border-radius: 4px;
+	overflow: auto;
+	/* Light theme defaults */
+	background-color: #f3f4f6;
+	color: #4b5563;
+	white-space: pre; /* preserves spacing & line breaks */
+}
+
+/* Dark theme overrides */
+[data-bs-theme="dark"] .console-view {
+	background-color: #111827;
+	color: #d1d5db;
+}
+
+.history-container {
+	background-color: #f9fafb;
+}
+
+[data-bs-theme="dark"] .history-container {
+	background-color: #1f2937;
+}
+
+.badge {
+	font-weight: 500;
+}

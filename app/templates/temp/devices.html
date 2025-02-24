@@ -53,7 +53,7 @@
 								alt="Icon"
 							/>
                         <span class="ms-3 text-gray-900">Command Exeution</span></h4>
-                    <a href="#" class="d-flex mt-2">
+                    <a class="d-flex mt-2 cursor-pointer" data-bs-toggle="modal" data-bs-target="#historyModal">
                         <img
 								class="h-lg-16px m-0 theme-light-show"
 								src="{% static 'assets/media/svg/custom/command-history-grey.svg' %}"
@@ -113,24 +113,128 @@
                     </div>
                 </div>
 
+                <div class="mt-6 pe-2 col-4" id="interface-selection" style="display: block">
+                    <h6 class="mb-3 text-gray-800">Enter Target</h6>
+                    <input
+                        class="form-control"
+                        name="interface-sel"
+                        id="interface-sel"
+                        type="text"
+                        placeholder="Enter target"
+                    >
+                </div>
+
                 <!-- Execute Button -->
                 <div class="d-flex justify-content-end mt-4">
                     <button
                         type="button"
-                        class="btn btn-primary"
+                        class="btn btn-primary text-center"
                         id="executeCommandBtn"
                     >
+                        <img
+								class="h-lg-20px"
+								src="{% static 'assets/media/svg/custom/execute-command.svg' %}"
+								alt="Icon"
+							/>
                         Execute Command
                     </button>
+                </div>
+
+                <div class="mt-2">
+                    <h6 class="mb-3 text-gray-800">Command Output</h6>
+                </div>
+
+                <!-- Devices Output Container -->
+                <div class="card p-3 h-100 bg-light mode-container">
+                    <div id="devices-tabs" class="h-100">
+                        <div
+                            class="d-flex flex-column justify-content-center align-items-center h-100"
+                        >
+                            <p class="text-center m-0">Select Device(s) to show tabs</p>
+                        </div>
+                    </div>
+                    <div
+                        id="download-device"
+                        class="mt-3 d-flex w-100 justify-content-end d-none"
+                    >
+                        <button class="btn btn-sm btn-success">Download</button>
+                    </div>
+                    
                 </div>
             </div>
         </div>
     </div>
 </form>
 
+{% block modal %}
+<!--begin::Modal - History-->
+<div class="modal fade" id="historyModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="areaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-gray-900" id="historyModalLabel">Command History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 mx-0">
+                <div class="d-flex gap-6 flex-column my-6">
+                    <div class="history-container rounded w-100 p-5">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="d-flex gap-4 align-items-center">
+                                <h6 class="text-gray-900 mb-1">Show Interfaces</h6>
+                                <span class="text-gray-800">2021-09-01 12:00:00 AM</span>
+                            </div>
+                            <!-- Success pill green background -->
+                            <span class="badge badge-light-success">success</span>
+                        </div>
+                        <div class="rounded p-5 console-view">PING 8.8.8.8 (8.8.8.8): 56 data bytes
+                                        64 bytes from 8.8.8.8: icmp_seq=0 ttl=64 time=0.081 ms
+                                        64 bytes from 8.8.8.8: icmp_seq=1 ttl=64 time=0.129 ms
+                                        64 bytes from 8.8.8.8: icmp_seq=2 ttl=64 time=0.116 ms
+                                        64 bytes from 8.8.8.8: icmp_seq=3 ttl=64 time=0.127 ms
+                                        64 bytes from 8.8.8.8: icmp_seq=4 ttl=64 time=0.069 ms
+
+                                        --- 8.8.8.8 ping statistics ---
+                                        5 packets transmitted, 5 packets received, 0.0% packet loss
+                                        round-trip min/avg/max/stddev = 0.069/0.104/0.129/0.024 ms
+                        </div>
+                    </div>
+
+                    <div class="history-container rounded w-100 p-5">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="d-flex gap-4 align-items-center">
+                                <h6 class="text-gray-900 mb-1">Show Interfaces</h6>
+                                <span class="text-gray-800">2021-09-01 12:00:00 AM</span>
+                            </div>
+                            <!-- Success pill green background -->
+                            <span class="badge badge-light-success">success</span>
+                        </div>
+                        <div class="rounded p-5 console-view">PING 8.8.8.8 (8.8.8.8): 56 data bytes
+                                        64 bytes from 8.8.8.8: icmp_seq=0 ttl=64 time=0.081 ms
+                                        64 bytes from 8.8.8.8: icmp_seq=1 ttl=64 time=0.129 ms
+                                        64 bytes from 8.8.8.8: icmp_seq=2 ttl=64 time=0.116 ms
+                                        64 bytes from 8.8.8.8: icmp_seq=3 ttl=64 time=0.127 ms
+                                        64 bytes from 8.8.8.8: icmp_seq=4 ttl=64 time=0.069 ms
+
+                                        --- 8.8.8.8 ping statistics ---
+                                        5 packets transmitted, 5 packets received, 0.0% packet loss
+                                        round-trip min/avg/max/stddev = 0.069/0.104/0.129/0.024 ms
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--end::Modal - History-->
+{% endblock %}
+
 {% endblock %} {% block scripts %}
 <script>
 	$(document).ready(function () {
+        // Global variables to manage active requests and command state
+        let activeXhrs = [];
+        let commandRunning = false;
+
         // Do not show both select until select2 initializes
         $("#datacenters-select").removeClass("d-none");
         $("#devices-select").removeClass("d-none");
@@ -166,6 +270,72 @@
 
 		let selectedCategory = null;
 		let selectedCommandType = null;
+
+        function createDevicesTabsContainer() {
+            const devicesTabsContainer = $("#devices-tabs");
+            devicesTabsContainer.empty();
+            const tabNav = $(
+                '<ul class="nav nav-tabs" id="myTab" role="tablist"></ul>'
+            );
+            const tabContent = $(
+                '<div class="tab-content h-100" id="myTabContent"></div>'
+            );
+            devicesTabsContainer.append(tabNav);
+            devicesTabsContainer.append(tabContent);
+        }
+
+        function createTabs(devices) {
+            if (devices.length === 0) {
+                $("#devices-tabs").empty();
+                $("#devices-tabs").append(`
+                <div class="d-flex flex-column justify-content-center align-items-center h-100">
+                    <p class="text-center">Select Device(s) to show tab(s)</p>
+                </div>
+                `);
+                return;
+            }
+            createDevicesTabsContainer();
+            const tabContainer = $("#myTab");
+            const tabContent = $("#myTabContent");
+            devices.forEach((device, index) => {
+                const tabId = `device-tab-${index}`;
+                const tabPaneId = `device-tab-content-${index}`;
+
+                tabContainer.append(`
+                    <li class="nav-item" role="presentation">
+                        <button
+                            class="nav-link ${index === 0 ? "active" : ""}"
+                            id="${tabId}"
+                            data-bs-toggle="tab"
+                            data-bs-target="#${tabPaneId}"
+                            type="button"
+                            role="tab"
+                            aria-controls="${tabPaneId}"
+                            aria-selected="${index === 0}"
+                        >
+                            ${device.name}
+                        </button>
+                    </li>
+                `);
+
+                tabContent.append(`
+                    <div
+                        class="tab-pane fade h-100 ${
+                            index === 0 ? "show active" : ""
+                        }"
+                        id="${tabPaneId}"
+                        role="tabpanel"
+                        aria-labelledby="${tabId}"
+                    >
+                        <div id="device-response-${
+                            device.id
+                        }" class="card console-view shadow-none border-0" style="position: relative; max-height: 500px; min-height: 300px;">
+                            <div class="text-gray-800 text-center mt-auto mb-auto">Click Execute Command button to show response</div>
+                        </div>
+                    </div>
+                `);
+            });
+        }
 
 		// 3) When user clicks a Category card
 		$(".command-category").on("click", function () {
@@ -230,11 +400,11 @@
 		});
 
         $("#datacenters-select").on("change", function () {
-            const selectedCities = $(this).val();
-            const deviceSelect = $("#devices-select");
+            const selectedDatacenters = $(this).val();
+            const devicesSelect = $("#devices-select");
 
-            if (!selectedCities || selectedCities.length === 0) {
-                deviceSelect.empty();
+            if (!selectedDatacenters || selectedDatacenters.length === 0) {
+                devicesSelect.empty();
                 createTabs([]);
                 return;
             }
@@ -242,18 +412,18 @@
             $.ajax({
                 url: "/get-devices/",
                 method: "GET",
-                data: { cities: selectedCities },
+                data: { cities: selectedDatacenters },
                 success: function (data) {
-                    deviceSelect.empty();
+                    devicesSelect.empty();
                     if (data.devices.length > 0) {
                         data.devices.forEach((device) => {
-                            deviceSelect.append(
+                            devicesSelect.append(
                                 `<option value="${device.id}">${device.name} (${device.ip})</option>`
                             );
                         });
                         $("#devices-select").prop("disabled", false);
                     } else {
-                        deviceSelect.append(
+                        devicesSelect.append(
                             `<option value="">No devices available</option>`
                         );
                     }
@@ -264,9 +434,55 @@
             });
         });
 
+        $("#devices-select").on("change", function () {
+            // $("#popular_commands").show();
+            // $("#command-select").prop("disabled", false);
+            // $("#custom-input-toggle").prop("disabled", false);
+            const selectedDevices = $("#devices-select")
+                .find(":selected")
+                .map(function () {
+                    return {
+                        name: $(this).text(),
+                        id: $(this).val(),
+                        ip: $(this).data("ip"),
+                    };
+                })
+                .get();
+            createTabs(selectedDevices);
+        });
+
 		function submitForm() {
+            // If a command is already running, treat this click as a stop command.
+            if (commandRunning) {
+                // Abort all active requests.
+                activeXhrs.forEach(function (xhr) {
+                    xhr.abort();
+                });
+                activeXhrs = [];
+                commandRunning = false;
+                $("#executeCommandBtn").text("Execute Command");
+                return;
+            }
+
 			const datacentersSelected = $("#datacenters-select").val() || [];
-			const devicesSelected = $("#devices-select").val() || [];
+			//const devicesSelected = $("#devices-select").val() || [];
+
+            // Validate that devices and command are selected, build the command string, etc.
+            const devicesSelect = $("#devices-select")
+                .find(":selected")
+                .map(function () {
+                    return {
+                        name: $(this).text(),
+                        id: $(this).val(),
+                        ip: $(this).data("ip"),
+                    };
+                })
+                .get();
+
+            if (!devicesSelect.length) {
+                alert("Please select device(s) and a command before running!");
+                return;
+            }
 
 			// Basic validation
 			if (!datacentersSelected.length) {
@@ -286,15 +502,58 @@
 				return;
 			}
 
-			// Gather form data
-			const csrfToken = $('[name="csrfmiddlewaretoken"]').val();
-			const formData = {
-				csrfmiddlewaretoken: csrfToken,
-				datacenters: datacentersSelected,
-				devices: devicesSelected,
-				command_category: selectedCategory,
-				command_type: selectedCommandType,
-			};
+			
+            // Determine the command value.
+            let commandValue = "";
+            const customInput = $("#custom-input-toggle").is(":checked");
+            
+                const commandSelect = $("#command-select").val();
+                if (
+                    commandSelect.includes("<") ||
+                    commandSelect.includes(">")
+                ) {
+                    const targetInput = $("#interface-sel").val();
+                    if (!targetInput) {
+                        alert("Please enter target.");
+                        return;
+                    }
+                    commandValue = commandSelect.replace(
+                        /<([^>]*)>/g,
+                        targetInput
+                    );
+                } else {
+                    commandValue = commandSelect;
+                }
+            
+
+            if (!commandValue) {
+                alert("Please enter command.");
+                return;
+            }
+
+            // Change button to "Stop" and mark command as running.
+            commandRunning = true;
+            $("#executeCommandBtn").text("Stop Command");
+
+            // For each selected device, stream the command response live.
+            selectedDevices.forEach((device) => {
+                const tabResponse = $(`#device-response-${device.id}`);
+                // Show "Running..." with a loader.
+                tabResponse.html(`
+                    <div class="text-center" id="runningStatus">
+                        <div class="loader-container">
+                            Running... <span class="loader"></span>
+                        </div>
+                    </div>
+                    <button 
+                        class="btn btn-sm btn-success download-log" 
+                        data-device-id="${device.id}" 
+                        data-device-name="${device.name}" 
+                        style="display: none; position: absolute; bottom: 10px; right: 10px;">
+                            Download Log
+                    </button>
+
+                `);
             // Build the URL for the streaming view.
             const url =
                     "{% url 'network_tools_api' %}?router_id=" +
@@ -353,8 +612,8 @@
                     // If no more active requests remain, reset the button.
                     if (activeXhrs.length === 0) {
                         commandRunning = false;
-                        $("#run-btn").text("Run");
-                        $("#run-btn").prop("disabled", false);
+                        $("#executeCommandBtn").text("Run");
+                        $("#executeCommandBtn").prop("disabled", false);
                     }
                 };
 
@@ -370,7 +629,7 @@
                     activeXhrs = activeXhrs.filter((item) => item !== xhr);
                     if (activeXhrs.length === 0) {
                         commandRunning = false;
-                        $("#run-btn").text("Run");
+                        $("#executeCommandBtn").text("Run");
                     }
                 };
 
@@ -390,13 +649,241 @@
                     activeXhrs = activeXhrs.filter((item) => item !== xhr);
                     if (activeXhrs.length === 0) {
                         commandRunning = false;
-                        $("#run-btn").text("Run");
+                        $("#executeCommandBtn").text("Run");
                     }
                 };
 
                 xhr.send();
-            
+            });
 		}
+
+        $("#executeCommandBtn").on("click", function () {
+            // If a command is already running, treat this click as a stop command.
+            if (commandRunning) {
+                // Abort all active requests.
+                activeXhrs.forEach(function (xhr) {
+                    xhr.abort();
+                });
+                activeXhrs = [];
+                commandRunning = false;
+                $("#executeCommandBtn").text("Execute Command");
+                return;
+            }
+
+            // Otherwise, this is a "Run" command:
+            // Validate that devices and command are selected, build the command string, etc.
+            const selectedDevices = $("#devices-select")
+                .find(":selected")
+                .map(function () {
+                    return {
+                        name: $(this).text(),
+                        id: $(this).val(),
+                        ip: $(this).data("ip"),
+                    };
+                })
+                .get();
+
+            if (!selectedDevices.length) {
+                alert("Please select device(s) and a command before running!");
+                return;
+            }
+
+            // Determine the command value.
+            let commandValue = "";
+            const customInput = $("#custom-input-toggle").is(":checked");
+            if (customInput) {
+                commandValue = $("#custom-input").val();
+            } else {
+                const commandSelect = $("#command-select").val();
+                if (
+                    commandSelect.includes("<") ||
+                    commandSelect.includes(">")
+                ) {
+                    const targetInput = $("#interface-sel").val();
+                    if (!targetInput) {
+                        alert("Please enter target.");
+                        return;
+                    }
+                    commandValue = commandSelect.replace(
+                        /<([^>]*)>/g,
+                        targetInput
+                    );
+                } else {
+                    commandValue = commandSelect;
+                }
+            }
+
+            if (!commandValue) {
+                alert("Please enter command.");
+                return;
+            }
+
+            // Change button to "Stop" and mark command as running.
+            commandRunning = true;
+            $("#executeCommandBtn").text("Stop Command");
+
+            // For each selected device, stream the command response live.
+            selectedDevices.forEach((device) => {
+                const tabResponse = $(`#device-response-${device.id}`);
+                // Show "Running..." with a loader.
+                tabResponse.html(`
+                    <div class="text-center" id="runningStatus">
+                        <div class="loader-container">
+                            Running... <span class="loader"></span>
+                        </div>
+                    </div>
+                    <button 
+                        class="btn btn-sm btn-success download-log" 
+                        data-device-id="${device.id}" 
+                        data-device-name="${device.name}" 
+                        style="display: none; position: absolute; bottom: 10px; right: 10px;">
+                            Download Log
+                    </button>
+
+                `);
+
+                const is_custom = $("#custom-input-toggle").is(":checked");
+                // Build the URL for the streaming view.
+                const url =
+                    "{% url 'network_tools_api' %}?router_id=" +
+                    encodeURIComponent(device.id) +
+                    "&command=" +
+                    encodeURIComponent(commandValue) +
+                    "&custom=" +
+                    is_custom;
+
+                if (is_custom) {
+                    const downloadLink = document.createElement("a");
+                    downloadLink.href = url;
+                    downloadLink.download = "router_config_log.txt";
+
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    commandRunning = false;
+                    $("#executeCommandBtn").text("Download");
+                    $("#executeCommandBtn").prop("disabled", false);
+                    $(".terminal").html("<div>Your file is downloaded</div>")
+                    return;
+                }
+
+                // Create a new XMLHttpRequest for streaming.
+                const xhr = new XMLHttpRequest();
+                xhr.open("GET", url, true);
+
+                // Save this xhr in our activeXhrs array.
+                activeXhrs.push(xhr);
+
+                let processed = 0; // Keep track of processed characters
+
+                xhr.onprogress = function () {
+                    const responseText = xhr.responseText;
+                    const newData = responseText.substring(processed);
+                    processed = responseText.length;
+                    newData.split("\n").forEach((line) => {
+                        if (line.trim()) {
+                            tabResponse.append(
+                                `<div class="command">${line}</div>`
+                            );
+                        }
+                    });
+                };
+
+                xhr.onload = function () {
+                    if (xhr.status === 400) {
+                        try {
+                            const errorResponse = JSON.parse(xhr.responseText);
+                            tabResponse.html(
+                                `<div class="text-danger">Error: ${errorResponse.message}</div>`
+                            );
+                        } catch (error) {
+                            tabResponse.html(
+                                '<div class="text-danger">Error: Failed to execute command.</div>'
+                            );
+                        }
+                    } else {
+                        // Remove the "Running..." message when streaming is complete.
+                        tabResponse.find("#runningStatus").remove();
+                        console.log(
+                            "Streaming complete for device: " + device.id
+                        );
+                    }
+                    // Show the download button only after loading has finished
+                    $(`#device-response-${device.id}`)
+                        .children(".download-log")
+                        .show();
+                    // Remove this xhr from activeXhrs.
+                    activeXhrs = activeXhrs.filter((item) => item !== xhr);
+                    // If no more active requests remain, reset the button.
+                    if (activeXhrs.length === 0) {
+                        commandRunning = false;
+                        $("#executeCommandBtn").text("Run");
+                        $("#executeCommandBtn").prop("disabled", false);
+                    }
+                };
+
+                xhr.onerror = function () {
+                    tabResponse.html(
+                        '<div class="text-danger">Failed to execute command.</div>'
+                    );
+                    // Also show the download button in error cases
+                    $(`#device-response-${device.id}`)
+                        .children(".download-log")
+                        .show();
+                    // Remove this xhr from activeXhrs.
+                    activeXhrs = activeXhrs.filter((item) => item !== xhr);
+                    if (activeXhrs.length === 0) {
+                        commandRunning = false;
+                        $("#executeCommandBtn").text("Run");
+                    }
+                };
+
+                // Handle the abort event to display a message that the command was stopped.
+                xhr.onabort = function () {
+                    tabResponse.append(
+                        '<div class="text-warning">Command aborted by user.</div>'
+                    );
+                    // Remove the "Running..." message when streaming is stopped.
+                    tabResponse.find("#runningStatus").remove();
+                    console.log("Streaming stopped for device: " + device.id);
+                    // Show the download button when the request is aborted
+                    $(`#device-response-${device.id}`)
+                        .children(".download-log")
+                        .show();
+                    // Remove this xhr from activeXhrs.
+                    activeXhrs = activeXhrs.filter((item) => item !== xhr);
+                    if (activeXhrs.length === 0) {
+                        commandRunning = false;
+                        $("#executeCommandBtn").text("Run");
+                    }
+                };
+
+                xhr.send();
+            });
+        });
+
+        $(document).on("click", ".download-log", function () {
+            const deviceId = $(this).data("device-id");
+            const deviceName = $(this).data("device-name");
+            // Gather each output line and join them with newline characters.
+            const logLines = $(`#device-response-${deviceId}`)
+                .find(".command")
+                .map(function () {
+                    return $(this).text();
+                })
+                .get();
+            const logContent = logLines.join("\n");
+            const blob = new Blob([logContent], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${deviceName} log.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
 	});
 </script>
 
