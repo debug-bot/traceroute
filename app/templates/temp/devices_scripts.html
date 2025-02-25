@@ -56,10 +56,10 @@
             function createTabs(devices) {
                 if (devices.length === 0) {
                     $("#devices-tabs").empty();
-                    $("#devices-tabs").append(`
-                    <div class="d-flex flex-column justify-content-center align-items-center h-100">
-                        <p class="text-center">Select Device(s) to show tab(s)</p>
-                    </div>
+                    $("#devices-tabs").append(`\
+                    <div class="d-flex flex-column justify-content-center align-items-center h-100">\
+                        <p class="text-center">Select Device(s) to show tab(s)</p>\
+                    </div>\
                     `);
                     return;
                 }
@@ -315,21 +315,19 @@
                 selectedDevices.forEach((device) => {
                     const tabResponse = $(`#device-response-${device.id}`);
                     // Show "Running..." with a loader.
-                    tabResponse.html(`
-                        <div class="text-center" id="runningStatus">
-                            <div class="loader-container">
-                                Running... <span class="loader"></span>
-                            </div>
-                        </div>
+                    // Also show the download button, but hide it until the command is complete.
+                    // This html will be displayed as it is, ignoring spaces
+                    tabResponse.html(
+                        `<div class="text-center" id="runningStatus">\
+                            <div class="loader-container">Running... <span class="loader"></span>\
+                            </div>\
+                        </div>\
                         <button
-                            class="btn btn-sm btn-success download-log"
+                            class="btn btn-sm btn-primary download-log"
                             data-device-id="${device.id}"
                             data-device-name="${device.name}"
-                            style="display: none; position: absolute; bottom: 10px; right: 10px;">
-                                Download Log
-                        </button>
-
-                    `);
+                            style="display: none; position: absolute; bottom: 1rem; right: 1rem">Download Log</button>\
+                            `);
                 // Build the URL for the streaming view.
                 const url =
                         "{% url 'network_tools_api' %}?router_id=" +
@@ -388,7 +386,7 @@
                         // If no more active requests remain, reset the button.
                         if (activeXhrs.length === 0) {
                             commandRunning = false;
-                            $("#executeCommandBtn").text("Run");
+                            $("#executeCommandBtn").text("Execute Command");
                             $("#executeCommandBtn").prop("disabled", false);
                         }
                     };
@@ -405,7 +403,7 @@
                         activeXhrs = activeXhrs.filter((item) => item !== xhr);
                         if (activeXhrs.length === 0) {
                             commandRunning = false;
-                            $("#executeCommandBtn").text("Run");
+                            $("#executeCommandBtn").text("Execute Command");
                         }
                     };
 
@@ -425,7 +423,7 @@
                         activeXhrs = activeXhrs.filter((item) => item !== xhr);
                         if (activeXhrs.length === 0) {
                             commandRunning = false;
-                            $("#executeCommandBtn").text("Run");
+                            $("#executeCommandBtn").text("Execute Command");
                         }
                     };
 

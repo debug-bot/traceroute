@@ -21,6 +21,7 @@
 }
 /* A container for console-like text */
 .console-view {
+	display: block;
 	padding: 1rem;
 	font-family: "Courier New", Courier, monospace;
 	border-radius: 4px;
@@ -47,4 +48,30 @@
 
 .badge {
 	font-weight: 500;
+}
+
+
+
+.loader-container {
+    display: inline-flex;
+    align-items: center;
+}
+.loader {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-left: 5px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
