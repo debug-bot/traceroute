@@ -1,0 +1,459 @@
+<script>
+	$(document).ready(function () {
+	        // Global variables to manage active requests and command state
+            let activeXhrs = [];
+            let commandRunning = false;
+
+            // Do not show both select until select2 initializes
+            $("#datacenters-select").removeClass("d-none");
+            $("#devices-select").removeClass("d-none");
+
+            // 1) Initialize Select2 for Datacenters and Devices
+            $("#datacenters-select").select2({
+                placeholder: "Select Datacenter(s)",
+                allowClear: true,
+            });
+            $("#devices-select").select2({
+                placeholder: "Select Device(s)",
+                allowClear: true,
+            });
+
+
+
+            // 2) Mapping of category -> command types
+            //    (Replace with real data from your app)
+            // Build a JS object: categoryId -> list of commands
+	        const categoryCommands = {
+	            {% for category in categories %}
+	            "{{ category.id }}": [
+                    {% for command in category.command_set.all %}
+                        {
+                            "id": "{{ command.id }}",
+                            "label": "{{ command.label|escapejs }}",
+                            "command": "{{ command.command|escapejs }}"
+                        }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+	            ]{% if not forloop.last %},{% endif %}
+	            {% endfor %}
+	        };
+
+		let selectedCategory = null;
+		let selectedCommandType = null;
+
+	        function createDevicesTabsContainer() {
+                const devicesTabsContainer = $("#devices-tabs");
+                devicesTabsContainer.empty();
+                const tabNav = $(
+                    '<ul class="nav nav-tabs" id="myTab" role="tablist"></ul>'
+                );
+                const tabContent = $(
+                    '<div class="tab-content h-100" id="myTabContent"></div>'
+                );
+                devicesTabsContainer.append(tabNav);
+                devicesTabsContainer.append(tabContent);
+            }
+
+            function createTabs(devices) {
+                if (devices.length === 0) {
+                    $("#devices-tabs").empty();
+                    $("#devices-tabs").append(`
+                    <div class="d-flex flex-column justify-content-center align-items-center h-100">
+                        <p class="text-center">Select Device(s) to show tab(s)</p>
+                    </div>
+                    `);
+                    return;
+                }
+                createDevicesTabsContainer();
+                const tabContainer = $("#myTab");
+                const tabContent = $("#myTabContent");
+                devices.forEach((device, index) => {
+                    const tabId = `device-tab-${index}`;
+                    const tabPaneId = `device-tab-content-${index}`;
+
+                    tabContainer.append(`
+                        <li class="nav-item" role="presentation">
+                            <button
+                                class="nav-link ${index === 0 ? "active" : ""}"
+                                id="${tabId}"
+                                data-bs-toggle="tab"
+                                data-bs-target="#${tabPaneId}"
+                                type="button"
+                                role="tab"
+                                aria-controls="${tabPaneId}"
+                                aria-selected="${index === 0}"
+                            >
+                                ${device.name}
+                            </button>
+                        </li>
+                    `);
+
+                    tabContent.append(`
+                        <div
+                            class="tab-pane fade h-100 ${
+                                index === 0 ? "show active" : ""
+                            }"
+                            id="${tabPaneId}"
+                            role="tabpanel"
+                            aria-labelledby="${tabId}"
+                        >
+                            <div id="device-response-${
+                                device.id
+                            }" class="card console-view shadow-none border-0" style="position: relative; max-height: 500px; min-height: 300px;">
+                                <div class="text-gray-800 text-center mt-auto mb-auto">Click Execute Command button to show response</div>
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+
+		// 3) When user clicks a Category card
+		$(".command-category").on("click", function () {
+			// Highlight selected category
+			$(".command-category").removeClass("border-primary");
+			$(this).addClass("border-primary");
+	           // Also background color change to light blue
+                $(".command-category").removeClass("bg-light");
+                $(this).addClass("bg-light");
+
+			selectedCategoryId = $(this).data("category-id");
+			selectedCommandType = null; // reset command type
+
+			// Show Command Type section
+			$("#commandTypeSection").show();
+			// Clear old command types
+			$("#commandTypeContainer").empty();
+
+			// Populate command types for this category
+			if (categoryCommands[selectedCategoryId]) {
+				categoryCommands[selectedCategoryId].forEach((ct) => {
+					const cardHtml = `
+                            <div class="col">
+                                <div
+                                class="card h-100 command-type shadow-none cursor-pointer"
+                                data-command-type="${ct.command}"
+                                >
+                                    <div class="card-body p-4">
+                                        <h5 class="mb-0 text-gray-900">${ct.label}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+					$("#commandTypeContainer").append(cardHtml);
+				});
+			}
+		});
+
+		// 4) When user clicks a Command Type card
+		$(document).on("click", ".command-type", function () {
+			// Highlight selected command type
+			$(".command-type").removeClass("border-primary");
+			$(this).addClass("border-primary");
+	           // Also background color change to light blue
+                $(".command-type").removeClass("bg-light");
+                $(this).addClass("bg-light");
+
+			selectedCommandType = $(this).data("command-type");
+
+            // if command contains < >, show interface selection
+            if (selectedCommandType.includes("<") && selectedCommandType.includes(">")) {
+                $("#interface-selection").show();
+            } else {
+                $("#interface-selection").hide();
+            }
+		});
+
+		// 5) Handle "Execute Command" button
+		$("#executeCommandBtn").on("click", function () {
+			submitForm();
+		});
+
+		// Also submit on Enter (if all fields are chosen)
+		$(document).on("keydown", function (e) {
+			if (e.key === "Enter") {
+				e.preventDefault(); // Prevent default form submission
+				submitForm();
+			}
+		});
+
+            $("#datacenters-select").on("change", function () {
+                const selectedDatacenters = $(this).val();
+                const selectedDevices = $("#devices-select");
+
+                if (!selectedDatacenters || selectedDatacenters.length === 0) {
+                    selectedDevices.empty();
+                    createTabs([]);
+                    return;
+                }
+
+                $.ajax({
+                    url: "/get-devices/",
+                    method: "GET",
+                    data: { cities: selectedDatacenters },
+                    success: function (data) {
+                        selectedDevices.empty();
+                        if (data.devices.length > 0) {
+                            data.devices.forEach((device) => {
+                                selectedDevices.append(
+                                    `<option value="${device.id}">${device.name} (${device.ip})</option>`
+                                );
+                            });
+                            $("#devices-select").prop("disabled", false);
+                        } else {
+                            selectedDevices.append(
+                                `<option value="">No devices available</option>`
+                            );
+                        }
+                    },
+                    error: function () {
+                        alert("Failed to fetch devices.");
+                    },
+                });
+            });
+
+            $("#devices-select").on("change", function () {
+                // $("#popular_commands").show();
+                // $("#command-select").prop("disabled", false);
+                // $("#custom-input-toggle").prop("disabled", false);
+                const selectedDevices = $("#devices-select")
+                    .find(":selected")
+                    .map(function () {
+                        return {
+                            name: $(this).text(),
+                            id: $(this).val(),
+                            ip: $(this).data("ip"),
+                        };
+                    })
+                    .get();
+                createTabs(selectedDevices);
+            });
+
+            function submitForm() {
+                // If a command is already running, treat this click as a stop command.
+                if (commandRunning) {
+                    // Abort all active requests.
+                    activeXhrs.forEach(function (xhr) {
+                        xhr.abort();
+                    });
+                    activeXhrs = [];
+                    commandRunning = false;
+                    $("#executeCommandBtn").text("Execute Command");
+                    return;
+                }
+
+                const datacentersSelected = $("#datacenters-select").val() || [];
+                //const selectedDevicesed = $("#devices-select").val() || [];
+
+                // Validate that devices and command are selected, build the command string, etc.
+                const selectedDevices = $("#devices-select")
+                    .find(":selected")
+                    .map(function () {
+                        return {
+                            name: $(this).text(),
+                            id: $(this).val(),
+                            ip: $(this).data("ip"),
+                        };
+                    })
+                    .get();
+
+                if (!selectedDevices.length) {
+                    alert("Please select device(s) and a command type before running!");
+                    return;
+                }
+
+                // Basic validation
+                if (!datacentersSelected.length) {
+                    alert("Please select at least one Datacenter.");
+                    return;
+                }
+                if (!selectedDevices.length) {
+                    alert("Please select at least one Device.");
+                    return;
+                }
+                if (!selectedCategoryId) {
+                    alert("Please select a Command Category.");
+                    return;
+                }
+                if (!selectedCommandType) {
+                    alert("Please select a Command Type.");
+                    return;
+                }
+
+                // Determine the command value.
+                let commandValue = "";
+                const customInput = $("#custom-input-toggle").is(":checked");
+
+                    if (
+                        selectedCommandType.includes("<") ||
+                        selectedCommandType.includes(">")
+                    ) {
+                        const targetInput = $("#interface-sel").val();
+                        if (!targetInput) {
+                            alert("Please enter target.");
+                            return;
+                        }
+                        commandValue = selectedCommandType.replace(
+                            /<([^>]*)>/g,
+                            targetInput
+                        );
+                        console.log("Command value1: " + commandValue);
+                    } else {
+                        commandValue = selectedCommandType;
+                        console.log("Command value: " + commandValue);
+                    }
+
+
+                if (!commandValue) {
+                    alert("Please select command type.");
+                    return;
+                }
+
+                // Change button to "Stop" and mark command as running.
+                commandRunning = true;
+                $("#executeCommandBtn").text("Stop Command");
+
+                // For each selected device, stream the command response live.
+                selectedDevices.forEach((device) => {
+                    const tabResponse = $(`#device-response-${device.id}`);
+                    // Show "Running..." with a loader.
+                    tabResponse.html(`
+                        <div class="text-center" id="runningStatus">
+                            <div class="loader-container">
+                                Running... <span class="loader"></span>
+                            </div>
+                        </div>
+                        <button
+                            class="btn btn-sm btn-success download-log"
+                            data-device-id="${device.id}"
+                            data-device-name="${device.name}"
+                            style="display: none; position: absolute; bottom: 10px; right: 10px;">
+                                Download Log
+                        </button>
+
+                    `);
+                // Build the URL for the streaming view.
+                const url =
+                        "{% url 'network_tools_api' %}?router_id=" +
+                        encodeURIComponent(device.id) +
+                        "&command=" +
+                        encodeURIComponent(commandValue);
+
+                    // Submit form via xhr
+                    // Create a new XMLHttpRequest for streaming.
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("GET", url, true);
+
+                    // Save this xhr in our activeXhrs array.
+                    activeXhrs.push(xhr);
+
+                    let processed = 0; // Keep track of processed characters
+
+                    xhr.onprogress = function () {
+                        const responseText = xhr.responseText;
+                        const newData = responseText.substring(processed);
+                        processed = responseText.length;
+                        newData.split("\n").forEach((line) => {
+                            if (line.trim()) {
+                                tabResponse.append(
+                                    `<div class="command">${line}</div>`
+                                );
+                            }
+                        });
+                    };
+
+                    xhr.onload = function () {
+                        if (xhr.status === 400) {
+                            try {
+                                const errorResponse = JSON.parse(xhr.responseText);
+                                tabResponse.html(
+                                    `<div class="text-danger">Error: ${errorResponse.message}</div>`
+                                );
+                            } catch (error) {
+                                tabResponse.html(
+                                    '<div class="text-danger">Error: Failed to execute command.</div>'
+                                );
+                            }
+                        } else {
+                            // Remove the "Running..." message when streaming is complete.
+                            tabResponse.find("#runningStatus").remove();
+                            console.log(
+                                "Streaming complete for device: " + device.id
+                            );
+                        }
+                        // Show the download button only after loading has finished
+                        $(`#device-response-${device.id}`)
+                            .children(".download-log")
+                            .show();
+                        // Remove this xhr from activeXhrs.
+                        activeXhrs = activeXhrs.filter((item) => item !== xhr);
+                        // If no more active requests remain, reset the button.
+                        if (activeXhrs.length === 0) {
+                            commandRunning = false;
+                            $("#executeCommandBtn").text("Run");
+                            $("#executeCommandBtn").prop("disabled", false);
+                        }
+                    };
+
+                    xhr.onerror = function () {
+                        tabResponse.html(
+                            '<div class="text-danger">Failed to execute command.</div>'
+                        );
+                        // Also show the download button in error cases
+                        $(`#device-response-${device.id}`)
+                            .children(".download-log")
+                            .show();
+                        // Remove this xhr from activeXhrs.
+                        activeXhrs = activeXhrs.filter((item) => item !== xhr);
+                        if (activeXhrs.length === 0) {
+                            commandRunning = false;
+                            $("#executeCommandBtn").text("Run");
+                        }
+                    };
+
+                    // Handle the abort event to display a message that the command was stopped.
+                    xhr.onabort = function () {
+                        tabResponse.append(
+                            '<div class="text-warning">Command aborted by user.</div>'
+                        );
+                        // Remove the "Running..." message when streaming is stopped.
+                        tabResponse.find("#runningStatus").remove();
+                        console.log("Streaming stopped for device: " + device.id);
+                        // Show the download button when the request is aborted
+                        $(`#device-response-${device.id}`)
+                            .children(".download-log")
+                            .show();
+                        // Remove this xhr from activeXhrs.
+                        activeXhrs = activeXhrs.filter((item) => item !== xhr);
+                        if (activeXhrs.length === 0) {
+                            commandRunning = false;
+                            $("#executeCommandBtn").text("Run");
+                        }
+                    };
+
+                    xhr.send();
+                });
+            }
+
+            $(document).on("click", ".download-log", function () {
+                const deviceId = $(this).data("device-id");
+                const deviceName = $(this).data("device-name");
+                // Gather each output line and join them with newline characters.
+                const logLines = $(`#device-response-${deviceId}`)
+                    .find(".command")
+                    .map(function () {
+                        return $(this).text();
+                    })
+                    .get();
+                const logContent = logLines.join("\n");
+                const blob = new Blob([logContent], { type: "text/plain" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${deviceName} log.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+    });
+</script>
