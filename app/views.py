@@ -105,7 +105,7 @@ def network_tools_api(request):
             """Generator that yields output chunks every second, auto-closing after 20 seconds."""
             collected_output = ""
             yield f"STARTED QUERY AT {datetime.utcnow().strftime('%Y/%m/%d %H:%M:%S')} UTC\n"
-            yield "Statistics from router:\n"
+            yield "\n"
 
             start_time = time.time()  # Record the start time for timeout
 

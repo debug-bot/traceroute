@@ -70,7 +70,7 @@
                     const tabId = `device-tab-${index}`;
                     const tabPaneId = `device-tab-content-${index}`;
 
-                    tabContainer.append(`
+                    tabContainer.append(`\
                         <li class="nav-item" role="presentation">
                             <button
                                 class="nav-link ${index === 0 ? "active" : ""}"
@@ -87,7 +87,7 @@
                         </li>
                     `);
 
-                    tabContent.append(`
+                    tabContent.append(`\
                         <div
                             class="tab-pane fade h-100 ${
                                 index === 0 ? "show active" : ""
@@ -126,7 +126,7 @@
 			// Populate command types for this category
 			if (categoryCommands[selectedCategoryId]) {
 				categoryCommands[selectedCategoryId].forEach((ct) => {
-					const cardHtml = `
+					const cardHtml = `\
                             <div class="col">
                                 <div
                                 class="card h-100 command-type shadow-none cursor-pointer"
