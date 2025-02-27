@@ -1,4 +1,5 @@
-from django.shortcuts import render, redirect
+import subprocess
+from django.shortcuts import get_object_or_404, render, redirect
 from .models import (
     Category,
     CommandHistory,
@@ -228,6 +229,85 @@ def dashboard2(request):
         },
     )
 
+def ping_device(ip_address):
+    """
+    Returns True if ping is successful, False otherwise.
+    Adjust the command/parameters for your OS if needed.
+    """
+    try:
+        # "-c 1" => send 1 ICMP echo request, "-W 1" => 1-second timeout (Linux/Mac)
+        output = subprocess.check_output(
+            ["ping", "-c", "1", "-W", "1", ip_address],
+            stderr=subprocess.STDOUT
+        )
+        return True
+    except subprocess.CalledProcessError:
+        return False
+    
+    
+def get_device_stats(request, device_id):
+    """
+    GET /get_device_stats?device_id=123
+    Returns JSON with {status, cpu, storage} for the device.
+    """
+    device = get_object_or_404(Router, pk=device_id)
+    
+    # Ping on each request (inefficient, not truly 5s intervals)
+    success = ping_device(device.ip)
+    consecutive_failures = 0
+    if not success:
+        consecutive_failures += 1
+        if device.consecutive_failures >= 3:
+            status = 'offline'
+        else:
+            status = 'warning'
+    else:
+        if device.consecutive_failures > 0:
+            status = 'warning'  # or 'online'
+        else:
+            status = 'online'
+        consecutive_failures = 0
+    
+    return JsonResponse({
+        "status": status,
+        "consecutive_failures": consecutive_failures,
+    })
+
+
+def get_devices_by_datacenters(request):
+    if request.method == "GET":
+        cities = request.GET.getlist("cities[]")  # Get the selected cities as a list
+        
+        # Build a list of datacenter info + their devices
+        devices = []
+        
+        # if cities contain 'all' then get cities from db 
+        if 'all' in cities:
+            cities = DataCenter.objects.all()
+            for city in cities:
+                city_devices = (
+                    Router.objects.filter(datacenter=city)
+                    .values("id", "name", "ip")
+                )
+                devices.append({"city": city.city + ", " + city.state,
+                                "devices": list(city_devices)})
+            return JsonResponse({"status": "success", "datacenters": devices})
+        
+        
+        # Otherwise, split city, state        
+        for city in cities:
+            # Otherwise, split city, state
+            city_name, state = city.split(",")
+            city_devices = (
+                Router.objects.filter(data_center__city=city_name.strip())
+                .values("id", "name", "ip")
+            )
+            devices.append({"city": city, "devices": list(city_devices)})
+            
+        return JsonResponse({"status": "success", "datacenters": devices})
+        
+    return JsonResponse({"error": "Invalid request method"}, status=400)
+
 
 def get_devices_by_cities(request):
     if request.method == "GET":
@@ -241,7 +321,6 @@ def get_devices_by_cities(request):
         )
         return JsonResponse({"devices": list(devices)})
     return JsonResponse({"error": "Invalid request method"}, status=400)
-
 
 @login_required(login_url="/login")
 def command_history_view(request):
@@ -308,7 +387,6 @@ def history(request):
     )
 
     data = []
-    print(data)
     for h in histories:
         # Format the timestamp however you like:
         # e.g. YYYY-MM-DD HH:MM:SS or using strftime
@@ -321,7 +399,6 @@ def history(request):
             "timestamp": formatted_ts,
             "output": h.output,
         })
-    print(data)
 
     return JsonResponse({
         "status": "success",
@@ -349,3 +426,26 @@ def devices(request):
             "popular_commands": popular_commands,
         }
     return render(request, "temp/devices.html", context)
+
+
+@login_required(login_url="/login")
+def monitoring(request):
+    unique_cities = [
+        f"{city}, {state}" if state else f"{city}"
+        for city, state in DataCenter.objects.values_list("city", "state")
+        .distinct()
+        .order_by("city")
+    ]
+    categories = (
+        Category.objects.prefetch_related("command_set")
+        .filter(command__isnull=False)
+        .distinct()
+    )
+    popular_commands = PopularCommand.objects.all()
+    context = {
+            'title': 'Monitoring',
+            "unique_cities": unique_cities,
+            "categories": categories,
+            "popular_commands": popular_commands,
+        }
+    return render(request, "temp/monitoring.html", context)
