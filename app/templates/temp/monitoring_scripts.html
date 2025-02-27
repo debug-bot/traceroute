@@ -139,7 +139,8 @@
 
 					// Update CPU
 					const cpuEl = document.getElementById(`cpu-${deviceId}`);
-					cpuEl.textContent = `${stats.cpu || 0}%`;
+                    if (stats.cpu > 0)
+					    cpuEl.textContent = `${stats.cpu || 0}%`;
 
 					// Update Storage
 					const storageEl = document.getElementById(
