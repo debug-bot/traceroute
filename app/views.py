@@ -289,7 +289,7 @@ def get_devices_by_datacenters(request):
                     Router.objects.filter(datacenter=city)
                     .values("id", "name", "ip")
                 )
-                devices.append({"city": city.city + ", " + city.state,
+                devices.append({"city": str(city),
                                 "devices": list(city_devices)})
             return JsonResponse({"status": "success", "datacenters": devices})
         
