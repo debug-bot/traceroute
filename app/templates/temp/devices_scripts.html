@@ -453,5 +453,78 @@
                 URL.revokeObjectURL(url);
             });
 
+    // Grab the modal element
+    const historyModal = document.getElementById("historyModal");
+
+    // When the modal is about to be shown
+    historyModal.addEventListener("show.bs.modal", function() {
+        // Fetch the command history
+        fetch("/history", {
+            method: "GET",
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                // Clear any existing items
+                const container = document.getElementById("historyContainer");
+                container.innerHTML = "";
+
+                // data.data is the list of histories
+                data.data.forEach(item => {
+                    // Create the main container for one history record
+                    const historyDiv = document.createElement("div");
+                    historyDiv.classList.add("history-container", "rounded", "w-100", "p-5");
+
+                    // Top row (title + date + status)
+                    const topRow = document.createElement("div");
+                    topRow.classList.add("d-flex", "justify-content-between", "align-items-center", "mb-4");
+
+                    // Left part: command name + timestamp
+                    const leftDiv = document.createElement("div");
+                    leftDiv.classList.add("d-flex", "gap-4", "align-items-center");
+
+                    const commandName = document.createElement("h6");
+                    commandName.classList.add("text-gray-900", "mb-1");
+                    commandName.textContent = item.command || "Unknown Command";
+
+                    const timestampSpan = document.createElement("span");
+                    timestampSpan.classList.add("text-gray-800");
+                    timestampSpan.textContent = item.timestamp; // or format date/time
+
+                    leftDiv.appendChild(commandName);
+                    leftDiv.appendChild(timestampSpan);
+
+                    // Right part: status badge
+                    const statusBadge = document.createElement("span");
+                    // For example, if item.status is "success", we show green badge
+                    statusBadge.classList.add("badge", "badge-light-success");
+                    statusBadge.textContent = item.status || "success";
+
+                    // Combine left and right
+                    topRow.appendChild(leftDiv);
+                    topRow.appendChild(statusBadge);
+
+                    // Console view container
+                    const consoleDiv = document.createElement("div");
+                    consoleDiv.classList.add("rounded", "p-5", "console-view");
+                    // The command output
+                    consoleDiv.textContent = item.output || "No output available";
+
+                    // Append everything
+                    historyDiv.appendChild(topRow);
+                    historyDiv.appendChild(consoleDiv);
+                    container.appendChild(historyDiv);
+                });
+                } else {
+                    alert("Error fetching history: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching history:", error);
+                alert("An error occurred while fetching history.");
+            });
+        });
+
     });
 </script>

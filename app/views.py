@@ -143,11 +143,12 @@ def network_tools_api(request):
                 # Save the command history for authenticated users.
                 if request.user.is_authenticated:
                     output_data = collected_output.splitlines()
+                    multiline_output = "\n".join(output_data)
                     CommandHistory.objects.create(
                         user=request.user,
                         device=router,
                         command=command,
-                        output=output_data,
+                        output=multiline_output
                     )
 
         response = StreamingHttpResponse(stream_output(), content_type="text/plain")
@@ -287,6 +288,8 @@ def command_history_view(request):
 
     return render(request, "command_history.html", {"histories": formatted_histories})
 
+from django.utils.dateformat import DateFormat
+
 
 def temp(request):
     return render(request, "temp/base.html")
@@ -294,6 +297,36 @@ def temp(request):
 def dashboard(request):
     context = {'title': 'Dashboard'}
     return render(request, "temp/dashboard.html", context)
+
+@login_required(login_url="/login")
+def history(request):
+    histories = (
+        CommandHistory.objects
+        .filter(user=request.user)
+        .select_related("device")      # so we can access device fields efficiently
+        .order_by("-timestamp")
+    )
+
+    data = []
+    print(data)
+    for h in histories:
+        # Format the timestamp however you like:
+        # e.g. YYYY-MM-DD HH:MM:SS or using strftime
+        formatted_ts = DateFormat(h.timestamp).format("Y-m-d H:i:s")
+
+        data.append({
+            "id": h.id,
+            "device_name": h.device.name if h.device else "No Device",
+            "command": h.command,
+            "timestamp": formatted_ts,
+            "output": h.output,
+        })
+    print(data)
+
+    return JsonResponse({
+        "status": "success",
+        "data": data,
+    })
 
 @login_required(login_url="/login")
 def devices(request):

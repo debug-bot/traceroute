@@ -186,14 +186,13 @@ class CommandHistory(models.Model):
         related_name="command_history_devices",
         help_text="Device where command was executed",
     )
-    command = models.TextField(help_text="Command executed by the user")
+    command = models.CharField(max_length=500, help_text="Command executed by the user")
     timestamp = models.DateTimeField(
         auto_now_add=True, help_text="Timestamp when the command was executed"
     )
-    output = models.JSONField(
-        blank=True,
-        null=True,
-        help_text="Output result of the command execution stored as JSON",
+    output = models.TextField(
+        default="PING OK",
+        help_text="Output result of the command execution",
     )
 
     class Meta:
