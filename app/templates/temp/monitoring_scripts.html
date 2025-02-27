@@ -116,11 +116,11 @@
 		async function fetchDeviceStats(deviceId) {
 			try {
 				const resp = await fetch(
-					`/get_device_stats?device_id=${deviceId}`
+					`/get_device_stats/${deviceId}`
 				);
 				const data = await resp.json();
 				if (data.status === "success") {
-					const stats = data.device_stats;
+					const stats = data.stats;
 					// Update status badge
 					const statusEl = document.getElementById(
 						`status-${deviceId}`
@@ -139,13 +139,13 @@
 
 					// Update CPU
 					const cpuEl = document.getElementById(`cpu-${deviceId}`);
-					cpuEl.textContent = `${stats.cpu_usage || 0}%`;
+					cpuEl.textContent = `${stats.cpu || 0}%`;
 
 					// Update Storage
 					const storageEl = document.getElementById(
 						`storage-${deviceId}`
 					);
-					storageEl.textContent = `${stats.storage_usage || 0}%`;
+					storageEl.textContent = `${stats.storage || 0}%`;
 				} else {
 					console.error("Device stats error:", data.error);
 				}

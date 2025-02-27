@@ -18,6 +18,8 @@ from django.utils.html import format_html
 import json
 from django.utils.html import format_html, escape
 from django.utils.safestring import mark_safe
+from django.views.decorators.http import require_GET
+
 
 
 def main(request):
@@ -229,50 +231,175 @@ def dashboard2(request):
         },
     )
 
-def ping_device(ip_address):
+
+def ping_device_once(ip_address):
     """
-    Returns True if ping is successful, False otherwise.
-    Adjust the command/parameters for your OS if needed.
+    Returns True if single ping is successful, False otherwise.
     """
     try:
-        # "-c 1" => send 1 ICMP echo request, "-W 1" => 1-second timeout (Linux/Mac)
-        output = subprocess.check_output(
-            ["ping", "-c", "1", "-W", "1", ip_address],
+        # Example (Linux/Mac): "-c 1" => 1 ICMP request, "-W 1" => 1-second timeout
+        # for windows use "-n 1" instead of "-c 1"
+        subprocess.check_output(
+            ["ping", "-c", "1", "-w", "1", ip_address],
             stderr=subprocess.STDOUT
         )
         return True
     except subprocess.CalledProcessError:
         return False
+
+def ping_device_n_times(ip_address, count=3):
+    """
+    Pings the device `count` times, returns:
+      {
+        "successes": int,
+        "failures": int,
+        "status": "online"/"warning"/"offline"
+      }
+    """
+    successes = 0
+    for _ in range(count):
+        if ping_device_once(ip_address):
+            successes += 1
+
+    failures = count - successes
+
+    # Determine status based on successes/failures
+    if successes == 0:
+        # All pings failed
+        status = "offline"
+    elif successes < count:
+        # Some pings failed, some succeeded
+        status = "warning"
+    else:
+        # All pings succeeded
+        status = "online"
+
+    return {
+        "successes": successes,
+        "failures": failures,
+        "status": status
+    }
+
+def parse_show_system_processes_extensive(output):
+    """
+    Parses lines like:
+      CPU:  0.7% user,  0.0% nice,  0.3% system,  0.1% interrupt, 99.0% idle
+      Mem: 353M Active, 4621M Inact, 947M Wired, 300M Buf, 10G Free
+    Returns (cpu_usage_percent, mem_usage_percent) as floats or None if not found.
+    """
+
+    cpu_line = None
+    mem_line = None
+
+    # 1) Identify the lines we need
+    for line in output:
+        line = line.strip()
+        if line.startswith("CPU:"):
+            cpu_line = line
+        elif line.startswith("Mem:"):
+            mem_line = line
+
+    # 2) Parse the CPU line => total usage = 100% - idle%
+    cpu_usage = None
+    if cpu_line:
+        # Look for something like "99.0% idle"
+        match = re.search(r'(\d+(\.\d+)?)%\s+idle', cpu_line)
+        if match:
+            idle_val = float(match.group(1))
+            cpu_usage = 100.0 - idle_val  # total usage
+
+    # 3) Parse the Mem line => parse each field (Active, Inact, Wired, Buf, Free)
+    mem_usage = None
+    if mem_line:
+        # Example: Mem: 353M Active, 4621M Inact, 947M Wired, 300M Buf, 10G Free
+        # We'll capture the numeric portion + unit for each label
+        active_match = re.search(r'(\S+)\s+Active', mem_line)
+        inact_match = re.search(r'(\S+)\s+Inact', mem_line)
+        wired_match = re.search(r'(\S+)\s+Wired', mem_line)
+        buf_match   = re.search(r'(\S+)\s+Buf',   mem_line)
+        free_match  = re.search(r'(\S+)\s+Free',  mem_line)
+
+        if all([active_match, inact_match, wired_match, buf_match, free_match]):
+            # Convert "353M" -> float MB, "10G" -> float MB, etc.
+            def to_mb(s):
+                # e.g. "353M" => 353.0, "10G" => 10240.0
+                unit = s[-1].upper()
+                val = float(s[:-1])
+                if unit == 'M':
+                    return val
+                elif unit == 'G':
+                    return val * 1024
+                return val  # fallback if no unit, e.g. "512"
+
+            active_val = to_mb(active_match.group(1))
+            inact_val  = to_mb(inact_match.group(1))
+            wired_val  = to_mb(wired_match.group(1))
+            buf_val    = to_mb(buf_match.group(1))
+            free_val   = to_mb(free_match.group(1))
+
+            total = active_val + inact_val + wired_val + buf_val + free_val
+            used  = total - free_val
+
+            if total > 0:
+                mem_usage = (used / total) * 100.0
+
+    return cpu_usage, mem_usage
+
+def get_cpu_and_mem(device_ip):
+    # command to get cpu and memory usage, using ssh into that device 'show system processes extensive'
+
+    try:
+        # ssh into the device and get the output    
+        output = execute_ssh_command("show system processes extensive", hostname=device_ip)
+        
+        # Parse the output to get CPU and memory usage
+        cpu_usage, mem_usage = parse_show_system_processes_extensive(output)
+    except Exception as e:
+        # Log the error and return None for both values
+        print(f"Error getting CPU and memory usage: {e}")
+        cpu_usage = mem_usage = 0
+    
+    return cpu_usage, mem_usage
     
     
-def get_device_stats(request, device_id):
+    
+    
+    
+    
+@require_GET
+def get_device_stats(request, device_id=78):
     """
     GET /get_device_stats?device_id=123
-    Returns JSON with {status, cpu, storage} for the device.
+    Returns JSON with {status, cpu, storage} for the device,
+    determined by 3 consecutive pings in a single request.
     """
-    device = get_object_or_404(Router, pk=device_id)
-    
-    # Ping on each request (inefficient, not truly 5s intervals)
-    success = ping_device(device.ip)
-    consecutive_failures = 0
-    if not success:
-        consecutive_failures += 1
-        if device.consecutive_failures >= 3:
-            status = 'offline'
-        else:
-            status = 'warning'
-    else:
-        if device.consecutive_failures > 0:
-            status = 'warning'  # or 'online'
-        else:
-            status = 'online'
-        consecutive_failures = 0
-    
-    return JsonResponse({
-        "status": status,
-        "consecutive_failures": consecutive_failures,
-    })
+    device = Router.objects.filter(id=device_id).first()
+    if not device:
+        return JsonResponse({"error": f"{device_id} device not found"}, status=404)
 
+    # Ping 3 times in one shot
+    ping_results = ping_device_n_times(device.ip, count=3)
+    status = ping_results["status"]
+    failures = ping_results["failures"]
+    successes = ping_results["successes"]
+
+    # Fake CPU & storage usage or retrieve real data from your source
+    cpu_usage = 50
+    storage_usage = 80
+    
+    # Get CPU and memory usage from the device
+    cpu_usage, mem_usage = get_cpu_and_mem(device.ip)
+
+    return JsonResponse({
+        "status": "success",
+        "stats": {
+            "status": status,
+            "cpu": cpu_usage,
+            "storage": storage_usage,
+            "successes": successes,
+            "failures": failures
+        }
+    })
 
 def get_devices_by_datacenters(request):
     if request.method == "GET":
@@ -299,7 +426,7 @@ def get_devices_by_datacenters(request):
             # Otherwise, split city, state
             city_name, state = city.split(",")
             city_devices = (
-                Router.objects.filter(data_center__city=city_name.strip())
+                Router.objects.filter(datacenter__city=city_name.strip())
                 .values("id", "name", "ip")
             )
             devices.append({"city": city, "devices": list(city_devices)})
