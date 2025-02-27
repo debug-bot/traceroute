@@ -1,4 +1,5 @@
 import subprocess
+import re
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import (
     Category,
@@ -345,7 +346,7 @@ def parse_show_system_processes_extensive(output):
 
     return cpu_usage, mem_usage
 
-def get_cpu_and_mem(device_ip):
+def get_cpu_and_mem(device_ip='23.141.136.2'):
     # command to get cpu and memory usage, using ssh into that device 'show system processes extensive'
 
     try:
@@ -360,11 +361,6 @@ def get_cpu_and_mem(device_ip):
         cpu_usage = mem_usage = 0
     
     return cpu_usage, mem_usage
-    
-    
-    
-    
-    
     
 @require_GET
 def get_device_stats(request, device_id=78):
