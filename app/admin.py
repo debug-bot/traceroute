@@ -67,7 +67,7 @@ class DataCenterAdmin(admin.ModelAdmin):
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     # also add no of commands in the category
-    list_display = ("name", "command_count", "order")
+    list_display = ("name", "order", "command_count")
     search_fields = ("name",)
     ordering = ("order",)
     
