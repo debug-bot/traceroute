@@ -20,6 +20,7 @@ import json
 from django.utils.html import format_html, escape
 from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_GET
+from .utils import get_cpu_and_mem, get_storage
 
 
 
@@ -281,87 +282,7 @@ def ping_device_n_times(ip_address, count=3):
         "status": status
     }
 
-def parse_show_system_processes_extensive(output):
-    """
-    Parses lines like:
-      CPU:  0.7% user,  0.0% nice,  0.3% system,  0.1% interrupt, 99.0% idle
-      Mem: 353M Active, 4621M Inact, 947M Wired, 300M Buf, 10G Free
-    Returns (cpu_usage_percent, mem_usage_percent) as floats or None if not found.
-    """
 
-    cpu_line = None
-    mem_line = None
-
-    # 1) Identify the lines we need
-    for line in output:
-        line = line.strip()
-        if line.startswith("CPU:"):
-            cpu_line = line
-        elif line.startswith("Mem:"):
-            mem_line = line
-
-    # 2) Parse the CPU line => total usage = 100% - idle%
-    cpu_usage = None
-    if cpu_line:
-        # Look for something like "99.0% idle"
-        match = re.search(r'(\d+(\.\d+)?)%\s+idle', cpu_line)
-        if match:
-            idle_val = float(match.group(1))
-            cpu_usage = 100.0 - idle_val  # total usage
-
-    # 3) Parse the Mem line => parse each field (Active, Inact, Wired, Buf, Free)
-    mem_usage = None
-    if mem_line:
-        # Example: Mem: 353M Active, 4621M Inact, 947M Wired, 300M Buf, 10G Free
-        # We'll capture the numeric portion + unit for each label
-        active_match = re.search(r'(\S+)\s+Active', mem_line)
-        inact_match = re.search(r'(\S+)\s+Inact', mem_line)
-        wired_match = re.search(r'(\S+)\s+Wired', mem_line)
-        buf_match   = re.search(r'(\S+)\s+Buf',   mem_line)
-        free_match  = re.search(r'(\S+)\s+Free',  mem_line)
-
-        if all([active_match, inact_match, wired_match, buf_match, free_match]):
-            # Convert "353M" -> float MB, "10G" -> float MB, etc.
-            def to_mb(s):
-                # e.g. "353M" => 353.0, "10G" => 10240.0
-                unit = s[-1].upper()
-                val = float(s[:-1])
-                if unit == 'M':
-                    return val
-                elif unit == 'G':
-                    return val * 1024
-                return val  # fallback if no unit, e.g. "512"
-
-            active_val = to_mb(active_match.group(1))
-            inact_val  = to_mb(inact_match.group(1))
-            wired_val  = to_mb(wired_match.group(1))
-            buf_val    = to_mb(buf_match.group(1))
-            free_val   = to_mb(free_match.group(1))
-
-            total = active_val + inact_val + wired_val + buf_val + free_val
-            used  = total - free_val
-
-            if total > 0:
-                mem_usage = (used / total) * 100.0
-
-    return cpu_usage, mem_usage
-
-def get_cpu_and_mem(device_ip='23.141.136.2'):
-    # command to get cpu and memory usage, using ssh into that device 'show system processes extensive'
-
-    try:
-        # ssh into the device and get the output    
-        output = execute_ssh_command("show system processes extensive", hostname=device_ip)
-        
-        # Parse the output to get CPU and memory usage
-        cpu_usage, mem_usage = parse_show_system_processes_extensive(output)
-    except Exception as e:
-        # Log the error and return None for both values
-        print(f"Error getting CPU and memory usage: {e}")
-        cpu_usage = mem_usage = 0
-    
-    return cpu_usage, mem_usage
-    
 @require_GET
 def get_device_stats(request, device_id=78):
     """
@@ -381,17 +302,18 @@ def get_device_stats(request, device_id=78):
 
     # Fake CPU & storage usage or retrieve real data from your source
     cpu_usage = 50
-    storage_usage = 80
+    overall_storage_usage = 80
     
     # Get CPU and memory usage from the device
     cpu_usage, mem_usage = get_cpu_and_mem(device.ip)
+    filesystems_usage, overall_storage_usage = get_storage(device.ip)
 
     return JsonResponse({
         "status": "success",
         "stats": {
             "status": status,
             "cpu": cpu_usage,
-            "storage": storage_usage,
+            "storage": overall_storage_usage,
             "successes": successes,
             "failures": failures
         }
@@ -420,7 +342,13 @@ def get_devices_by_datacenters(request):
         # Otherwise, split city, state        
         for city in cities:
             # Otherwise, split city, state
-            city_name, state = city.split(",")
+            try:
+                try:
+                    city_name, state = city.split(", ")
+                except:
+                    city_name, state, country = city.split(",")
+            except:
+                city_name = city
             city_devices = (
                 Router.objects.filter(datacenter__city=city_name.strip())
                 .values("id", "name", "ip")

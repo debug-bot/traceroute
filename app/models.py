@@ -71,10 +71,15 @@ class Category(models.Model):
         help_text="Enter the command category",
         verbose_name="Category Name",
     )
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text="Enter the order of the category in accending order",
+        verbose_name="Order",
+    )
     class Meta:
         verbose_name = "Category"
         verbose_name_plural = "Categories"
-        ordering = ["name"]
+        ordering = ["order"]
 
 class Command(models.Model):
     category = models.ForeignKey(Category, null=True, on_delete=models.CASCADE)

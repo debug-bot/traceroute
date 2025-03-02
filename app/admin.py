@@ -66,15 +66,17 @@ class DataCenterAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name",)
-    search_fields = ("name",)
+    list_display = ("name", "order")
+    search_fields = ("name", )
+    ordering = ("order", )
 
 
 @admin.register(Command)
 class CommandAdmin(admin.ModelAdmin):
     list_display = ("label", "command", "purpose", "category_name",)
     search_fields = ("label", "command", "purpose")
-    list_filter = ("category__name",)
+    list_filter = ("category__name", )
+    ordering = ("label", )
     
     def category_name(self, obj):
         return obj.category.name if obj.category else "No Category"
