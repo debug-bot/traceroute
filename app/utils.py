@@ -167,7 +167,7 @@ def parse_junos_storage(output):
     # Calculate overall usage percentage
     overall_usage_pct = 0.0
     if total_size_bytes > 0:
-        overall_usage_pct = (total_used_bytes / total_size_bytes) * 100
+        overall_usage_pct = (total_used_bytes / total_size_bytes) * 100.0
     # round to 2 decimal places
     overall_usage_pct = round(overall_usage_pct, 2)
 
