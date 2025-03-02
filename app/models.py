@@ -80,6 +80,10 @@ class Category(models.Model):
         verbose_name = "Category"
         verbose_name_plural = "Categories"
         ordering = ["order"]
+        
+    def __str__(self):
+        return self.name or "No Category"
+    
 
 class Command(models.Model):
     category = models.ForeignKey(Category, null=True, on_delete=models.CASCADE)

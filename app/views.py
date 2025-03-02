@@ -466,9 +466,9 @@ def devices(request):
     ]
     categories = (
         Category.objects.prefetch_related("command_set")
-        .filter(command__isnull=False)
-        .distinct()
+        .filter(command__isnull=False).distinct().order_by('order')
     )
+    print(categories)
     popular_commands = PopularCommand.objects.all()
     context = {
             'title': 'Devices',
