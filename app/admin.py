@@ -66,9 +66,15 @@ class DataCenterAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "order")
-    search_fields = ("name", )
-    ordering = ("order", )
+    # also add no of commands in the category
+    list_display = ("name", "command_count", "order")
+    search_fields = ("name",)
+    ordering = ("order",)
+    
+    def command_count(self, obj):
+        return obj.command_set.count()
+    
+    command_count.short_description = "No. of Commands"
 
 
 @admin.register(Command)
