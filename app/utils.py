@@ -31,7 +31,7 @@ def execute_ssh_command(command, hostname=ROUTER_SSH_DETAILS["hostname"], delay_
         channel.exec_command(command) 
         
         # Wait
-        time.sleep(delay_in_seconds)
+        # time.sleep(delay_in_seconds)
 
         output = channel.recv(65535).decode()  # Get remaining output
 
@@ -105,7 +105,7 @@ def parse_junos_storage(output):
       - Overall usage across all filesystems (used_bytes / size_bytes * 100)
         (this is only meaningful if you want a grand total)
     """
-    lines = output.strip().splitlines()
+    lines = output
     # Find the header line (starts with "Filesystem") so we know where to begin parsing
     header_index = None
     for i, line in enumerate(lines):
