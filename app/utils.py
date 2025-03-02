@@ -168,6 +168,8 @@ def parse_junos_storage(output):
     overall_usage_pct = 0.0
     if total_size_bytes > 0:
         overall_usage_pct = (total_used_bytes / total_size_bytes) * 100
+    # round to 2 decimal places
+    overall_usage_pct = round(overall_usage_pct, 2)
 
     return filesystems, overall_usage_pct
 
@@ -193,11 +195,12 @@ def parse_show_system_processes_extensive(output):
     # 2) Parse the CPU line => total usage = 100% - idle%
     cpu_usage = None
     if cpu_line:
-        # Look for something like "99.0% idle"
+        # Look for something like "99.0% idle upto 2 decimal places"
         match = re.search(r'(\d+(\.\d+)?)%\s+idle', cpu_line)
         if match:
             idle_val = float(match.group(1))
             cpu_usage = 100.0 - idle_val  # total usage
+            cpu_usage = round(cpu_usage, 2)
 
     # 3) Parse the Mem line => parse each field (Active, Inact, Wired, Buf, Free)
     mem_usage = None
