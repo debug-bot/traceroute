@@ -238,7 +238,7 @@
                         if (data.devices.length > 0) {
                             data.devices.forEach((device) => {
                                 selectedDevices.append(
-                                    `<option value="${device.id}">${device.name} (${device.ip})</option>`
+                                    `<option value="${device.id}" data-ip="${device.ip}">${device.name} (${device.ip})</option>`
                                 );
                             });
                             $("#devices-select").prop("disabled", false);
