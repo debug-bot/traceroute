@@ -332,7 +332,7 @@ def get_devices_by_datacenters(request):
             for city in cities:
                 city_devices = (
                     Router.objects.filter(datacenter=city)
-                    .values("id", "name", "ip")
+                    .values("id", "name", "ip", "uptime_percentage", "status", "cpu_usage", "storage_usage")
                 )
                 devices.append({"city": str(city),
                                 "devices": list(city_devices)})
@@ -351,7 +351,7 @@ def get_devices_by_datacenters(request):
                 city_name = city
             city_devices = (
                 Router.objects.filter(datacenter__city=city_name.strip())
-                .values("id", "name", "ip")
+                .values("id", "name", "ip", "uptime_percentage", "status", "cpu_usage", "storage_usage")
             )
             devices.append({"city": city, "devices": list(city_devices)})
             

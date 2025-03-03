@@ -25,22 +25,21 @@ def execute_ssh_command(command, command2=None, hostname=ROUTER_SSH_DETAILS["hos
             username=ROUTER_SSH_DETAILS["username"],
             password=ROUTER_SSH_DETAILS["password"],
         )
+        
+        if command2:
+            combined_cmd = f"{command}; echo '----SPLIT----'; {command2}"
+        else:
+            combined_cmd = command
 
         # Execute the traceroute command
         channel = client.get_transport().open_session()
-        channel.exec_command(command) 
+        channel.exec_command(combined_cmd) 
         
         # Wait
         # time.sleep(delay_in_seconds)
 
         output = channel.recv(65535).decode()  # Get remaining output
         
-        if command2:
-            channel.exec_command(command2) 
-            # distingush between the two commands by adding \n----SPLIT----\n in between
-            output += "\n----SPLIT----\n"
-            output += channel.recv(65535).decode()
-
         data = output.splitlines()
         
         channel.close()
