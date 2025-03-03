@@ -31,10 +31,10 @@ class CommandHistoryAdmin(admin.ModelAdmin):
 @admin.register(Router)
 class RouterAdmin(admin.ModelAdmin):
     # Fields to display in the admin list view
-    list_display = ("ssh_settings", "type", "name", "asn", "ip", "version", "datacenter")
+    list_display = ("ssh_settings", "type", "name", "asn", "ip", "version", "datacenter", "status", "uptime_percentage", "total_pings", "successful_pings", "consecutive_failures", "cpu_usage", "mem_usage", "storage_usage")
 
     # Add filters for these fields
-    list_filter = ("type", "version", "datacenter")
+    list_filter = ("type", "version", "datacenter", "status")
 
     # Add a search bar for these fields
     search_fields = ("name", "ip", "datacenter")
@@ -44,6 +44,8 @@ class RouterAdmin(admin.ModelAdmin):
         ("Router SSH Settings", {"fields": ("ssh_settings",)}),
         ("Router Details", {"fields": ("type", "name", "asn", "ip", "version")}),
         ("Location Information", {"fields": ("datacenter",)}),
+        ("Status Information", {"fields": ("status", "uptime", "total_pings", "successful_pings", "consecutive_failures")}),
+        ("Resource Usage", {"fields": ("cpu_usage", "mem_usage", "storage_usage")}),
     )
 
     # Enable ordering by fields

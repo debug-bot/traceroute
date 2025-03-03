@@ -125,6 +125,12 @@ class Router(models.Model):
         ("v4", "IPv4"),
         ("v6", "IPv6"),
     ]
+    
+    STATUS_CHOICES = [ 
+        ("online", "Online"),
+        ("offline", "Offline"),
+        ("warning", "Warning"),
+    ]
 
     ssh_settings = models.ForeignKey(SSHSettings, verbose_name="SSH Settings", on_delete=models.CASCADE)
     type = models.CharField(
@@ -156,8 +162,29 @@ class Router(models.Model):
     )
     datacenter = models.ForeignKey(DataCenter, verbose_name="Data Center Location", default=None, null=True, on_delete=models.CASCADE)
 
+    # Track how many pings have succeeded vs. total
+    total_pings = models.PositiveIntegerField(default=0)
+    successful_pings = models.PositiveIntegerField(default=0)
+    
+    # If the device fails 3 times in a row => offline
+    consecutive_failures = models.PositiveIntegerField(default=0, help_text="Number of consecutive failures", verbose_name="Consecutive Failures") 
+
+    # online / warning / offline, based on consecutive failures, 0 => online, 1-2 => warning, >=3 => offline
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="offline", help_text="Current status of the device", verbose_name="Device Status")
+    
+    # Following 3 fields are in percentage
+    cpu_usage = models.FloatField(default=0.0)
+    mem_usage = models.FloatField(default=0.0)
+    storage_usage = models.FloatField(default=0.0)
+
+    @property
+    def uptime_percentage(self):
+        if self.total_pings == 0:
+            return 0.0
+        return (self.successful_pings / self.total_pings) * 100.0
+    
     def __str__(self):
-        return f"{self.name} - {self.datacenter}"
+        return f"{self.name}:{self.ip} - {self.datacenter}"
 
     def clean(self):
         """Custom validation logic for advanced constraints."""

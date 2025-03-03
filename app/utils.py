@@ -11,7 +11,7 @@ ROUTER_SSH_DETAILS = {
 }
 
 
-def execute_ssh_command(command, hostname=ROUTER_SSH_DETAILS["hostname"], delay_in_seconds=20):
+def execute_ssh_command(command, command2=None, hostname=ROUTER_SSH_DETAILS["hostname"], delay_in_seconds=20):
     """
     Execute a command on the router via SSH and return the output.
     If wait is True, continuously read the output until the command completes.
@@ -34,14 +34,18 @@ def execute_ssh_command(command, hostname=ROUTER_SSH_DETAILS["hostname"], delay_
         # time.sleep(delay_in_seconds)
 
         output = channel.recv(65535).decode()  # Get remaining output
+        
+        if command2:
+            channel.exec_command(command2) 
+            # distingush between the two commands by adding \n----SPLIT----\n in between
+            output += "\n----SPLIT----\n"
+            output += channel.recv(65535).decode()
 
         data = output.splitlines()
         
         channel.close()
         client.close()
         
-        
-
         return data
 
     except Exception as e:
@@ -242,31 +246,47 @@ def parse_show_system_processes_extensive(output):
 def get_cpu_and_mem(device_ip='23.141.136.2'):
     # command to get cpu and memory usage, using ssh into that device 'show system processes extensive'
 
-    try:
-        # ssh into the device and get the output    
-        output = execute_ssh_command("show system processes extensive | match nice", hostname=device_ip)
-        
-        # Parse the output to get CPU and memory usage
-        cpu_usage, mem_usage = parse_show_system_processes_extensive(output)
-    except Exception as e:
-        # Log the error and return None for both values
-        print(f"Error getting CPU and memory usage: {e}")
-        cpu_usage = mem_usage = 0
+    # ssh into the device and get the output    
+    output = execute_ssh_command("show system processes extensive | match nice", hostname=device_ip)
+    
+    # Parse the output to get CPU and memory usage
+    cpu_usage, mem_usage = parse_show_system_processes_extensive(output)
     
     return cpu_usage, mem_usage
     
 def get_storage(device_ip='23.141.136.2'):
     # command to get storage usage, using ssh into that device 'show system storage'
 
-    try:
-        # ssh into the device and get the output    
-        output = execute_ssh_command("show system storage", hostname=device_ip)
-        
-        # Parse the output to get storage usage
-        filesystems, overall_usage_pct = parse_junos_storage(output)
-    except Exception as e:
-        # Log the error and return None for both values
-        print(f"Error getting storage usage: {e}")
-        filesystems = overall_usage_pct = 0
+    # ssh into the device and get the output    
+    output = execute_ssh_command("show system storage", hostname=device_ip)
     
+    # Parse the output to get storage usage
+    filesystems, overall_usage_pct = parse_junos_storage(output)
+
     return filesystems, overall_usage_pct
+
+def get_device_stats(device_ip='23.141.136.2'):
+    # Get CPU, memory, storage usage of the device
+    output = execute_ssh_command("show system processes extensive | match nice", "show system storage", hostname=device_ip)
+    
+    # split the output into two parts
+    cpu_output = []
+    storage_output = []
+    split = False
+    for line in output:
+        if line == "----SPLIT----":
+            split = True
+            continue
+        if not split:
+            cpu_output.append(line)
+        else:
+            storage_output.append(line)
+    
+    # Parse the output to get CPU and memory usage
+    cpu_usage, mem_usage = parse_show_system_processes_extensive(cpu_output)
+    
+    # Parse the output to get storage usage
+    _, overall_storage_pct = parse_junos_storage(storage_output)
+
+    
+    return cpu_usage, mem_usage, overall_storage_pct
