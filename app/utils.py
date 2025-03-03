@@ -87,7 +87,7 @@ def execute_ssh_command_while(command, hostname=ROUTER_SSH_DETAILS["hostname"], 
                 if time.time() - start_time >= delay_in_seconds:
                     break
 
-                # time.sleep(1)
+                time.sleep(1)
 
             # Flush any remaining output
             while channel.recv_ready():
