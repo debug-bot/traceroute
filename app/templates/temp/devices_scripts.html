@@ -144,7 +144,7 @@
                     success: function (data) {
                         selectedDevices.forEach((device) => {
                             const configurationLines = data.configuration[device.id];
-                            if (!configurationLines) {
+                            if (!configurationLines || configurationLines == '0') {
                                 return; // No config for this device
                             }
                             // Join lines into one text blob
