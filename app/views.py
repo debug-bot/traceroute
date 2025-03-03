@@ -200,7 +200,7 @@ def network_tools_api(request):
 
         # Return the full output as a downloadable text file.
         response = HttpResponse(collected_output, content_type="text/plain")
-        response["Content-Disposition"] = 'attachment; filename="router_config_log.txt"'
+        response["Content-Disposition"] = f'attachment; filename="{router.name}_{router.ip}_configuration.txt"'
         return response
 
 
