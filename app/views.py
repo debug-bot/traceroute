@@ -466,6 +466,7 @@ def command_history_view(request):
     return render(request, "command_history.html", {"histories": formatted_histories})
 
 import json
+@require_GET
 def download_configuration(request):
     selected_devices_str = request.GET.get("selectedDevices", "[]")
     selected_devices = json.loads(selected_devices_str)  # list of {id, name, ip, ...}
