@@ -135,36 +135,23 @@
                     })
                     .get();
             if (selectedCategoryName.toLowerCase().startsWith('download configuration'))  // if starts with 'download' or 'Download'
-            { 
-                // send request to backend to download configuration directly
-                $.ajax({
-                    url: "/download-configuration/",
-                    method: "GET",
-                    data: {'selectedDevices': JSON.stringify(selectedDevices)},
-                    success: function (data) {
-                        selectedDevices.forEach((device) => {
-                            const configurationLines = data.configuration[device.id];
-                            if (!configurationLines || configurationLines == '0') {
-                                return; // No config for this device
-                            }
-                            // Join lines into one text blob
-                            // const configContent = configurationLines.join("\n");
-                            const blob = new Blob([configurationLines], { type: "text/plain" });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = `${device.name} configuration.txt`;
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            URL.revokeObjectURL(url);
-                        });
-                    },
-                    error: function () {
-                        console.error("Failed to download configuration.");
-                    },
-                })
-                // return;
+            {
+                const is_custom = true;
+                const url =
+                    "{% url 'network_tools_api' %}?router_id=" +
+                    encodeURIComponent(device.id) +
+                    "&custom=" +
+                    is_custom;
+
+                const downloadLink = document.createElement("a");
+                downloadLink.href = url;
+                downloadLink.download = device.name + " configuration.txt";
+
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                commandRunning = false;
+                return;
             }
             
 			// Populate command types for this category

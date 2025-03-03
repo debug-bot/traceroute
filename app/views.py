@@ -56,9 +56,6 @@ def network_tools_api(request):
     # (Assumes custom is passed as "true" or "false".)
     custom_param = request.GET.get("custom", "false").lower() == "true"
     
-    print("Router ID: ", router_id)
-    print("Command: ", command)
-
     # Retrieve the router object based on router_id
     router = Router.objects.filter(id=router_id).first()
     if router:
