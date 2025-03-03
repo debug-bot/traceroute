@@ -3,7 +3,7 @@
 import subprocess
 from django.core.management.base import BaseCommand
 from app.models import Router
-from app.utils import get_device_stats
+from app.utils import get_cpu_and_mem, get_storage  # or wherever your SSH funcs are
 
 
 def ping_device_once(ip_address):
@@ -52,20 +52,33 @@ class Command(BaseCommand):
             
             # Update CPU, memory, storage usage
             try:
-                cpu_usage, mem_usage, storage_usage = get_device_stats(router.ip)
+                # 1) Get CPU + memory usage
+                cpu_usage, mem_usage = get_cpu_and_mem(router.ip)
                 self.stdout.write(self.style.SUCCESS(
-                    f"[{router.name}:{router.ip}] CPU={cpu_usage}%, MEM={mem_usage}%, Storage={storage_usage}%"
+                    f"[{router.name}:{router.ip}] CPU={cpu_usage}%, MEM={mem_usage}%"
                 ))
             except Exception as e:
                 self.stdout.write(self.style.ERROR(
-                    f"[{router.name}:{router.ip}] Error getting CPU/MEM and Storage usage: {e}"
+                    f"[{router.name}:{router.ip}] Error getting CPU/MEM usage: {e}"
                 ))
-                cpu_usage, mem_usage, storage_usage = 0, 0, 0
+                cpu_usage, mem_usage = 0, 0
             
-            # Update router fields
+            try:
+                # 2) Get storage usage
+                _, overall_storage_pct = get_storage(router.ip)
+                self.stdout.write(self.style.SUCCESS(
+                    f"[{router.name}:{router.ip}] Storage={overall_storage_pct}%"
+                ))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(
+                    f"[{router.name}:{router.ip}] Error getting storage usage: {e}"
+                ))
+                overall_storage_pct = 0
+
+            # 3) Update router fields
             router.cpu_usage = cpu_usage or 0.0
             router.mem_usage = mem_usage or 0.0
-            router.storage_usage = storage_usage or 0.0
+            router.storage_usage = overall_storage_pct or 0.0
             
             router.save()
 
