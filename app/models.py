@@ -71,6 +71,13 @@ class Category(models.Model):
         help_text="Enter the command category",
         verbose_name="Category Name",
     )
+    summary = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text="Enter the summary of the category",
+        verbose_name="Category Summary",
+    )
     order = models.PositiveIntegerField(
         default=0,
         help_text="Enter the order of the category in accending order",
