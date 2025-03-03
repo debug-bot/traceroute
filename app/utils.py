@@ -11,7 +11,7 @@ ROUTER_SSH_DETAILS = {
 }
 
 
-def execute_ssh_command(command, command2=None, hostname=ROUTER_SSH_DETAILS["hostname"], delay_in_seconds=20):
+def execute_ssh_command(command, command2=None, hostname=ROUTER_SSH_DETAILS["hostname"], delay_in_seconds=None):
     """
     Execute a command on the router via SSH and return the output.
     If wait is True, continuously read the output until the command completes.
@@ -36,7 +36,8 @@ def execute_ssh_command(command, command2=None, hostname=ROUTER_SSH_DETAILS["hos
         channel.exec_command(combined_cmd) 
         
         # Wait
-        # time.sleep(delay_in_seconds)
+        if (delay_in_seconds):
+            time.sleep(delay_in_seconds)
 
         output = channel.recv(65535).decode()  # Get remaining output
                 

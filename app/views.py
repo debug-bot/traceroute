@@ -476,7 +476,7 @@ def download_configuration(request):
     for dev in selected_devices:
         device_id = dev["id"]
         device_ip = dev["ip"]
-        output = execute_ssh_command('show configuration | display set', hostname=device_ip)
+        output = execute_ssh_command('show configuration | display set', hostname=device_ip, delay_in_seconds=5)
         configuration_data[device_id] = output
 
     return JsonResponse({"configuration": configuration_data})
