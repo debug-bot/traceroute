@@ -479,7 +479,7 @@ def download_configuration(request):
             output = execute_ssh_command_while('show configuration | display set', hostname=device_ip, delay_in_seconds=5)
         except:
             output = '0'
-        configuration_data[device_id] = output
+        configuration_data[device_id] = device_ip+'\n'+output
 
     return JsonResponse({"configuration": configuration_data})
 
