@@ -148,8 +148,8 @@
                                 return; // No config for this device
                             }
                             // Join lines into one text blob
-                            const configContent = configurationLines.join("\n");
-                            const blob = new Blob([configContent], { type: "text/plain" });
+                            // const configContent = configurationLines.join("\n");
+                            const blob = new Blob([configurationLines], { type: "text/plain" });
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement("a");
                             a.href = url;
