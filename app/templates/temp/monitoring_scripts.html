@@ -6,33 +6,33 @@
 
 		// Do not show both select until select2 initializes
 		$("#datacenters-select").removeClass("d-none");
-		$("#statuses-select").removeClass("d-none");
+		$("#status-select").removeClass("d-none");
 
 		// 1) Initialize Select2 for Datacenters and Devices
 		$("#datacenters-select").select2({
 			placeholder: "Select Datacenter(s)",
 			allowClear: true,
 		});
-		$("#statuses-select").select2({
-			placeholder: "Select Status(es)",
+		$("#status-select").select2({
+			placeholder: "Select Status",
 			allowClear: true,
 		});
 
 		$("#datacenters-select").on("change", handleAllOptionChange);
-		$("#statuses-select").on("change", handleAllOptionChange);
+		$("#status-select").on("change", handleAllOptionChange);
 
-		function handleRequest(selectedDatacenters, selectedStatuses) {
+		function handleRequest(selectedDatacenters, selectedStatus) {
 			$.ajax({
 				url: "{% url 'get_devices_by_datacenters' %}",
 				method: "GET",
-				data: { cities: selectedDatacenters },
+				data: { cities: selectedDatacenters, status: selectedStatus },
 				success: function (data) {
 					if (data.status === "success") {
 						renderDatacenters(data.datacenters);
 						// Fetch stats for each device
-						$('#network-uptime').text(data.total_uptime_percentage);
-						$('#total-devices').text(data.total_devices);
-						$('#offline-devices').text(data.total_offline_devices);
+						$("#network-uptime").text(data.total_uptime_percentage);
+						$("#total-devices").text(data.total_devices);
+						$("#offline-devices").text(data.total_offline_devices);
 					} else {
 						alert("Failed to fetch devices.");
 					}
@@ -42,26 +42,33 @@
 				},
 			});
 		}
+
 		$("#datacenters-select").on("change", function () {
 			const selectedDatacenters = $(this).val();
-			const selectedStatuses = $("#statuses-select").val();
-			handleRequest(selectedDatacenters, selectedStatuses);
+			const selectedStatus = $("#status-select").val();
+			handleRequest(selectedDatacenters, selectedStatus);
+		});
+		$("#status-select").on("change", function () {
+			const selectedDatacenters = $("#datacenters-select").val();
+			const selectedStatus = $(this).val();
+			handleRequest(selectedDatacenters, selectedStatus);
 		});
 
 		function renderDatacenters(datacenters) {
 			const container = document.getElementById("datacentersContainer");
 			container.innerHTML = ""; // Clear previous
+			
 
 			datacenters.forEach((dc) => {
 				// Each DC block
 				const dcDiv = document.createElement("div");
 
-                if (dc.devices.length === 0) {
-                    return;
-                }
-                // If there is only one device in the datacenter, we can show '1 device' instead of devices in the title
-                const device_text = dc.devices.length > 1 ? 'devices' : 'device';
-                
+				if (dc.devices.length === 0) {
+					return;
+				}
+				// If there is only one device in the datacenter, we can show '1 device' instead of devices in the title
+				const device_text =
+					dc.devices.length > 1 ? "devices" : "device";
 
 				dcDiv.innerHTML = `
 	        <div>
@@ -70,7 +77,9 @@
 	            <h4 class="m-0 text-gray-900">${dc.city}
                 
                 </h4>
-	            <span class="text-muted">(${dc.devices.length} ${device_text})</span>
+	            <span class="text-muted">(${
+					dc.devices.length
+				} ${device_text})</span>
 	          </div>
 	          <div class="row g-4 row-cols-2 row-cols-md-3" id="dc-${slugify(
 					dc.city
@@ -87,18 +96,18 @@
 					// We'll place a spinner for the status/cpu/storage until we fetch them
 					const colDiv = document.createElement("div");
 					colDiv.classList.add("col");
-					const statusClass // online, offline, warning
-						= device.status === "online"
-						? "badge-light-success"
-						: device.status === "offline"
-						? "badge-light-danger"
-						: "badge-light-warning";
+					const statusClass = // online, offline, warning
+						device.status === "online"
+							? "badge-light-success"
+							: device.status === "offline"
+							? "badge-light-danger"
+							: "badge-light-warning";
 					colDiv.innerHTML = `
 	          <div class="h-100 border rounded p-3">
 	            <div class="d-flex justify-content-between">
 	              <span>${device.name}</span>
 	              <!-- Loader spinner in place of badge -->
-	              <span class="badge ${ statusClass }" id="status-${device.id}">${device.status}</span>
+	              <span class="badge ${statusClass}" id="status-${device.id}">${device.status}</span>
 	            </div>
 	            <div class="text-muted">${device.ip}</div>
 	            <div class="d-flex text-muted mt-5">
@@ -120,9 +129,7 @@
 
 		async function fetchDeviceStats(deviceId) {
 			try {
-				const resp = await fetch(
-					`/get_device_stats/${deviceId}`
-				);
+				const resp = await fetch(`/get_device_stats/${deviceId}`);
 				const data = await resp.json();
 				if (data.status === "success") {
 					const stats = data.stats;
@@ -144,8 +151,7 @@
 
 					// Update CPU
 					const cpuEl = document.getElementById(`cpu-${deviceId}`);
-                    if (stats.cpu > 0)
-					    cpuEl.textContent = `${stats.cpu}%`;
+					if (stats.cpu > 0) cpuEl.textContent = `${stats.cpu}%`;
 
 					// Update Storage
 					const storageEl = document.getElementById(
@@ -177,7 +183,7 @@
 		// Call handleRequest Initially with 'all' datacenters and 'all' statuses
 		handleRequest(
 			$("#datacenters-select").val(),
-			$("#statuses-select").val()
+			$("#status-select").val()
 		);
 	});
 </script>

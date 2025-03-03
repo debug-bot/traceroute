@@ -322,6 +322,8 @@ def get_device_stats(request, device_id=78):
 def get_devices_by_datacenters(request):
     if request.method == "GET":
         cities = request.GET.getlist("cities[]")  # Get the selected cities as a list
+        status = request.GET.get("status", "all")  # Get the status filter
+        print(status, cities)
         
         # Build a list of datacenter info + their devices
         devices = []
@@ -335,6 +337,9 @@ def get_devices_by_datacenters(request):
             
             for city in cities:
                 city_devices_qs = Router.objects.filter(datacenter=city)
+                if status != "all":
+                    city_devices_qs = Router.objects.filter(datacenter=city, status=status)
+                    print(city_devices_qs)
                 # Build JSON-serializable list with property access
                 devices_list = []
                 for device in city_devices_qs:
@@ -373,6 +378,8 @@ def get_devices_by_datacenters(request):
             except:
                 city_name = city
             city_devices_qs = Router.objects.filter(datacenter__city=city_name.strip())
+            if status != "all":
+                city_devices_qs = city_devices_qs.filter(status=status)
             # Build JSON-serializable list with property access
             devices_list = []
             for device in city_devices_qs:
