@@ -190,11 +190,12 @@ def network_tools_api(request):
             # Save the command history for authenticated users.
             if request.user.is_authenticated:
                 output_data = collected_output.splitlines()
+                multiline_output = "\n".join(output_data)
                 CommandHistory.objects.create(
                     user=request.user,
                     device=router,
                     command=command,
-                    output=output_data,
+                    output=multiline_output
                 )
 
         # Return the full output as a downloadable text file.
