@@ -49,6 +49,62 @@ def execute_ssh_command(command, command2=None, hostname=ROUTER_SSH_DETAILS["hos
     except Exception as e:
         raise Exception(f"SSH command execution failed: {e}")
 
+def execute_ssh_command_while(command, hostname=ROUTER_SSH_DETAILS["hostname"], delay_in_seconds=None):
+    """
+    Execute a command on the router via SSH and return the output.
+    If wait is True, continuously read the output until the command completes.
+    """
+    try:
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(
+            hostname=hostname,
+            port=ROUTER_SSH_DETAILS["port"],
+            username=ROUTER_SSH_DETAILS["username"],
+            password=ROUTER_SSH_DETAILS["password"],
+        )
+        
+
+        # Execute the traceroute command
+        channel = client.get_transport().open_session()
+        channel.exec_command(command) 
+        
+        collected_output = ""
+
+        start_time = time.time()  # Record the start time for timeout
+
+        try:
+            # Stream output while the command is running
+            while True:
+                if channel.recv_ready():
+                    chunk = channel.recv(1024).decode()
+                    collected_output += chunk
+
+                if channel.exit_status_ready():
+                    break
+
+                # If delay seconds have passed, break out of the loop
+                if time.time() - start_time >= delay_in_seconds:
+                    break
+
+                # time.sleep(1)
+
+            # Flush any remaining output
+            while channel.recv_ready():
+                chunk = channel.recv(1024).decode()
+                collected_output += chunk
+        except Exception as e:
+            print(f"Connection aborted: {e}. Terminating SSH session.")
+        finally:
+            channel.close()
+            client.close()
+                
+        
+        return collected_output
+
+    except Exception as e:
+        raise Exception(f"SSH command execution failed: {e}")
+
 
 def install_package_if_missing(command):
     """

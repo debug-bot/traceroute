@@ -11,7 +11,7 @@ from .models import (
 )
 from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from datetime import datetime
-from .utils import execute_ssh_command, ROUTER_SSH_DETAILS
+from .utils import execute_ssh_command, ROUTER_SSH_DETAILS, execute_ssh_command_while
 import time
 import paramiko
 from django.contrib.auth.decorators import login_required
@@ -205,7 +205,6 @@ def network_tools_api(request):
         response["Content-Disposition"] = 'attachment; filename="router_config_log.txt"'
         return response
 
-    return JsonResponse({"status": "error", "message": "Unexpected error."}, status=500)
 
 
 @login_required(login_url="/login")
@@ -477,7 +476,7 @@ def download_configuration(request):
         device_id = dev["id"]
         device_ip = dev["ip"]
         try:
-            output = execute_ssh_command('show configuration | display set', hostname=device_ip, delay_in_seconds=5)
+            output = execute_ssh_command_while('show configuration | display set', hostname=device_ip, delay_in_seconds=5)
         except:
             output = '0'
         configuration_data[device_id] = output
