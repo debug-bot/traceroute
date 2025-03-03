@@ -343,9 +343,9 @@ def get_devices_by_datacenters(request):
                         "ip": device.ip,
                         "name": device.name,
                         "status": device.status,
-                        "uptime_percentage": device.uptime_percentage,
-                        "cpu_usage": device.cpu_usage,
-                        "storage_usage": device.storage_usage
+                        "uptime_percentage": f'{device.uptime_percentage}%' if device.uptime_percentage else '...',
+                        "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
+                        "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
                     })
                     total_uptime_percentage += device.uptime_percentage
                     total_offline_devices += device.status == "offline"
@@ -381,9 +381,9 @@ def get_devices_by_datacenters(request):
                     "ip": device.ip,
                     "name": device.name,
                     "status": device.status,
-                    "uptime_percentage": device.uptime_percentage,
-                    "cpu_usage": device.cpu_usage,
-                    "storage_usage": device.storage_usage
+                    "uptime_percentage": f'{device.uptime_percentage}%' if device.uptime_percentage else '...',
+                    "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
+                    "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
                 })
                 total_uptime_percentage += device.uptime_percentage
                 total_offline_devices += device.status == "offline"
