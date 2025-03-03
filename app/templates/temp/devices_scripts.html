@@ -136,22 +136,28 @@
                     .get();
             if (selectedCategoryName.toLowerCase().startsWith('download configuration'))  // if starts with 'download' or 'Download'
             {
-                const is_custom = true;
-                const url =
-                    "{% url 'network_tools_api' %}?router_id=" +
-                    encodeURIComponent(device.id) +
-                    "&custom=" +
-                    is_custom;
+                selectedDevices.forEach(
+                    device => {
+                        const is_custom = true;
+                        const url =
+                            "{% url 'network_tools_api' %}?router_id=" +
+                            encodeURIComponent(device.id) +
+                            "&custom=" +
+                            is_custom;
 
-                const downloadLink = document.createElement("a");
-                downloadLink.href = url;
-                downloadLink.download = device.name + " configuration.txt";
+                        const downloadLink = document.createElement("a");
+                        downloadLink.href = url;
+                        downloadLink.download = device.name + " configuration.txt";
 
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
-                commandRunning = false;
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                        commandRunning = false;
+                        
+                    }
+                )
                 return;
+                
             }
             
 			// Populate command types for this category
