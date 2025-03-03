@@ -39,13 +39,11 @@ def execute_ssh_command(command, command2=None, hostname=ROUTER_SSH_DETAILS["hos
         # time.sleep(delay_in_seconds)
 
         output = channel.recv(65535).decode()  # Get remaining output
-        
-        data = output.splitlines()
-        
+                
         channel.close()
         client.close()
         
-        return data
+        return output
 
     except Exception as e:
         raise Exception(f"SSH command execution failed: {e}")
@@ -249,7 +247,7 @@ def get_cpu_and_mem(device_ip='23.141.136.2'):
     output = execute_ssh_command("show system processes extensive | match nice", hostname=device_ip)
     
     # Parse the output to get CPU and memory usage
-    cpu_usage, mem_usage = parse_show_system_processes_extensive(output)
+    cpu_usage, mem_usage = parse_show_system_processes_extensive(output.splitlines())
     
     return cpu_usage, mem_usage
     
@@ -260,26 +258,27 @@ def get_storage(device_ip='23.141.136.2'):
     output = execute_ssh_command("show system storage", hostname=device_ip)
     
     # Parse the output to get storage usage
-    filesystems, overall_usage_pct = parse_junos_storage(output)
+    filesystems, overall_usage_pct = parse_junos_storage(output.splitlines())
 
     return filesystems, overall_usage_pct
 
 def get_device_stats(device_ip='23.141.136.2'):
     # Get CPU, memory, storage usage of the device
     output = execute_ssh_command("show system processes extensive | match nice", "show system storage", hostname=device_ip)
-    
+    print(output)
     # split the output into two parts
     cpu_output = []
     storage_output = []
     split = False
-    for line in output:
-        if line == "----SPLIT----":
+    for line in output.splitlines():
+        if line.strip() == "----SPLIT----":
             split = True
             continue
         if not split:
             cpu_output.append(line)
         else:
             storage_output.append(line)
+    print(22,storage_output)
     
     # Parse the output to get CPU and memory usage
     cpu_usage, mem_usage = parse_show_system_processes_extensive(cpu_output)
