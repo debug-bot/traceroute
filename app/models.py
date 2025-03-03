@@ -186,6 +186,8 @@ class Router(models.Model):
     cpu_usage = models.FloatField(default=0.0)
     mem_usage = models.FloatField(default=0.0)
     storage_usage = models.FloatField(default=0.0)
+    
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def uptime_percentage(self):

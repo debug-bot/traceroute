@@ -123,6 +123,50 @@
 			// Clear old command types
 			$("#commandTypeContainer").empty();
 
+            const selectedCategoryName = $(this).data("category-name");
+            const selectedDevices = $("#devices-select")
+                    .find(":selected")
+                    .map(function () {
+                        return {
+                            name: $(this).text(),
+                            id: $(this).val(),
+                            ip: $(this).data("ip"),
+                        };
+                    })
+                    .get();
+            if (selectedCategoryName.toLowerCase().startsWith('download configuration'))  // if starts with 'download' or 'Download'
+            { 
+                // send request to backend to download configuration directly
+                $.ajax({
+                    url: "/download-configuration/",
+                    method: "GET",
+                    data: {'selectedDevices': JSON.stringify(selectedDevices)},
+                    success: function (data) {
+                        selectedDevices.forEach((device) => {
+                            const configurationLines = data.configuration[device.id];
+                            if (!configurationLines) {
+                                return; // No config for this device
+                            }
+                            // Join lines into one text blob
+                            const configContent = configurationLines.join("\n");
+                            const blob = new Blob([configContent], { type: "text/plain" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = `${device.name}_configuration.txt`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        });
+                    },
+                    error: function () {
+                        alert("Failed to download configuration.");
+                    },
+                })
+                return;
+            }
+            
 			// Populate command types for this category
 			if (categoryCommands[selectedCategoryId]) {
 				categoryCommands[selectedCategoryId].forEach((ct) => {

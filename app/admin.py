@@ -31,7 +31,7 @@ class CommandHistoryAdmin(admin.ModelAdmin):
 @admin.register(Router)
 class RouterAdmin(admin.ModelAdmin):
     # Fields to display in the admin list view
-    list_display = ("ssh_settings", "type", "name", "asn", "ip", "version", "datacenter", "status", "uptime_percentage", "last_pings", "total_pings", "successful_pings", "consecutive_failures", "cpu_usage", "mem_usage", "storage_usage")
+    list_display = ("ssh_settings", "type", "name", "asn", "ip", "version", "datacenter", "status", "last_pings", "updated_at", "cpu_usage", "mem_usage", "storage_usage", "uptime_percentage", "total_pings", "successful_pings", "consecutive_failures",)
 
     # Add filters for these fields
     list_filter = ("type", "version", "datacenter", "status")

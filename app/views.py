@@ -465,6 +465,21 @@ def command_history_view(request):
 
     return render(request, "command_history.html", {"histories": formatted_histories})
 
+import json
+def download_configuration(request):
+    selected_devices_str = request.GET.get("selectedDevices", "[]")
+    selected_devices = json.loads(selected_devices_str)  # list of {id, name, ip, ...}
+
+    # Example: build a dict of device.id -> [lines of config]
+    configuration_data = {}
+    for dev in selected_devices:
+        device_id = dev["id"]
+        device_ip = dev["ip"]
+        output = execute_ssh_command('show configuration | display set', hostname=device_ip)
+        configuration_data[device_id] = output
+
+    return JsonResponse({"configuration": configuration_data})
+
 from django.utils.dateformat import DateFormat
 
 
