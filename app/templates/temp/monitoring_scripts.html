@@ -29,6 +29,10 @@
 				success: function (data) {
 					if (data.status === "success") {
 						renderDatacenters(data.datacenters);
+						// Fetch stats for each device
+						$('#network-uptime').text(data.total_uptime_percentage);
+						$('#total-devices').text(data.total_devices);
+						$('#offline-devices').text(data.total_offline_devices);
 					} else {
 						alert("Failed to fetch devices.");
 					}

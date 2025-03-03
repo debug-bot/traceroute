@@ -162,6 +162,9 @@ class Router(models.Model):
     )
     datacenter = models.ForeignKey(DataCenter, verbose_name="Data Center Location", default=None, null=True, on_delete=models.CASCADE)
 
+    # We store the last 3 pings as "1" for success, "0" for fail. Example: "110", "101", etc.
+    last_pings = models.CharField(max_length=3, default="", help_text="Last 3 ping results, '1' for success, '0' for failure.", verbose_name="Last Pings")
+    
     # Track how many pings have succeeded vs. total
     total_pings = models.PositiveIntegerField(default=0)
     successful_pings = models.PositiveIntegerField(default=0)
@@ -179,9 +182,15 @@ class Router(models.Model):
 
     @property
     def uptime_percentage(self):
-        if self.total_pings == 0:
+        """
+        Returns how many of the last_pings were '1' (success) as a percentage.
+        If last_pings is empty or shorter than 3, we base it on however many pings are stored.
+        """
+        if not self.last_pings:
             return 0.0
-        return (self.successful_pings / self.total_pings) * 100.0
+        success_count = self.last_pings.count("1")
+        total_count = len(self.last_pings)  # could be 1, 2, or 3
+        return (success_count / total_count) * 100.0
     
     def __str__(self):
         return f"{self.name}:{self.ip} - {self.datacenter}"

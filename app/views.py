@@ -325,18 +325,41 @@ def get_devices_by_datacenters(request):
         
         # Build a list of datacenter info + their devices
         devices = []
+        total_uptime_percentage = 0.0
+        total_offline_devices = 0
+        total_devices = 0
         
         # if cities contain 'all' then get cities from db 
         if 'all' in cities:
             cities = DataCenter.objects.all()
+            
             for city in cities:
-                city_devices = (
-                    Router.objects.filter(datacenter=city)
-                    .values("id", "name", "ip", "uptime_percentage", "status", "cpu_usage", "storage_usage")
-                )
+                city_devices_qs = Router.objects.filter(datacenter=city)
+                # Build JSON-serializable list with property access
+                devices_list = []
+                for device in city_devices_qs:
+                    devices_list.append({
+                        "id": device.id,
+                        "ip": device.ip,
+                        "name": device.name,
+                        "status": device.status,
+                        "uptime_percentage": device.uptime_percentage,
+                        "cpu_usage": device.cpu_usage,
+                        "storage_usage": device.storage_usage
+                    })
+                    total_uptime_percentage += device.uptime_percentage
+                    total_offline_devices += device.status == "offline"
+                    total_devices += 1
+                    
                 devices.append({"city": str(city),
-                                "devices": list(city_devices)})
-            return JsonResponse({"status": "success", "datacenters": devices})
+                                "devices": list(devices_list)})
+                
+            if total_devices > 0:
+                total_uptime_percentage /= total_devices
+                total_uptime_percentage = round(total_uptime_percentage, 2)
+                total_uptime_percentage = f'{total_uptime_percentage}%'
+                
+            return JsonResponse({"status": "success", "datacenters": devices, "total_uptime_percentage": total_uptime_percentage, "total_offline_devices": f'{total_offline_devices} Offline', "total_devices": total_devices})
         
         
         # Otherwise, split city, state        
@@ -349,13 +372,30 @@ def get_devices_by_datacenters(request):
                     city_name, state, country = city.split(",")
             except:
                 city_name = city
-            city_devices = (
-                Router.objects.filter(datacenter__city=city_name.strip())
-                .values("id", "name", "ip", "uptime_percentage", "status", "cpu_usage", "storage_usage")
-            )
-            devices.append({"city": city, "devices": list(city_devices)})
+            city_devices_qs = Router.objects.filter(datacenter__city=city_name.strip())
+            # Build JSON-serializable list with property access
+            devices_list = []
+            for device in city_devices_qs:
+                devices_list.append({
+                    "id": device.id,
+                    "ip": device.ip,
+                    "name": device.name,
+                    "status": device.status,
+                    "uptime_percentage": device.uptime_percentage,
+                    "cpu_usage": device.cpu_usage,
+                    "storage_usage": device.storage_usage
+                })
+                total_uptime_percentage += device.uptime_percentage
+                total_offline_devices += device.status == "offline"
+                total_devices += 1
+            devices.append({"city": city, "devices": devices_list})
             
-        return JsonResponse({"status": "success", "datacenters": devices})
+        if total_devices > 0:
+            total_uptime_percentage /= total_devices
+            total_uptime_percentage = round(total_uptime_percentage, 2)
+            total_uptime_percentage = f'{total_uptime_percentage}%'
+            
+        return JsonResponse({"status": "success", "datacenters": devices, "total_uptime_percentage": total_uptime_percentage, "total_offline_devices": f'{total_offline_devices} Offline', "total_devices": total_devices})
         
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
