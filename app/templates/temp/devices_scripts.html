@@ -105,7 +105,46 @@
                     `);
                 });
             }
-
+        
+        $("#download-configuration").on("click", function () {
+            const datacentersSelected = $("#datacenters-select").val() || [];
+            const selectedDevices = $("#devices-select")
+                    .find(":selected")
+                    .map(function () {
+                        return {
+                            name: $(this).text(),
+                            id: $(this).val(),
+                            ip: $(this).data("ip"),
+                        };
+                    })
+                    .get();
+                    // Basic validation
+            if (!datacentersSelected.length) {
+                alert("Please select at least one Datacenter.");
+                return;
+            }
+            if (!selectedDevices.length) {
+                alert("Please select at least one Device.");
+                return;
+            }
+            selectedDevices.forEach(
+                device => {
+                    const is_custom = true;
+                    const url =
+                        "{% url 'network_tools_api' %}?router_id=" +
+                        encodeURIComponent(device.id) +
+                        "&custom=" +
+                        is_custom;
+                    const downloadLink = document.createElement("a");
+                    downloadLink.href = url;
+                    downloadLink.download = device.name + " configuration.txt";
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    commandRunning = false;
+                }
+            )
+        }
 		// 3) When user clicks a Category card
 		$(".command-category").on("click", function () {
 			// Highlight selected category
@@ -124,39 +163,7 @@
 			$("#commandTypeContainer").empty();
 
             const selectedCategoryName = $(this).data("category-name");
-            const selectedDevices = $("#devices-select")
-                    .find(":selected")
-                    .map(function () {
-                        return {
-                            name: $(this).text(),
-                            id: $(this).val(),
-                            ip: $(this).data("ip"),
-                        };
-                    })
-                    .get();
-            if (selectedCategoryName.toLowerCase().startsWith('download configuration'))  // if starts with 'download' or 'Download'
-            {
-                selectedDevices.forEach(
-                    device => {
-                        const is_custom = true;
-                        const url =
-                            "{% url 'network_tools_api' %}?router_id=" +
-                            encodeURIComponent(device.id) +
-                            "&custom=" +
-                            is_custom;
-
-                        const downloadLink = document.createElement("a");
-                        downloadLink.href = url;
-                        downloadLink.download = device.name + " configuration.txt";
-
-                        document.body.appendChild(downloadLink);
-                        downloadLink.click();
-                        document.body.removeChild(downloadLink);
-                        commandRunning = false;
-                    }
-                )
-                // return;
-            }
+            
             
 			// Populate command types for this category
 			if (categoryCommands[selectedCategoryId]) {

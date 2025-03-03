@@ -41,19 +41,34 @@
         <!-- 2nd Row: Command Execution -->
         <div class="card border-0 shadow-sm">
             <div class="card-header justify-content-between align-items-center p-6">
-                    <h4 class="card-title mb-0">
+                <h4 class="card-title mb-0">
+                    <img
+                            class="h-lg-20px theme-light-show"
+                            src="{% static 'assets/media/svg/custom/command-execution.svg' %}"
+                            alt="Icon"
+                        />
                         <img
-								class="h-lg-20px theme-light-show"
-								src="{% static 'assets/media/svg/custom/command-execution.svg' %}"
+                            class="h-lg-20px theme-dark-show"
+                            src="{% static 'assets/media/svg/custom/command-execution-dark.svg' %}"
+                            alt="Icon"
+                        />
+                    <span class="ms-3 text-gray-900">Command Exeution</span>
+                </h4>
+                <div class="d-flex align-content-center">
+                    <div class="d-flex mt-2 cursor-pointer" id="download-configuration">
+                        <img
+								class="h-16px align-self-center m-0 theme-light-show"
+								src="{% static 'assets/media/svg/custom/download.svg' %}"
 								alt="Icon"
 							/>
                             <img
-								class="h-lg-20px theme-dark-show"
-								src="{% static 'assets/media/svg/custom/command-execution-dark.svg' %}"
+								class="h-16px align-self-center m-0 theme-dark-show"
+								src="{% static 'assets/media/svg/custom/download-dark.svg' %}"
 								alt="Icon"
 							/>
-                        <span class="ms-3 text-gray-900">Command Exeution</span></h4>
-                    <a class="d-flex mt-2 cursor-pointer" data-bs-toggle="modal" data-bs-target="#historyModal">
+                        <span class="ms-1 fs-5  text-gray-800">Download Configuration</span>
+                    </div>
+                    <a class="d-flex ms-4 mt-2 cursor-pointer" data-bs-toggle="modal" data-bs-target="#historyModal">
                         <img
 								class="h-lg-16px align-self-center m-0 theme-light-show"
 								src="{% static 'assets/media/svg/custom/command-history-grey.svg' %}"
@@ -66,6 +81,7 @@
 							/>
                         <span class="ms-1 fs-5  text-gray-800">Command History</span>
                     </a>
+                </div>
             </div>
             <div class="card-body p-6">
                 <!-- Command Category -->

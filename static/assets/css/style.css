@@ -75,3 +75,10 @@
         transform: rotate(360deg);
     }
 }
+
+.h-16px, .h-lg-16px {
+	height: 16px !important;
+}
+.h-24px, .h-lg-24px {
+	height: 24px !important;
+}
