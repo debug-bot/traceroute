@@ -302,15 +302,15 @@ def get_device_stats(request, device_id=78):
     overall_storage_usage = 80
     
     # Get CPU and memory usage from the device
-    cpu_usage, mem_usage = get_cpu_and_mem(device.ip)
-    filesystems_usage, overall_storage_usage = get_storage(device.ip)
+    # cpu_usage, mem_usage = get_cpu_and_mem(device.ip)
+    # filesystems_usage, overall_storage_usage = get_storage(device.ip)
 
     return JsonResponse({
         "status": "success",
         "stats": {
             "status": status,
-            "cpu": cpu_usage,
-            "storage": overall_storage_usage,
+            "cpu": '...',
+            "storage": '...',
             "successes": successes,
             "failures": failures
         }
