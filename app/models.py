@@ -195,8 +195,10 @@ class Router(models.Model):
     def avg_latency(self):
         data = self.last_3_latency or {}
         latencies = data.get("latency", [])
+        if len(latencies) == 0:
+            return 0.0
         # Compute average
-        return round(sum(latencies) / len(latencies),2)      
+        return round(sum(latencies) / len(latencies), 2)      
 
     @property
     def uptime_percentage(self):
