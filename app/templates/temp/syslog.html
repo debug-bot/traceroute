@@ -8,7 +8,7 @@
     />
     <!--end::Vendor Stylesheets-->
 {% endblock %} {% block content %}
-<table class="table table-striped table-hover">
+<table class="table table-striped table-hover" id='logsTable'>
 	<thead class="table-light">
 		<tr>
 			<th scope="col">Timestamp</th>
@@ -45,6 +45,7 @@
             "order": [[0, "desc"]],   // Sort by the first column (timestamp) descending
             // DataTables automatically adds search and pagination functionality.
         });
+        //new DataTable('#logsTable')
     });
 </script>
 {% endblock %}
