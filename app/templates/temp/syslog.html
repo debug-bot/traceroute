@@ -2,7 +2,7 @@
 {% block styles %}
     <!--begin::Vendor Stylesheets(used for this page only)-->
     <link
-        href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}"
+        href="{% static 'assets/plugins/custom/datatables/datatables-latest.bundle.css' %}"
         rel="stylesheet"
         type="text/css"
     />
@@ -28,24 +28,27 @@
 		{% empty %}
 		<tr>
 			<td colspan="4" class="text-center">No log entries found.</td>
+            <td></td>
+            <td></td>
+            <td></td>
 		</tr>
 		{% endfor %}
 	</tbody>
 </table>
 {% endblock %}
-{% block script %}
+{% block scripts %}
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+<script src="{% static 'assets/plugins/custom/datatables/datatables-latest.bundle.js' %}"></script>
 <!--end::Vendors Javascript-->
 <script>
     $(document).ready(function () {
         // Initialize DataTables on our table with optional settings.
-        $('#logsTable').DataTable({
+       
+        new DataTable('#logsTable',{
             "pageLength": 10,         // Display 10 rows per page
             "order": [[0, "desc"]],   // Sort by the first column (timestamp) descending
             // DataTables automatically adds search and pagination functionality.
-        });
-        //new DataTable('#logsTable')
+        })
     });
 </script>
 {% endblock %}
