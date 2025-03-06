@@ -594,7 +594,7 @@ def rsyslog_log_view(request):
                                     log_entries.append({
                                         'timestamp': timestamp,
                                         'device': device,
-                                        'source': log_file,
+                                        'source': log_file.replace('.log','').upper(),
                                         'message': message,
                                     })
                         except Exception as e:
@@ -606,5 +606,5 @@ def rsyslog_log_view(request):
                             })
 
     # Optionally, you might sort the log entries by timestamp (if proper timestamp parsing is applied)
-    context = {'log_entries': log_entries}
+    context = {'log_entries': log_entries, 'title':'Syslog'}
     return render(request, 'temp/syslog.html', context)
