@@ -573,7 +573,7 @@ def rsyslog_log_view(request):
 
     # Ensure the base log directory exists
     if os.path.exists(base_log_dir):
-        # Iterate over each device folder
+        # Iterate over each device folder (device name)
         for device in os.listdir(base_log_dir):
             device_path = os.path.join(base_log_dir, device)
             if os.path.isdir(device_path):
@@ -589,10 +589,17 @@ def rsyslog_log_view(request):
                                         continue  # Skip empty lines
                                     # Assume the first token is the timestamp
                                     parts = line.split()
-                                    timestamp = parts[0] if parts else 'N/A'
+                                    timestamp_str = parts[0] if parts else 'N/A'
+                                    # Format the timestamp if possible
+                                    try:
+                                        dt = datetime.fromisoformat(timestamp_str)
+                                        formatted_time = dt.strftime("%Y-%m-%d %H:%M:%S")
+                                    except ValueError:
+                                        # If timestamp parsing fails, use the original string
+                                        formatted_time = timestamp_str
                                     message = " ".join(parts[1:]) if len(parts) > 1 else ''
                                     log_entries.append({
-                                        'timestamp': timestamp,
+                                        'timestamp': formatted_time,
                                         'device': device,
                                         'source': log_file.replace('.log','').upper(),
                                         'message': message,
@@ -605,6 +612,7 @@ def rsyslog_log_view(request):
                                 'message': f"Failed to read file: {str(e)}",
                             })
 
-    # Optionally, you might sort the log entries by timestamp (if proper timestamp parsing is applied)
+    # sort the log entries by timestamp (assumes "YYYY-MM-DD HH:MM:SS" format)
+    log_entries.sort(key=lambda entry: entry['timestamp'], reverse=True)
     context = {'log_entries': log_entries, 'title':'Syslog'}
     return render(request, 'temp/syslog.html', context)

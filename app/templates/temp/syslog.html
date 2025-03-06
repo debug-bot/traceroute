@@ -1,8 +1,15 @@
 {% extends 'temp/base.html' %} {% load static %}
-{% block styles %} {% endblock %} {% block content %}
-<h1 class="mb-4">Syslog Log Entries</h1>
+{% block styles %}
+    <!--begin::Vendor Stylesheets(used for this page only)-->
+    <link
+        href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}"
+        rel="stylesheet"
+        type="text/css"
+    />
+    <!--end::Vendor Stylesheets-->
+{% endblock %} {% block content %}
 <table class="table table-striped table-hover">
-	<thead class="table-dark">
+	<thead class="table-light">
 		<tr>
 			<th scope="col">Timestamp</th>
 			<th scope="col">Device</th>
@@ -25,4 +32,19 @@
 		{% endfor %}
 	</tbody>
 </table>
+{% endblock %}
+{% block script %}
+<!--begin::Vendors Javascript(used for this page only)-->
+<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
+<!--end::Vendors Javascript-->
+<script>
+    $(document).ready(function () {
+        // Initialize DataTables on our table with optional settings.
+        $('#logsTable').DataTable({
+            "pageLength": 10,         // Display 10 rows per page
+            "order": [[0, "desc"]],   // Sort by the first column (timestamp) descending
+            // DataTables automatically adds search and pagination functionality.
+        });
+    });
+</script>
 {% endblock %}

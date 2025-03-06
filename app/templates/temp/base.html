@@ -28,13 +28,6 @@
 			href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700"
 		/>
 		<!--end::Fonts-->
-		<!--begin::Vendor Stylesheets(used for this page only)-->
-		<link
-			href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}"
-			rel="stylesheet"
-			type="text/css"
-		/>
-		<!--end::Vendor Stylesheets-->
 		<!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
 		<link
 			href="{% static 'assets/plugins/global/plugins.bundle.css' %}"
@@ -1042,11 +1035,8 @@
 		<script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
 		<script src="{% static 'assets/js/scripts.bundle.js' %}"></script>
 		<!--end::Global Javascript Bundle-->
-		<!--begin::Vendors Javascript(used for this page only)-->
-		<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
-		<!--end::Vendors Javascript-->
-		{% block scripts %}{% endblock %}
 		<!--begin::Custom Javascript(used for this page only)-->
+		{% block scripts %}{% endblock %}
 		<!-- 
         <script src="{% static 'assets/js/widgets.bundle.js' %}"></script>
         <script src="{% static 'assets/js/custom/widgets.js' %}"></script> 
