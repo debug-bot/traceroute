@@ -563,3 +563,48 @@ def monitoring(request):
             "popular_commands": popular_commands,
         }
     return render(request, "temp/monitoring.html", context)
+
+import os
+from django.shortcuts import render
+
+def rsyslog_log_view(request):
+    base_log_dir = '/var/log/syslog_logs'
+    log_entries = []
+
+    # Ensure the base log directory exists
+    if os.path.exists(base_log_dir):
+        # Iterate over each device folder
+        for device in os.listdir(base_log_dir):
+            device_path = os.path.join(base_log_dir, device)
+            if os.path.isdir(device_path):
+                # Iterate over each file in the device folder
+                for log_file in os.listdir(device_path):
+                    file_path = os.path.join(device_path, log_file)
+                    if os.path.isfile(file_path):
+                        try:
+                            with open(file_path, 'r') as f:
+                                for line in f:
+                                    line = line.strip()
+                                    if not line:
+                                        continue  # Skip empty lines
+                                    # Assume the first token is the timestamp
+                                    parts = line.split()
+                                    timestamp = parts[0] if parts else 'N/A'
+                                    message = " ".join(parts[1:]) if len(parts) > 1 else ''
+                                    log_entries.append({
+                                        'timestamp': timestamp,
+                                        'device': device,
+                                        'source': log_file,
+                                        'message': message,
+                                    })
+                        except Exception as e:
+                            log_entries.append({
+                                'timestamp': 'Error',
+                                'device': device,
+                                'source': log_file,
+                                'message': f"Failed to read file: {str(e)}",
+                            })
+
+    # Optionally, you might sort the log entries by timestamp (if proper timestamp parsing is applied)
+    context = {'log_entries': log_entries}
+    return render(request, 'temp/syslog.html', context)
