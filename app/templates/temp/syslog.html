@@ -11,6 +11,15 @@
     #logsTable {
         visibility: hidden;
     }
+    /* Ensure timestamp and device columns don't wrap and have fixed widths */
+    th.timestamp, td.timestamp {
+        width: 150px; /* Adjust width as needed */
+        white-space: nowrap;
+    }
+    th.device, td.device {
+        width: 150px; /* Adjust width as needed */
+        white-space: nowrap;
+    }
     </style>
 {% endblock %} {% block content %}
 <table class="table table-striped table-hover" id='logsTable'>
@@ -25,10 +34,10 @@
 	<tbody>
 		{% for entry in log_entries %}
 		<tr>
-			<td>{{ entry.timestamp }}</td>
-			<td>{{ entry.device }}</td>
-			<td>{{ entry.source }}</td>
-			<td>{{ entry.message }}</td>
+			<td class="timestamp">{{ entry.timestamp }}</td>
+			<td class="device">{{ entry.device }}</td>
+			<td class="source">{{ entry.source }}</td>
+			<td class="message">{{ entry.message }}</td>
 		</tr>
 		{% empty %}
 		<tr>
