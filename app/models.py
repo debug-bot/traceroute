@@ -181,6 +181,8 @@ class Router(models.Model):
 
     # online / warning / offline, based on consecutive failures, 0 => online, 1-2 => warning, >=3 => offline
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="offline", help_text="Current status of the device", verbose_name="Device Status")
+        
+    last_3_latency = models.JSONField(default=dict, help_text="Last 3 latency values in ms")
     
     # Following 3 fields are in percentage
     cpu_usage = models.FloatField(default=0.0)
@@ -188,6 +190,13 @@ class Router(models.Model):
     storage_usage = models.FloatField(default=0.0)
     
     updated_at = models.DateTimeField(auto_now=True)
+    
+    @property
+    def avg_latency(self):
+        data = self.last_3_latency or {}
+        latencies = data.get("latency", [])
+        # Compute average
+        return round(sum(latencies) / len(latencies),2)      
 
     @property
     def uptime_percentage(self):

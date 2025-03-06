@@ -1,5 +1,4 @@
-import subprocess
-import re
+
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import (
     Category,
@@ -11,7 +10,7 @@ from .models import (
 )
 from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from datetime import datetime
-from .utils import execute_ssh_command, ROUTER_SSH_DETAILS, execute_ssh_command_while
+from .utils import execute_ssh_command, ROUTER_SSH_DETAILS, execute_ssh_command_while, ping_device_n_times
 import time
 import paramiko
 from django.contrib.auth.decorators import login_required
@@ -20,9 +19,6 @@ import json
 from django.utils.html import format_html, escape
 from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_GET
-from .utils import get_cpu_and_mem, get_storage
-
-
 
 def main(request):
     return redirect("login")
@@ -231,91 +227,6 @@ def dashboard2(request):
     )
 
 
-def ping_device_once(ip_address):
-    """
-    Returns True if single ping is successful, False otherwise.
-    """
-    try:
-        # Example (Linux/Mac): "-c 1" => 1 ICMP request, "-W 1" => 1-second timeout
-        # for windows use "-n 1" instead of "-c 1"
-        subprocess.check_output(
-            ["ping", "-c", "1", "-w", "1", ip_address],
-            stderr=subprocess.STDOUT
-        )
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-def ping_device_n_times(ip_address, count=3):
-    """
-    Pings the device `count` times, returns:
-      {
-        "successes": int,
-        "failures": int,
-        "status": "online"/"warning"/"offline"
-      }
-    """
-    successes = 0
-    for _ in range(count):
-        if ping_device_once(ip_address):
-            successes += 1
-
-    failures = count - successes
-
-    # Determine status based on successes/failures
-    if successes == 0:
-        # All pings failed
-        status = "offline"
-    elif successes < count:
-        # Some pings failed, some succeeded
-        status = "warning"
-    else:
-        # All pings succeeded
-        status = "online"
-
-    return {
-        "successes": successes,
-        "failures": failures,
-        "status": status
-    }
-
-
-@require_GET
-def get_device_stats(request, device_id=78):
-    """
-    GET /get_device_stats?device_id=123
-    Returns JSON with {status, cpu, storage} for the device,
-    determined by 3 consecutive pings in a single request.
-    """
-    device = Router.objects.filter(id=device_id).first()
-    if not device:
-        return JsonResponse({"error": f"{device_id} device not found"}, status=404)
-
-    # Ping 3 times in one shot
-    ping_results = ping_device_n_times(device.ip, count=3)
-    status = ping_results["status"]
-    failures = ping_results["failures"]
-    successes = ping_results["successes"]
-
-    # Fake CPU & storage usage or retrieve real data from your source
-    cpu_usage = 50
-    overall_storage_usage = 80
-    
-    # Get CPU and memory usage from the device
-    # cpu_usage, mem_usage = get_cpu_and_mem(device.ip)
-    # filesystems_usage, overall_storage_usage = get_storage(device.ip)
-
-    return JsonResponse({
-        "status": "success",
-        "stats": {
-            "status": status,
-            "cpu": '...',
-            "storage": '...',
-            "successes": successes,
-            "failures": failures
-        }
-    })
-
 def get_devices_by_datacenters(request):
     if request.method == "GET":
         cities = request.GET.getlist("cities[]")  # Get the selected cities as a list
@@ -345,9 +256,10 @@ def get_devices_by_datacenters(request):
                         "ip": device.ip,
                         "name": device.name,
                         "status": device.status,
+                        "latency": f'{device.avg_latency} ms' if device.avg_latency else '...',
                         "uptime_percentage": f'{device.uptime_percentage}%' if device.uptime_percentage else '...',
-                        "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
-                        "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
+                        # "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
+                        # "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
                     })
                     total_uptime_percentage += device.uptime_percentage
                     total_offline_devices += device.status == "offline"

@@ -1,3 +1,4 @@
+import subprocess
 import paramiko
 import time
 import re
@@ -105,7 +106,109 @@ def execute_ssh_command_while(command, hostname=ROUTER_SSH_DETAILS["hostname"], 
     except Exception as e:
         raise Exception(f"SSH command execution failed: {e}")
 
+def ping_device_once(ip_address):
+    """
+    Returns True if single ping is successful, False otherwise.
+    """
+    try:
+        # Example (Linux/Mac): "-c 1" => 1 ICMP request, "-W 1" => 1-second timeout
+        # for windows use "-n 1" instead of "-c 1"
+        output = subprocess.check_output(
+            ["ping", "-c", "1", "-w", "1", ip_address],
+            stderr=subprocess.STDOUT
+        ).decode('utf-8')
+        # Attempt to extract the average latency from the rtt summary line.
+        # Example line: "rtt min/avg/max/mdev = 7.963/7.963/7.963/0.000 ms"
+        match = re.search(r'rtt min/avg/max/mdev = [\d\.]+/([\d\.]+)/[\d\.]+/[\d\.]+ ms', output)
+        if match:
+            avg_latency = float(match.group(1))
+        else:
+            # Fallback: extract latency from the reply line: "time=7.96 ms"
+            match = re.search(r'time=([\d\.]+) ms', output)
+            avg_latency = float(match.group(1)) if match else None
 
+        return True, avg_latency
+    except subprocess.CalledProcessError:
+        return False, None
+
+
+def ping_device_n_times(ip_address, count=3):
+    """
+    Pings the device `count` times, returns:
+      {
+        "successes": int,
+        "failures": int,
+        "status": "online"/"warning"/"offline"
+      }
+    """
+    successes = 0
+    avg_latency = 0.0
+    for _ in range(count):
+        success, latency = ping_device_once(ip_address)
+        if success:
+            successes += 1
+            avg_latency += latency
+
+    failures = count - successes
+
+    # Determine status based on successes/failures
+    if successes == 0:
+        # All pings failed
+        status = "offline"
+    elif successes < count:
+        # Some pings failed, some succeeded
+        status = "warning"
+    else:
+        # All pings succeeded
+        status = "online"
+        
+    avg_latency = round(avg_latency / successes, 2)
+
+    return {
+        "successes": successes,
+        "failures": failures,
+        "status": status,
+        "avg_latency": avg_latency
+    }
+    
+
+def get_device_stats(device_id=78):
+    """
+    GET /get_device_stats?device_id=123
+    Returns JSON with {status, cpu, storage} for the device,
+    determined by 3 consecutive pings in a single request.
+    """
+    device = Router.objects.filter(id=device_id).first()
+    if not device:
+        return {"error": f"{device_id} device not found"}
+
+    # Ping 3 times in one shot
+    ping_results = ping_device_n_times(device.ip, count=3)
+    status = ping_results["status"]
+    failures = ping_results["failures"]
+    successes = ping_results["successes"]
+    avg_latency = ping_results["avg_latency"]
+
+    # Fake CPU & storage usage or retrieve real data from your source
+    cpu_usage = 50
+    overall_storage_usage = 80
+    
+    # Get CPU and memory usage from the device
+    # cpu_usage, mem_usage = get_cpu_and_mem(device.ip)
+    # filesystems_usage, overall_storage_usage = get_storage(device.ip)
+
+    return {
+        "status": "success",
+        "stats": {
+            "status": status,
+            "cpu": '...',
+            "storage": '...',
+            "successes": successes,
+            "failures": failures,
+            "avg_latency": avg_latency
+        }
+    }
+    
 def install_package_if_missing(command):
     """
     Check if a package is missing and install it via SSH.

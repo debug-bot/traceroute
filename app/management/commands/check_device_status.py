@@ -3,22 +3,8 @@
 import subprocess
 from django.core.management.base import BaseCommand
 from app.models import Router
-from app.utils import get_cpu_and_mem, get_storage  # or wherever your SSH funcs are
+from app.utils import get_cpu_and_mem, get_storage, ping_device_once
 
-
-def ping_device_once(ip_address):
-    """
-    Returns True if single ping is successful, False otherwise.
-    Adjust the command for Windows (-n 1) or Linux/Mac (-c 1).
-    """
-    try:
-        subprocess.check_output(
-            ["ping", "-c", "1", "-W", "1", ip_address],
-            stderr=subprocess.STDOUT
-        )
-        return True
-    except subprocess.CalledProcessError:
-        return False
 
 def update_last_pings(router, success):
     old_pings = router.last_pings or ""
@@ -48,7 +34,22 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         routers = Router.objects.all()
         for router in routers:
-            success = ping_device_once(router.ip)
+            success, new_latency = ping_device_once(router.ip)
+            
+            latency_data = router.last_3_latency or {}
+            latencies = latency_data.get("latency", [])
+
+            # 1) If we already have 3, remove the oldest
+            if len(latencies) >= 3:
+                latencies.pop(0)
+                
+            # 2) Append the new latency
+            latencies.append(new_latency)
+            
+            # 3) Store back in the JSONField
+            latency_data["latency"] = latencies
+            router.last_3_latency = latency_data
+
             
             # 1) Shift last_pings and add new result
             update_last_pings(router, success)
@@ -67,34 +68,34 @@ class Command(BaseCommand):
                 router.consecutive_failures += 1
             
             # 4) Update CPU, memory, storage usage
-            try:
-                # 1) Get CPU + memory usage
-                cpu_usage, mem_usage = get_cpu_and_mem(router.ip)
-                self.stdout.write(self.style.SUCCESS(
-                    f"[{router.name}:{router.ip}] CPU={cpu_usage}%, MEM={mem_usage}%"
-                ))
-            except Exception as e:
-                self.stdout.write(self.style.ERROR(
-                    f"[{router.name}:{router.ip}] Error getting CPU/MEM usage: {e}"
-                ))
-                cpu_usage, mem_usage = 0, 0
+            # try:
+            #     # 1) Get CPU + memory usage
+            #     cpu_usage, mem_usage = get_cpu_and_mem(router.ip)
+            #     self.stdout.write(self.style.SUCCESS(
+            #         f"[{router.name}:{router.ip}] CPU={cpu_usage}%, MEM={mem_usage}%"
+            #     ))
+            # except Exception as e:
+            #     self.stdout.write(self.style.ERROR(
+            #         f"[{router.name}:{router.ip}] Error getting CPU/MEM usage: {e}"
+            #     ))
+            #     cpu_usage, mem_usage = 0, 0
             
-            try:
-                # 2) Get storage usage
-                _, overall_storage_pct = get_storage(router.ip)
-                self.stdout.write(self.style.SUCCESS(
-                    f"[{router.name}:{router.ip}] Storage={overall_storage_pct}%"
-                ))
-            except Exception as e:
-                self.stdout.write(self.style.ERROR(
-                    f"[{router.name}:{router.ip}] Error getting storage usage: {e}"
-                ))
-                overall_storage_pct = 0
+            # try:
+            #     # 2) Get storage usage
+            #     _, overall_storage_pct = get_storage(router.ip)
+            #     self.stdout.write(self.style.SUCCESS(
+            #         f"[{router.name}:{router.ip}] Storage={overall_storage_pct}%"
+            #     ))
+            # except Exception as e:
+            #     self.stdout.write(self.style.ERROR(
+            #         f"[{router.name}:{router.ip}] Error getting storage usage: {e}"
+            #     ))
+            #     overall_storage_pct = 0
 
             # 5) Update router fields
-            router.cpu_usage = cpu_usage or 0.0
-            router.mem_usage = mem_usage or 0.0
-            router.storage_usage = overall_storage_pct or 0.0
+            # router.cpu_usage = cpu_usage or 0.0
+            # router.mem_usage = mem_usage or 0.0
+            # router.storage_usage = overall_storage_pct or 0.0
             
             router.save()
 
@@ -103,5 +104,3 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(
                     f"[ALERT] {router.name}:{router.ip} is offline!"
                 ))
-
-        self.stdout.write(self.style.SUCCESS("Device status check complete."))
