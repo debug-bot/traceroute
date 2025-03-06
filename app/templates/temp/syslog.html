@@ -2,7 +2,7 @@
 {% block styles %}
     <!--begin::Vendor Stylesheets(used for this page only)-->
     <link
-        href="{% static 'assets/plugins/custom/datatables/datatables-latest.bundle.css' %}"
+        href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}"
         rel="stylesheet"
         type="text/css"
     />
@@ -13,22 +13,20 @@
     }
     /* Ensure timestamp and device columns don't wrap and have fixed widths */
     th.timestamp, td.timestamp {
-        width: 150px; /* Adjust width as needed */
         white-space: nowrap;
     }
     th.device, td.device {
-        width: 150px; /* Adjust width as needed */
         white-space: nowrap;
     }
     </style>
 {% endblock %} {% block content %}
-<table class="table table-striped table-hover" id='logsTable'>
-	<thead class="table-light">
-		<tr>
-			<th scope="col">Timestamp</th>
-			<th scope="col">Device</th>
-			<th scope="col">Source</th>
-			<th scope="col">Message</th>
+<table class="table table-striped table-hover table-row-bordered gy-5 gs-7 border rounded" id='logsTable'>
+	<thead class="">
+		<tr class="fw-bold fs-6 text-gray-800 px-7">
+			<th class="timestamp" scope="col">Time</th>
+			<th class="device" scope="col">Device</th>
+			<th class="source" scope="col">Source</th>
+			<th class="message" scope="col">Message</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -52,20 +50,31 @@
 {% endblock %}
 {% block scripts %}
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="{% static 'assets/plugins/custom/datatables/datatables-latest.bundle.js' %}"></script>
+<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
 <!--end::Vendors Javascript-->
 <script>
     $(document).ready(function () {
         // Initialize DataTables on our table with optional settings.
-       
-        new DataTable('#logsTable',{
-            "pageLength": 10,         // Display 10 rows per page
+       $('#logsTable').DataTable({
+          "pageLength": 10,         // Display 10 rows per page
             "order": [[0, "desc"]],   // Sort by the first column (timestamp) descending
             // DataTables automatically adds search and pagination functionality.
             "initComplete": function () {
                 $('#logsTable').css('visibility', 'visible');
-            }
-        })
+            },
+            "dom":
+                "<'row mb-2'" +
+                "<'col-sm-6 d-flex align-items-center justify-conten-start dt-toolbar'l>" +
+                "<'col-sm-6 d-flex align-items-center justify-content-end dt-toolbar'f>" +
+                ">" +
+
+                "<'table-responsive'tr>" +
+
+                "<'row'" +
+                "<'col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start'i>" +
+                "<'col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'p>" +
+                ">"
+       })
     });
 </script>
 {% endblock %}
