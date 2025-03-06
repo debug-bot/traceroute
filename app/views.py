@@ -575,6 +575,8 @@ def rsyslog_log_view(request):
     if os.path.exists(base_log_dir):
         # Iterate over each device folder (device name)
         for device in os.listdir(base_log_dir):
+            if device == 'net-tools':
+                continue
             device_path = os.path.join(base_log_dir, device)
             if os.path.isdir(device_path):
                 # Iterate over each file in the device folder
