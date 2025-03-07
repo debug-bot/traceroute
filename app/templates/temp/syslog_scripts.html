@@ -1,5 +1,10 @@
 <script>
 	$(document).ready(function () {
+		// Auto reload
+		setInterval(function(){
+			window.location.reload();
+		}, 20000); // 20000 milliseconds = 20 seconds
+
 		// Initialize DataTables on our table with optional settings.
 		$("#logsTable").DataTable({
 			pageLength: 10, // Display 10 rows per page

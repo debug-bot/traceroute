@@ -297,9 +297,10 @@ def get_devices_by_datacenters(request):
                     "ip": device.ip,
                     "name": device.name,
                     "status": device.status,
-                    "uptime_percentage": f'{device.uptime_percentage}%' if device.uptime_percentage else '...',
-                    "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
-                    "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
+                    "latency": f'{device.avg_latency} ms' if device.avg_latency else '...',
+                    "uptime": f'{device.uptime_percentage}%' if device.uptime_percentage else '...',
+                    # "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
+                    # "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
                 })
                 total_uptime_percentage += device.uptime_percentage
                 total_offline_devices += device.status == "offline"
@@ -482,6 +483,8 @@ from django.shortcuts import render
 def rsyslog_log_view(request):
     base_log_dir = '/var/log/syslog_logs'
     log_entries = []
+    threshold = time.time() - (30 * 24 * 60 * 60)  # 30 days ago
+
 
     # Ensure the base log directory exists
     if os.path.exists(base_log_dir):
@@ -495,6 +498,9 @@ def rsyslog_log_view(request):
                 for log_file in os.listdir(device_path):
                     file_path = os.path.join(device_path, log_file)
                     if os.path.isfile(file_path):
+                        # Skip files older than 30 days:
+                        if os.path.getmtime(file_path) < threshold:
+                            continue
                         try:
                             with open(file_path, 'r') as f:
                                 for line in f:
@@ -527,6 +533,6 @@ def rsyslog_log_view(request):
                             })
 
     # sort the log entries by timestamp (assumes "YYYY-MM-DD HH:MM:SS" format)
-    log_entries.sort(key=lambda entry: entry['timestamp'], reverse=True)
+    # log_entries.sort(key=lambda entry: entry['timestamp'], reverse=True)
     context = {'log_entries': log_entries, 'title':'Syslog'}
     return render(request, 'temp/syslog.html', context)

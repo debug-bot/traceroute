@@ -3,6 +3,8 @@ import paramiko
 import time
 import re
 
+from app.models import Router
+
 # Router SSH Details
 ROUTER_SSH_DETAILS = {
     "hostname": "23.141.136.2",
