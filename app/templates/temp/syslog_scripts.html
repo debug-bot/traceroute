@@ -1,9 +1,34 @@
 <script>
 	$(document).ready(function () {
 		// Auto reload
-		setInterval(function(){
-			window.location.reload();
-		}, 20000); // 20000 milliseconds = 20 seconds
+		let reloadIntervalId = null;
+
+		function startReloadInterval() {
+			// Clear any existing interval
+			if (reloadIntervalId !== null) {
+				clearInterval(reloadIntervalId);
+			}
+			// Get selected interval in milliseconds
+			const reloadTime =
+				parseInt(document.getElementById("reloadSelect").value, 10) *
+				1000;
+			// Set a new interval that only reloads if the page is visible
+			reloadIntervalId = setInterval(function () {
+				if (document.visibilityState === "visible") {
+					window.location.reload();
+				}
+			}, reloadTime);
+		}
+
+		// Start interval when DOM is loaded
+		startReloadInterval();
+
+		// Update the interval when the dropdown selection changes
+		document
+			.getElementById("reloadSelect")
+			.addEventListener("change", function () {
+				startReloadInterval();
+			});
 
 		// Initialize DataTables on our table with optional settings.
 		$("#logsTable").DataTable({

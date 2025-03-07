@@ -33,7 +33,14 @@
         }
     </style>
 {% endblock %} {% block content %}
-<table class="table table-striped table-hover table-row-bordered gy-5 gs-7 border rounded" id='logsTable'>
+<div class="mt-4 d-flex justify-content-end">
+    <label class="text-gray-800" for="reloadSelect">Auto Reload Interval:</label>
+    <select class="text-gray-800 ms-4" id="reloadSelect">
+      <option value="10">10 seconds</option>
+      <option value="20">20 seconds</option>
+    </select>
+</div>
+<table class="table table-striped table-hover table-row-bordered mt-6 gy-5 gs-7 border rounded" id='logsTable'>
 	<thead class="">
 		<tr class="fw-bold fs-6 text-gray-800 px-7">
 			<th class="timestamp" scope="col">Time</th>
