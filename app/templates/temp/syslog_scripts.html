@@ -1,88 +1,100 @@
 <script>
-	$(document).ready(function () {
-		$("#reloadSelect").select2({
-			minimumResultsForSearch: -1
-		})
-		// Auto reload
-		let reloadIntervalId = null;
+    $(document).ready(function () {
+        //$("#reloadSelect").select2({
+        //    minimumResultsForSearch: -1,
+        //});
 
-		function startReloadInterval() {
-			// Clear any existing interval
-			if (reloadIntervalId !== null) {
-				clearInterval(reloadIntervalId);
-			}
-			// Get selected interval in milliseconds
-			const reloadTime =
-				parseInt(document.getElementById("reloadSelect").value, 10) *
-				1000;
-			// Set a new interval that only reloads if the page is visible
-			reloadIntervalId = setInterval(function () {
-				if (document.visibilityState === "visible") {
-					window.location.reload();
-				}
-			}, reloadTime);
-		}
+        let reloadIntervalId = null;
 
-		// Start interval when DOM is loaded
-		// startReloadInterval();
+        const savedInterval = localStorage.getItem("reloadInterval");
+        if (savedInterval) {
+            document.getElementById("reloadSelect").value = savedInterval;
+            startReloadInterval();
+        }
 
-		// Update the interval when the dropdown selection changes
-		document
-			.getElementById("reloadSelect")
-			.addEventListener("change", function () {
-				startReloadInterval();
-			});
+        function startReloadInterval() {
+            if (reloadIntervalId !== null) {
+                clearInterval(reloadIntervalId);
+            }
 
-		// Initialize DataTables on our table with optional settings.
-		$("#logsTable").DataTable({
-			pageLength: 10, // Display 10 rows per page
-			order: [[0, "desc"]], // Sort by the first column (timestamp) descending
-			buttons: [
-				{
-					extend: "collection",
-					text: '<span class="text-gray-800"><i class="fa fa-download"></i> Download Logs</span>',
-					titleAttr: "Export Options",
-					buttons: [
-						{
-							extend: "csvHtml5",
-							text: "Download as CSV",
-							titleAttr: "Export as CSV",
-						},
-						{
-							extend: "excelHtml5",
-							text: "Download as Excel",
-							titleAttr: "Export as Excel",
-						},
-					],
-				},
-			],
-			// DataTables automatically adds search and pagination functionality.
-			initComplete: function () {
-				$("#logsTable").css("visibility", "visible");
-				// Find the dt-toolbar that contains the search input and append the reload icon with margin
-				$(".dt-toolbar")
-					.filter(function () {
-						return $(this).find('input[type="search"]').length > 0;
-					})
-					.append(
-						'<div id="reloadIcon" style="margin-left:1rem; cursor:pointer;"><i class="fa fa-sync fa-lg text-gray-500"></i></div>'
-					);
-				$("#reloadIcon").on("click", function () {
-					location.reload();
-				});
-			},
-			dom:
-				"<'row mb-2'" +
-				"<'col-sm-3 d-flex align-items-center justify-content-start dt-toolbar'l>" +
-				"<'col-sm-5 mt-2 d-flex align-items-center justify-content-end dt-toolbar'B>" +
-				"<'col-sm-4 d-flex align-items-center justify-content-end dt-toolbar'f>" +
-				"<'col-sm-1 dt-toolbar'<'#reloadContainer'>>" +
-				">" +
-				"<'table-responsive'tr>" +
-				"<'row'" +
-				"<'col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start'i>" +
-				"<'col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'p>" +
-				">",
-		});
-	});
+            let selectedValue = document.getElementById("reloadSelect").value;
+            let reloadTime = parseInt(selectedValue, 10) * 1000;
+
+            if (!isNaN(reloadTime) && reloadTime > 0) {
+                reloadIntervalId = setInterval(function () {
+                    if (document.visibilityState === "visible") {
+                        window.location.reload();
+                    }
+                }, reloadTime);
+            }
+        }
+
+        // startReloadInterval();
+
+        $("#reloadSelect").change(function () {
+            const value = $(this).val();
+            if (value === "") {
+                if (reloadIntervalId !== null) {
+                    clearInterval(reloadIntervalId);
+                    reloadIntervalId = null;
+                }
+                localStorage.removeItem("reloadInterval");
+            } else {
+                localStorage.setItem("reloadInterval", value);
+                startReloadInterval();
+            }
+        });
+
+        // Initialize DataTables on our table with optional settings.
+        $("#logsTable").DataTable({
+            pageLength: 10, // Display 10 rows per page
+            order: [[0, "desc"]], // Sort by the first column (timestamp) descending
+            buttons: [
+                {
+                    extend: "collection",
+                    text: '<span class="text-gray-800"><i class="fa fa-download"></i> Download Logs</span>',
+                    titleAttr: "Export Options",
+                    buttons: [
+                        {
+                            extend: "csvHtml5",
+                            text: "Download as CSV",
+                            titleAttr: "Export as CSV",
+                        },
+                        {
+                            extend: "excelHtml5",
+                            text: "Download as Excel",
+                            titleAttr: "Export as Excel",
+                        },
+                    ],
+                },
+            ],
+            // DataTables automatically adds search and pagination functionality.
+            initComplete: function () {
+                $("#logsTable").css("visibility", "visible");
+                // Find the dt-toolbar that contains the search input and append the reload icon with margin
+                $(".dt-toolbar")
+                    .filter(function () {
+                        return $(this).find('input[type="search"]').length > 0;
+                    })
+                    .append(
+                        '<div id="reloadIcon" style="margin-left:1rem; cursor:pointer;"><i class="fa fa-sync fa-lg text-gray-500"></i></div>'
+                    );
+                $("#reloadIcon").on("click", function () {
+                    location.reload();
+                });
+            },
+            dom:
+                "<'row mb-2'" +
+                "<'col-sm-3 d-flex align-items-center justify-content-start dt-toolbar'l>" +
+                "<'col-sm-5 mt-2 d-flex align-items-center justify-content-end dt-toolbar'B>" +
+                "<'col-sm-4 d-flex align-items-center justify-content-end dt-toolbar'f>" +
+                "<'col-sm-1 dt-toolbar'<'#reloadContainer'>>" +
+                ">" +
+                "<'table-responsive'tr>" +
+                "<'row'" +
+                "<'col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start'i>" +
+                "<'col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'p>" +
+                ">",
+        });
+    });
 </script>
