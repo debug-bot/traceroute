@@ -28,7 +28,7 @@ def signup(request):
 
     form = SignUpForm()
     context = {"form": form}
-    return render(request, "authentication/signup.html", context)
+    return render(request, "new_authentication/register.html", context)
 
 
 def login(request):
@@ -66,7 +66,7 @@ def login(request):
 
     form = LoginForm()
     context = {"form": form}
-    return render(request, "authentication/login.html", context)
+    return render(request, "new_authentication/login.html", context)
 
 
 def logout(request):

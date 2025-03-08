@@ -89,3 +89,11 @@
 .menu-link > .menu-title {
 	color: inherit !important;
 }
+
+.menu-link {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.menu-link:hover {
+    background-color: var(--bs-gray-100);
+}

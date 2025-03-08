@@ -1,5 +1,8 @@
 <script>
 	$(document).ready(function () {
+		$("#reloadSelect").select2({
+			minimumResultsForSearch: -1
+		})
 		// Auto reload
 		let reloadIntervalId = null;
 
@@ -21,7 +24,7 @@
 		}
 
 		// Start interval when DOM is loaded
-		startReloadInterval();
+		// startReloadInterval();
 
 		// Update the interval when the dropdown selection changes
 		document
