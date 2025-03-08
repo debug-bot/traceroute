@@ -1,57 +1,55 @@
 /* The overlay that covers only #kt_app_content_container */
 #container-overlay {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-color: rgba(255, 255, 255, 0.9);
-	z-index: 999;
-	display: none; /* hidden by default */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    z-index: 999;
+    display: none; /* hidden by default */
 }
 
 /* Center the spinner in the container (both horizontally & vertically) */
 #spinner-center {
-	position: fixed;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	z-index: 1000;
-	display: none; /* hidden by default */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    display: none; /* hidden by default */
 }
 /* A container for console-like text */
 .console-view {
-	display: block;
-	padding: 1rem;
-	font-family: "Courier New", Courier, monospace;
-	border-radius: 4px;
-	overflow: auto;
-	font-size: 16px;
-	/* Light theme defaults */
-	background-color: #f3f4f6;
-	color: #4b5563;
-	white-space: pre; /* preserves spacing & line breaks */
+    display: block;
+    padding: 1rem;
+    font-family: "Courier New", Courier, monospace;
+    border-radius: 4px;
+    overflow: auto;
+    font-size: 16px;
+    /* Light theme defaults */
+    background-color: #f3f4f6;
+    color: #4b5563;
+    white-space: pre; /* preserves spacing & line breaks */
 }
 
 /* Dark theme overrides */
 [data-bs-theme="dark"] .console-view {
-	background-color: #111827;
-	color: #d1d5db;
+    background-color: #111827;
+    color: #d1d5db;
 }
 
 .history-container {
-	background-color: #f9fafb;
+    background-color: #f9fafb;
 }
 
 [data-bs-theme="dark"] .history-container {
-	background-color: #1f2937;
+    background-color: #1f2937;
 }
 
 .badge {
-	font-weight: 500;
+    font-weight: 500;
 }
-
-
 
 .loader-container {
     display: inline-flex;
@@ -77,17 +75,20 @@
     }
 }
 
-.h-16px, .h-lg-16px {
-	height: 16px !important;
+.h-16px,
+.h-lg-16px {
+    height: 16px !important;
 }
-.h-24px, .h-lg-24px {
-	height: 24px !important;
+.h-24px,
+.h-lg-24px {
+    height: 24px !important;
 }
-.menu-link:hover, .menu-title:hover {
-	color : #1B84FF !important;
+.menu-link:hover,
+.menu-title:hover {
+    color: #1b84ff !important;
 }
 .menu-link > .menu-title {
-	color: inherit !important;
+    color: inherit !important;
 }
 
 .menu-link {
@@ -96,4 +97,23 @@
 
 .menu-link:hover {
     background-color: var(--bs-gray-100);
+}
+.dt-toolbar label {
+    color: var(--bs-text-gray-800) !important;
+    font-size: 14px;
+}
+.dt-empty,
+.dt-info {
+    color: var(--bs-text-gray-800) !important;
+}
+.buttons-collection {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 0.6rem !important;
+    padding-bottom: 0.55rem !important;
+}
+
+.dt-toolbar input,
+.dt-toolbar select {
+    background-color: var(--bs-text-gray-200) !important;
 }
