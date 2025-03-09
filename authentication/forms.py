@@ -1,33 +1,38 @@
 from django import forms
 from django.contrib.auth.models import User
 from .snippets import verify_password
-from .models import  UserProfile
+from .models import UserProfile
 
 
 class SignUpForm(forms.ModelForm):
-    password1 = forms.CharField(label="Password", widget = forms.PasswordInput)
-    password2 = forms.CharField(label="Repeat Password", widget = forms.PasswordInput)
+    password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
+    password2 = forms.CharField(label="Repeat Password", widget=forms.PasswordInput)
 
-    class Meta():
+    class Meta:
         model = User
-        fields = ['username', 'email']
-        password1 = forms.CharField(label="Password", widget = forms.PasswordInput)
-        password2 = forms.CharField(label="Repeat Password", widget = forms.PasswordInput)
+        fields = ["username", "email"]
+        password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
+        password2 = forms.CharField(label="Repeat Password", widget=forms.PasswordInput)
 
     def clean(self):
-        username = self.cleaned_data.get('username')
-        email = self.cleaned_data.get('email')
-        password1 = self.cleaned_data.get('password1')
-        password2 = self.cleaned_data.get('password2')
+        username = self.cleaned_data.get("username")
+        email = self.cleaned_data.get("email")
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
         error_list = dict()
 
-        verify_password(field_name='password1', password1=password1, password2=password2, error_list=error_list)
+        verify_password(
+            field_name="password1",
+            password1=password1,
+            password2=password2,
+            error_list=error_list,
+        )
 
         if User.objects.filter(email=email).exists():
-            error_list['email'] = 'Email already registered!'
+            error_list["email"] = "Email already registered!"
 
         if User.objects.filter(username=username).exists():
-            error_list['username'] = 'Username already registered!'
+            error_list["username"] = "Username already registered!"
 
         if error_list is not None:
             for error in error_list:
@@ -51,28 +56,47 @@ class ChangePasswordForm(forms.Form):
 
 
 class UserProfileForm(forms.ModelForm):
-    # Add fields from the User model
     username = forms.CharField(
         max_length=150,
         required=True,
-        widget=forms.TextInput(attrs={"class": "form-control"}),
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control form-control-lg form-control-solid",
+                "placeholder": "Username",
+            }
+        ),
         label="Username",
     )
     email = forms.EmailField(
         required=True,
-        widget=forms.EmailInput(attrs={"class": "form-control"}),
+        widget=forms.EmailInput(
+            attrs={
+                "class": "form-control form-control-lg form-control-solid",
+                "placeholder": "Email",
+            }
+        ),
         label="Email",
     )
     first_name = forms.CharField(
         max_length=150,
         required=False,
-        widget=forms.TextInput(attrs={"class": "form-control"}),
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control form-control-lg form-control-solid mb-3 mb-lg-0",
+                "placeholder": "First Name",
+            }
+        ),
         label="First Name",
     )
     last_name = forms.CharField(
         max_length=150,
         required=False,
-        widget=forms.TextInput(attrs={"class": "form-control"}),
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control form-control-lg form-control-solid",
+                "placeholder": "Last Name",
+            }
+        ),
         label="Last Name",
     )
 
@@ -89,10 +113,31 @@ class UserProfileForm(forms.ModelForm):
             "location",
         ]
         widgets = {
-            "bio": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
-            "phone": forms.TextInput(attrs={"class": "form-control"}),
-            "location": forms.TextInput(attrs={"class": "form-control"}),
-            "profile_image": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "profile_image": forms.ClearableFileInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Profile Image",
+                }
+            ),
+            "bio": forms.Textarea(
+                attrs={
+                    "class": "form-control form-control-lg form-control-solid",
+                    "rows": 4,
+                    "placeholder": "Tell us about yourself",
+                }
+            ),
+            "phone": forms.TextInput(
+                attrs={
+                    "class": "form-control form-control-lg form-control-solid",
+                    "placeholder": "Phone Number",
+                }
+            ),
+            "location": forms.TextInput(
+                attrs={
+                    "class": "form-control form-control-lg form-control-solid",
+                    "placeholder": "Location",
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):

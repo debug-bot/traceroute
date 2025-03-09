@@ -40,7 +40,7 @@
 			type="text/css"
 		/>
 		<link
-			href="{% static 'assets/css/style.css' %}"
+			href="{% static 'assets/css/style.css' %}?v=1.1"
 			rel="stylesheet"
 			type="text/css"
 		/>
@@ -200,7 +200,7 @@
 								<div class="app-navbar-item ms-1 ms-md-2">
 									<!--begin::Menu Notification-->
 									<a
-										href="#"
+										href="{% url 'alerts_view' %}"
 										class="btn btn-icon btn-custom btn-icon-muted btn-active-light btn-active-color-primary w-35px h-35px"
 										data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
 										data-kt-menu-placement="bottom-end"
@@ -347,7 +347,7 @@
 													<div
 														class="fw-bold d-flex align-items-center fs-5"
 													>
-														Robert Fox
+														{{ request.user.username }}
 														<span
 															class="badge badge-light-success fw-bold fs-8 px-2 py-1 ms-2"
 															>Pro</span
@@ -356,7 +356,7 @@
 													<a
 														href="#"
 														class="fw-semibold text-muted text-hover-primary fs-7"
-														>robert@kt.com</a
+														>{{ request.user.email|default:"----" }}</a
 													>
 												</div>
 												<!--end::Username-->
@@ -883,7 +883,7 @@
 										<!--begin:Menu item-->
 										<div class="menu-item">
 											<!--begin:Menu link-->
-											<a class="menu-link" href="#">
+											<a class="menu-link  {% active 'configuration_view' %}" href="{% url 'configuration_view' %}">
 												<span class="menu-icon">
 													<i
 														class="la la-cog fs-1"
@@ -899,7 +899,7 @@
 										<!--begin:Menu item-->
 										<div class="menu-item">
 											<!--begin:Menu link-->
-											<a class="menu-link" href="#">
+											<a class="menu-link  {% active 'alerts_view' %}" href="{% url 'alerts_view' %}">
 												<span class="menu-icon">
 													<i
 														class="la la-bell fs-1"

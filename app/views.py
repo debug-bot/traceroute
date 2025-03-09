@@ -1,4 +1,3 @@
-
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import (
     Category,
@@ -10,7 +9,12 @@ from .models import (
 )
 from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from datetime import datetime
-from .utils import execute_ssh_command, ROUTER_SSH_DETAILS, execute_ssh_command_while, ping_device_n_times
+from .utils import (
+    execute_ssh_command,
+    ROUTER_SSH_DETAILS,
+    execute_ssh_command_while,
+    ping_device_n_times,
+)
 import time
 import paramiko
 from django.contrib.auth.decorators import login_required
@@ -19,6 +23,7 @@ import json
 from django.utils.html import format_html, escape
 from django.utils.safestring import mark_safe
 from django.views.decorators.http import require_GET
+
 
 def main(request):
     return redirect("login")
@@ -51,7 +56,7 @@ def network_tools_api(request):
     # Convert custom parameter to boolean.
     # (Assumes custom is passed as "true" or "false".)
     custom_param = request.GET.get("custom", "false").lower() == "true"
-    
+
     # Retrieve the router object based on router_id
     router = Router.objects.filter(id=router_id).first()
     if router:
@@ -146,7 +151,7 @@ def network_tools_api(request):
                         user=request.user,
                         device=router,
                         command=command,
-                        output=multiline_output
+                        output=multiline_output,
                     )
 
         response = StreamingHttpResponse(stream_output(), content_type="text/plain")
@@ -196,9 +201,10 @@ def network_tools_api(request):
 
         # Return the full output as a downloadable text file.
         response = HttpResponse(collected_output, content_type="text/plain")
-        response["Content-Disposition"] = f'attachment; filename="{router.name}_{router.ip}_configuration.txt"'
+        response["Content-Disposition"] = (
+            f'attachment; filename="{router.name}_{router.ip}_configuration.txt"'
+        )
         return response
-
 
 
 @login_required(login_url="/login")
@@ -232,51 +238,69 @@ def get_devices_by_datacenters(request):
         cities = request.GET.getlist("cities[]")  # Get the selected cities as a list
         status = request.GET.get("status", "all")  # Get the status filter
         print(status, cities)
-        
+
         # Build a list of datacenter info + their devices
         devices = []
         total_uptime_percentage = 0.0
         total_offline_devices = 0
         total_devices = 0
-        
-        # if cities contain 'all' then get cities from db 
-        if 'all' in cities:
+
+        # if cities contain 'all' then get cities from db
+        if "all" in cities:
             cities = DataCenter.objects.all()
-            
+
             for city in cities:
                 city_devices_qs = Router.objects.filter(datacenter=city)
                 if status != "all":
-                    city_devices_qs = Router.objects.filter(datacenter=city, status=status)
+                    city_devices_qs = Router.objects.filter(
+                        datacenter=city, status=status
+                    )
                     print(city_devices_qs)
                 # Build JSON-serializable list with property access
                 devices_list = []
                 for device in city_devices_qs:
-                    devices_list.append({
-                        "id": device.id,
-                        "ip": device.ip,
-                        "name": device.name,
-                        "status": device.status,
-                        "latency": f'{device.avg_latency} ms' if device.avg_latency else '...',
-                        "uptime": f'{device.uptime_percentage}%' if device.uptime_percentage else '...',
-                        # "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
-                        # "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
-                    })
+                    devices_list.append(
+                        {
+                            "id": device.id,
+                            "ip": device.ip,
+                            "name": device.name,
+                            "status": device.status,
+                            "latency": (
+                                f"{device.avg_latency} ms"
+                                if device.avg_latency
+                                else "..."
+                            ),
+                            "uptime": (
+                                f"{device.uptime_percentage}%"
+                                if device.uptime_percentage
+                                else "..."
+                            ),
+                            # "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
+                            # "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
+                        }
+                    )
                     total_uptime_percentage += device.uptime_percentage
                     total_offline_devices += device.status == "offline"
                     total_devices += 1
-                    
-                devices.append({"city": str(city),
-                                "devices": list(devices_list)})
-                
+
+                devices.append({"city": str(city), "devices": list(devices_list)})
+
             if total_devices > 0:
                 total_uptime_percentage /= total_devices
                 total_uptime_percentage = round(total_uptime_percentage, 2)
-                total_uptime_percentage = f'{total_uptime_percentage}%'
-                
-            return JsonResponse({"status": "success", "datacenters": devices, "total_uptime_percentage": total_uptime_percentage, "total_offline_devices": f'{total_offline_devices} Offline', "total_devices": total_devices})
-        
-        
-        # Otherwise, split city, state        
+                total_uptime_percentage = f"{total_uptime_percentage}%"
+
+            return JsonResponse(
+                {
+                    "status": "success",
+                    "datacenters": devices,
+                    "total_uptime_percentage": total_uptime_percentage,
+                    "total_offline_devices": f"{total_offline_devices} Offline",
+                    "total_devices": total_devices,
+                }
+            )
+
+        # Otherwise, split city, state
         for city in cities:
             # Otherwise, split city, state
             try:
@@ -292,43 +316,82 @@ def get_devices_by_datacenters(request):
             # Build JSON-serializable list with property access
             devices_list = []
             for device in city_devices_qs:
-                devices_list.append({
-                    "id": device.id,
-                    "ip": device.ip,
-                    "name": device.name,
-                    "status": device.status,
-                    "latency": f'{device.avg_latency} ms' if device.avg_latency else '...',
-                    "uptime": f'{device.uptime_percentage}%' if device.uptime_percentage else '...',
-                    # "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
-                    # "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
-                })
+                devices_list.append(
+                    {
+                        "id": device.id,
+                        "ip": device.ip,
+                        "name": device.name,
+                        "status": device.status,
+                        "latency": (
+                            f"{device.avg_latency} ms" if device.avg_latency else "..."
+                        ),
+                        "uptime": (
+                            f"{device.uptime_percentage}%"
+                            if device.uptime_percentage
+                            else "..."
+                        ),
+                        # "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
+                        # "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
+                    }
+                )
                 total_uptime_percentage += device.uptime_percentage
                 total_offline_devices += device.status == "offline"
                 total_devices += 1
             devices.append({"city": city, "devices": devices_list})
-            
+
         if total_devices > 0:
             total_uptime_percentage /= total_devices
             total_uptime_percentage = round(total_uptime_percentage, 2)
-            total_uptime_percentage = f'{total_uptime_percentage}%'
-            
-        return JsonResponse({"status": "success", "datacenters": devices, "total_uptime_percentage": total_uptime_percentage, "total_offline_devices": f'{total_offline_devices} Offline', "total_devices": total_devices})
-        
+            total_uptime_percentage = f"{total_uptime_percentage}%"
+
+        return JsonResponse(
+            {
+                "status": "success",
+                "datacenters": devices,
+                "total_uptime_percentage": total_uptime_percentage,
+                "total_offline_devices": f"{total_offline_devices} Offline",
+                "total_devices": total_devices,
+            }
+        )
+
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
 
 def get_devices_by_cities(request):
     if request.method == "GET":
         cities = request.GET.getlist("cities[]")  # Get the selected cities as a list
-        city_names = [
-            entry.split(",")[0] for entry in cities
-        ]  # Extract only city names
+        if len(cities):
+            city_names = []
+            for city in cities:
+                # Extract only city names
+                try:
+                    try:
+                        city_name, state = city.split(", ")
+                    except:
+                        city_name, state, country = city.split(",")
+                except:
+                    city_name = city
+                city_names.append(city_name)
+            devices = Router.objects.filter(datacenter__city__in=city_names).values(
+                "id", "name", "ip"
+            )
+        else:
+            city = request.GET.get('city','')
+            try:
+                try:
+                    city_name, state = city.split(", ")
+                except:
+                    city_name, state, country = city.split(",")
+            except:
+                city_name = city
 
-        devices = Router.objects.filter(datacenter__city__in=city_names).values(
-            "id", "name", "ip"
-        )
+            print(city_name)
+            devices = Router.objects.filter(datacenter__city=city_name.strip()).values(
+                "id", "name", "ip"
+            )
         return JsonResponse({"devices": list(devices)})
     return JsonResponse({"error": "Invalid request method"}, status=400)
+
 
 @login_required(login_url="/login")
 def command_history_view(request):
@@ -375,7 +438,10 @@ def command_history_view(request):
 
     return render(request, "command_history.html", {"histories": formatted_histories})
 
+
 import json
+
+
 @require_GET
 def download_configuration(request):
     selected_devices_str = request.GET.get("selectedDevices", "[]")
@@ -387,12 +453,17 @@ def download_configuration(request):
         device_id = dev["id"]
         device_ip = dev["ip"]
         try:
-            output = execute_ssh_command_while('show configuration | display set', hostname=device_ip, delay_in_seconds=5)
+            output = execute_ssh_command_while(
+                "show configuration | display set",
+                hostname=device_ip,
+                delay_in_seconds=5,
+            )
         except:
-            output = '0'
-        configuration_data[device_id] = device_ip+'\n'+output
+            output = "0"
+        configuration_data[device_id] = device_ip + "\n" + output
 
     return JsonResponse({"configuration": configuration_data})
+
 
 from django.utils.dateformat import DateFormat
 
@@ -400,16 +471,17 @@ from django.utils.dateformat import DateFormat
 def temp(request):
     return render(request, "temp/base.html")
 
+
 def dashboard(request):
-    context = {'title': 'Dashboard'}
+    context = {"title": "Dashboard"}
     return render(request, "temp/dashboard.html", context)
+
 
 @login_required(login_url="/login")
 def history(request):
     histories = (
-        CommandHistory.objects
-        .filter(user=request.user)
-        .select_related("device")      # so we can access device fields efficiently
+        CommandHistory.objects.filter(user=request.user)
+        .select_related("device")  # so we can access device fields efficiently
         .order_by("-timestamp")
     )
 
@@ -419,18 +491,23 @@ def history(request):
         # e.g. YYYY-MM-DD HH:MM:SS or using strftime
         formatted_ts = DateFormat(h.timestamp).format("Y-m-d H:i:s")
 
-        data.append({
-            "id": h.id,
-            "device_name": h.device.name if h.device else "No Device",
-            "command": h.command,
-            "timestamp": formatted_ts,
-            "output": h.output,
-        })
+        data.append(
+            {
+                "id": h.id,
+                "device_name": h.device.name if h.device else "No Device",
+                "command": h.command,
+                "timestamp": formatted_ts,
+                "output": h.output,
+            }
+        )
 
-    return JsonResponse({
-        "status": "success",
-        "data": data,
-    })
+    return JsonResponse(
+        {
+            "status": "success",
+            "data": data,
+        }
+    )
+
 
 @login_required(login_url="/login")
 def devices(request):
@@ -442,16 +519,17 @@ def devices(request):
     ]
     categories = (
         Category.objects.prefetch_related("command_set")
-        .filter(command__isnull=False).distinct().order_by('order')
+        .filter(command__isnull=False)
+        .distinct()
+        .order_by("order")
     )
-    print(categories)
     popular_commands = PopularCommand.objects.all()
     context = {
-            'title': 'Devices',
-            "unique_cities": unique_cities,
-            "categories": categories,
-            "popular_commands": popular_commands,
-        }
+        "title": "Devices",
+        "unique_cities": unique_cities,
+        "categories": categories,
+        "popular_commands": popular_commands,
+    }
     return render(request, "temp/devices.html", context)
 
 
@@ -470,27 +548,28 @@ def monitoring(request):
     )
     popular_commands = PopularCommand.objects.all()
     context = {
-            'title': 'Monitoring',
-            "unique_cities": unique_cities,
-            "categories": categories,
-            "popular_commands": popular_commands,
-        }
+        "title": "Monitoring",
+        "unique_cities": unique_cities,
+        "categories": categories,
+        "popular_commands": popular_commands,
+    }
     return render(request, "temp/monitoring.html", context)
+
 
 import os
 from django.shortcuts import render
 
+
 def rsyslog_log_view(request):
-    base_log_dir = '/var/log/syslog_logs'
+    base_log_dir = "/var/log/syslog_logs"
     log_entries = []
     threshold = time.time() - (30 * 24 * 60 * 60)  # 30 days ago
-
 
     # Ensure the base log directory exists
     if os.path.exists(base_log_dir):
         # Iterate over each device folder (device name)
         for device in os.listdir(base_log_dir):
-            if device == 'net-tools':
+            if device == "net-tools":
                 continue
             device_path = os.path.join(base_log_dir, device)
             if os.path.isdir(device_path):
@@ -502,37 +581,63 @@ def rsyslog_log_view(request):
                         if os.path.getmtime(file_path) < threshold:
                             continue
                         try:
-                            with open(file_path, 'r') as f:
+                            with open(file_path, "r") as f:
                                 for line in f:
                                     line = line.strip()
                                     if not line:
                                         continue  # Skip empty lines
                                     # Assume the first token is the timestamp
                                     parts = line.split()
-                                    timestamp_str = parts[0] if parts else 'N/A'
+                                    timestamp_str = parts[0] if parts else "N/A"
                                     # Format the timestamp if possible
                                     try:
                                         dt = datetime.fromisoformat(timestamp_str)
-                                        formatted_time = dt.strftime("%Y-%m-%d %H:%M:%S")
+                                        formatted_time = dt.strftime(
+                                            "%Y-%m-%d %H:%M:%S"
+                                        )
                                     except ValueError:
                                         # If timestamp parsing fails, use the original string
                                         formatted_time = timestamp_str
-                                    message = " ".join(parts[1:]) if len(parts) > 1 else ''
-                                    log_entries.append({
-                                        'timestamp': formatted_time,
-                                        'device': device,
-                                        'source': log_file.replace('.log','').upper(),
-                                        'message': message,
-                                    })
+                                    message = (
+                                        " ".join(parts[1:]) if len(parts) > 1 else ""
+                                    )
+                                    log_entries.append(
+                                        {
+                                            "timestamp": formatted_time,
+                                            "device": device,
+                                            "source": log_file.replace(
+                                                ".log", ""
+                                            ).upper(),
+                                            "message": message,
+                                        }
+                                    )
                         except Exception as e:
-                            log_entries.append({
-                                'timestamp': 'Error',
-                                'device': device,
-                                'source': log_file,
-                                'message': f"Failed to read file: {str(e)}",
-                            })
+                            log_entries.append(
+                                {
+                                    "timestamp": "Error",
+                                    "device": device,
+                                    "source": log_file,
+                                    "message": f"Failed to read file: {str(e)}",
+                                }
+                            )
 
     # sort the log entries by timestamp (assumes "YYYY-MM-DD HH:MM:SS" format)
     # log_entries.sort(key=lambda entry: entry['timestamp'], reverse=True)
-    context = {'log_entries': log_entries, 'title':'Syslog'}
-    return render(request, 'temp/syslog.html', context)
+    context = {"log_entries": log_entries, "title": "Syslog"}
+    return render(request, "temp/syslog.html", context)
+
+
+def configuration_view(request):
+    unique_cities = [
+        f"{city}, {state}" if state else f"{city}"
+        for city, state in DataCenter.objects.values_list("city", "state")
+        .distinct()
+        .order_by("city")
+    ]
+    context = {"unique_cities": unique_cities, "title": "Configuration"}
+    return render(request, "temp/configuration.html", context)
+
+
+def alerts_view(request):
+    context = {"title": "Alerts"}
+    return render(request, "temp/alerts.html", context)

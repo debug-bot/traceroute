@@ -1,0 +1,148 @@
+<script>
+	$(document).ready(function () {
+		// Global variables to manage active requests and command state
+		let activeXhrs = [];
+		let commandRunning = false;
+
+		// Do not show both select until select2 initializes
+		$("#datacenters-select").removeClass("d-none");
+		$("#status-select").removeClass("d-none");
+
+		// 1) Initialize Select2 for Datacenters and Devices
+		$("#datacenters-select").select2({
+			placeholder: "Select Datacenter(s)",
+			allowClear: true,
+		});
+		$("#status-select").select2({
+			placeholder: "Select Status",
+			allowClear: true,
+		});
+
+		$("#datacenters-select").on("change", handleAllOptionChange);
+		$("#status-select").on("change", handleAllOptionChange);
+
+		function handleRequest(selectedDatacenters, selectedStatus) {
+			$.ajax({
+				url: "{% url 'get_devices_by_datacenters' %}",
+				method: "GET",
+				data: { cities: selectedDatacenters, status: selectedStatus },
+				success: function (data) {
+					if (data.status === "success") {
+						renderDatacenters(data.datacenters);
+						// Fetch stats for each device
+						$("#network-uptime").text(data.total_uptime_percentage);
+						$("#total-devices").text(data.total_devices);
+						$("#offline-devices").text(data.total_offline_devices);
+					} else {
+						alert("Failed to fetch devices.");
+					}
+				},
+				error: function () {
+					alert("Failed to fetch devices.");
+				},
+			});
+		}
+
+		$("#datacenters-select").on("change", function () {
+			const selectedDatacenters = $(this).val();
+			const selectedStatus = $("#status-select").val();
+			handleRequest(selectedDatacenters, selectedStatus);
+		});
+		$("#status-select").on("change", function () {
+			const selectedDatacenters = $("#datacenters-select").val();
+			const selectedStatus = $(this).val();
+			handleRequest(selectedDatacenters, selectedStatus);
+		});
+
+		function renderDatacenters(datacenters) {
+			const container = document.getElementById("datacentersContainer");
+			container.innerHTML = ""; // Clear previous
+			
+
+			datacenters.forEach((dc) => {
+				// Each DC block
+				const dcDiv = document.createElement("div");
+
+				if (dc.devices.length === 0) {
+					return;
+				}
+				// If there is only one device in the datacenter, we can show '1 device' instead of devices in the title
+				const device_text =
+					dc.devices.length > 1 ? "devices" : "device";
+
+				dcDiv.innerHTML = `
+	        <div>
+	          <div class="d-flex align-items-center gap-3 mb-4">
+	            <img class="h-lg-20px" src="/static/assets/media/svg/custom/devices-grey.svg" alt="Icon" />
+	            <h4 class="m-0 text-gray-900">${dc.city}
+                
+                </h4>
+	            <span class="text-muted">(${
+					dc.devices.length
+				} ${device_text})</span>
+	          </div>
+	          <div class="row g-4 row-cols-2 row-cols-md-3" id="dc-${slugify(
+					dc.city
+				)}">
+	          </div>
+	        </div>
+	      `;
+				container.appendChild(dcDiv);
+
+				// Now add each device card
+				const rowDiv = dcDiv.querySelector(`.row`);
+				dc.devices.forEach((device) => {
+					// Create card with placeholders
+					// We'll place a spinner for the status/cpu/storage until we fetch them
+					const colDiv = document.createElement("div");
+					colDiv.classList.add("col");
+					const statusClass = // online, offline, warning
+						device.status === "online"
+							? "badge-light-success"
+							: device.status === "offline"
+							? "badge-light-danger"
+							: "badge-light-warning";
+					colDiv.innerHTML = `
+	          <div class="h-100 border rounded p-3">
+	            <div class="d-flex justify-content-between">
+	              <span>${device.name}</span>
+	              <!-- Loader spinner in place of badge -->
+	              <span class="badge ${statusClass}" id="status-${device.id}">${device.status}</span>
+	            </div>
+	            <div class="text-muted">${device.ip}</div>
+	            <div class="d-flex text-muted mt-5">
+	              <div class="col-4 d-flex align-items-center">
+	                <i class="fa fa-clock fa-regular fa-sharp fa-lg text-gray-500"></i>
+	                <span class="lh-1 ms-1" id="latency-${device.id}">${device.latency}</span>
+	              </div>
+	              <div class="col-4 d-flex align-items-center">
+	                <img class="h-lg-16px ms-8" src="/static/assets/media/svg/custom/traceroute-grey.svg" alt="Icon" />
+	                <span class="lh-1 ms-1" id="uptime-${device.id}">${device.uptime}</span>
+	              </div>
+	            </div>
+	          </div>
+	        `;
+					rowDiv.appendChild(colDiv);
+				});
+			});
+		}
+
+		// Helper to slugify city names for IDs
+		function slugify(text) {
+			return text
+				.toString()
+				.toLowerCase()
+				.replace(/\s+/g, "-") // Replace spaces with -
+				.replace(/[^\w-]+/g, "") // Remove all non-word chars
+				.replace(/--+/g, "-") // Replace multiple - with single -
+				.replace(/^-+/, "") // Trim - from start of text
+				.replace(/-+$/, ""); // Trim - from end of text
+		}
+
+		// Call handleRequest Initially with 'all' datacenters and 'all' statuses
+		handleRequest(
+			$("#datacenters-select").val(),
+			$("#status-select").val()
+		);
+	});
+</script>

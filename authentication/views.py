@@ -9,6 +9,7 @@ from django.conf import settings
 
 LOGGED_IN_REDIRECT = settings.LOGGED_IN_REDIRECT
 
+
 def signup(request):
     if request.method == "POST":
         form = SignUpForm(request.POST)
@@ -107,9 +108,13 @@ def update_profile(request):
             user.first_name = form.cleaned_data.get("first_name")
             user.last_name = form.cleaned_data.get("last_name")
             user.save()
+            if request.POST.get("avatar_remove"):
+                if profile.profile_image:
+                    profile.profile_image.delete(save=False)
+                profile.profile_image = None
 
             form.save()
-            return redirect("update_profile")  
+            return redirect("update_profile")
     else:
         form = UserProfileForm(instance=profile, user=request.user)
-    return render(request, "user/profile.html", {"form": form})
+    return render(request, "temp/profile.html", {"form": form})

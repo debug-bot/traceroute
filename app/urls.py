@@ -17,5 +17,7 @@ urlpatterns = [
     path("history/", views.history, name="history"),
     # for get_device_stats?device_id
     path("download-configuration/",views.download_configuration,name="download_configuration"),
-    path("syslog/", views.rsyslog_log_view, name="rsyslog_log")
+    path("syslog/", views.rsyslog_log_view, name="rsyslog_log"),
+    path("configuration/", views.configuration_view, name="configuration_view"),
+    path("alerts/", views.alerts_view, name="alerts_view"),
 ]

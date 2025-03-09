@@ -13,3 +13,8 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+    def get_profile_image(self):
+        if self.profile_image and hasattr(self.profile_image, "url"):
+            return self.profile_image.url
+        return "/static/assets/media/svg/avatars/blank.svg"

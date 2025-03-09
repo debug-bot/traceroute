@@ -1,0 +1,116 @@
+{% extends 'temp/base.html' %} {% load static %} {% block styles %}
+<!-- gap -->
+{% endblock %} {% block content %}
+
+<!-- Form (we'll handle submission via JavaScript) -->
+<form id="commandForm" method="POST">
+    <div class="d-flex gap-6 flex-column mt-6">
+        {% csrf_token %}
+        <!-- Top Row: Datacenter & Device -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-6">
+                <div class="row g-6">
+                    <div class="col-md-6">
+                        <label for="datacenter-select" class="form-label"
+                            >Datacenter</label
+                        >
+                        <!-- Multiple select using Select2 -->
+                        <select
+                            class="form-select d-none"
+                            id="datacenter-select"
+                            name="datacenters"
+                        >
+                            <option value="">Select Datacenter</option>
+                            {% for item in unique_cities %}
+                            <option value="{{ item }}">{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="device-select" class="form-label"
+                            >Device</label
+                        >
+                        <!-- Multiple select using Select2 -->
+                        <select
+                            class="form-select d-none"
+                            id="device-select"
+                            name="devices"
+                            disabled
+                        >
+                            <option value="">Select Device</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2nd Row -->
+        
+        <div class="card border-0 shadow-sm"></div>
+    </div>
+</form>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var ctx = document.getElementById("latencyChart").getContext("2d");
+
+        var data = {
+            labels: ["24h", "20h", "16h", "12h", "8h", "4h", "Now"],
+            datasets: [
+                {
+                    label: "Latency (ms)",
+                    data: [5, 4, 6, 3, 2, 4, 5],
+                    borderColor: "#3598dc",
+                    //backgroundColor: "rgba(63, 81, 181, 0.1)",
+                    //fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: "#3598dc",
+                    borderWidth: 2,
+                },
+            ],
+        };
+
+        var options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    title: {
+                        display: false,
+                        text: "ms",
+                    },
+                    beginAtZero: true,
+                    grid: {
+                        display: true,
+                        drawBorder: true,
+                    },
+                },
+                x: {
+                    title: {
+                        display: false,
+                        text: "Time",
+                    },
+                    grid: {
+                        display: false,
+                        drawBorder: false,
+                    },
+                },
+            },
+            plugins: {
+                legend: {
+                    display: false,
+                },
+            },
+        };
+
+        new Chart(ctx, {
+            type: "line",
+            data: data,
+            options: options,
+        });
+    });
+</script>
+<!-- end::Content Block -->
+{% endblock content %} {% block scripts %}
+<!-- gap -->
+{% include 'temp/configuration_scripts.html' %} {% endblock scripts %}

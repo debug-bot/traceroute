@@ -1,6 +1,6 @@
 {% extends 'temp/base.html' %} {% load static %} {% block styles %}
 <!-- gap -->
-{% endblock %} {% block content %}
+{% endblock styles %} {% block content %}
 
 <!-- Form (we'll handle submission via JavaScript) -->
 <form id="commandForm" method="POST">
@@ -31,7 +31,7 @@
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label for="status-select" class="form-label"
+                        <label for="devices-select" class="form-label"
                             >Status</label
                         >
                         <!-- Multiple select using Select2 -->
@@ -440,12 +440,7 @@
         });
     });
 </script>
-{% block modal %}
-<!--begin::Modal - History-->
-{% include 'temp/history_modal.html' %}
-<!--end::Modal - History-->
-{% endblock modal %}
 <!-- end::Content Block -->
 {% endblock content %} {% block scripts %}
 <!-- gap -->
-{% include 'temp/monitoring_scripts.html' %} {% endblock scripts %}
+{% include 'temp/links_scripts.html' %} {% endblock scripts %}

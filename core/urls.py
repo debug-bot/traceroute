@@ -17,8 +17,10 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-
+from django.conf import settings
 from core.views import ZabbixInterfaceDataView
+from django.conf.urls.static import static
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -27,3 +29,6 @@ urlpatterns = [
     path('api/zabbix/interfaces/', ZabbixInterfaceDataView.as_view(), name='zabbix_interfaces'),
 
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
