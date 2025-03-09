@@ -1,0 +1,68 @@
+<script>
+    $(document).ready(function () {
+        // Global variables to manage active requests and command state
+        let activeXhrs = [];
+        let commandRunning = false;
+
+        // Do not show both select until select2 initializes
+        $("#datacenter-select").removeClass("d-none");
+        $("#device-select").removeClass("d-none");
+
+        // 1) Initialize Select2 for Datacenters and Devices
+        $("#datacenter-select").select2({
+            placeholder: "Select Datacenter",
+            allowClear: true,
+        });
+        $("#device-select").select2({
+            placeholder: "Select Device",
+            allowClear: true,
+        });
+
+        $("#datacenter-select").on("change", function () {
+            const selectedDatacenter = $(this).val();
+            const deviceSelect = $("#device-select");
+
+            if (!selectedDatacenter) {
+                deviceSelect.empty();
+                deviceSelect.append('<option value="">Select Device</option>');
+                return;
+            }
+
+            $.ajax({
+                url: "/get-devices/",
+                method: "GET",
+                data: { city: selectedDatacenter },
+                success: function (data) {
+                    deviceSelect.empty();
+                    deviceSelect.prop("disabled", false);
+                    if (data.devices.length > 0) {
+                        deviceSelect.append(
+                            '<option value="">Select Device</option>'
+                        );
+                        data.devices.forEach((device) => {
+                            deviceSelect.append(
+                                `<option value="${device.id}" data-ip="${device.ip}">${device.name} (${device.ip})</option>`
+                            );
+                        });
+                    } else {
+                        deviceSelect.append(
+                            `<option value="">No devices available</option>`
+                        );
+                    }
+                },
+                error: function () {
+                    alert("Failed to fetch devices.");
+                },
+            });
+        });
+
+        $("#device-select").on("change", function () {
+            const selectedOption = $(this).find(":selected");
+            const device = {
+                name: selectedOption.text(),
+                id: selectedOption.val(),
+                ip: selectedOption.data("ip"),
+            };
+        });
+    });
+</script>

@@ -2,7 +2,6 @@
 <!-- gap -->
 {% endblock styles %} {% block content %}
 
-<!-- Form (we'll handle submission via JavaScript) -->
 <form id="commandForm" method="POST">
     <div class="d-flex gap-6 flex-column mt-6">
         {% csrf_token %}
@@ -11,436 +10,46 @@
             <div class="card-body p-6">
                 <div class="row g-6">
                     <div class="col-md-6">
-                        <label for="datacenters-select" class="form-label"
+                        <label for="datacenter-select" class="form-label"
                             >Datacenter</label
                         >
                         <!-- Multiple select using Select2 -->
                         <select
                             class="form-select d-none"
-                            id="datacenters-select"
+                            id="datacenter-select"
                             name="datacenters"
-                            multiple
                         >
-                            <!-- "All Datacenters" default selection -->
-                            <option value="all" selected>
-                                All Datacenters
-                            </option>
+                            <option value="">Select Datacenter</option>
                             {% for item in unique_cities %}
                             <option value="{{ item }}">{{ item }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label for="devices-select" class="form-label"
-                            >Status</label
+                        <label for="device-select" class="form-label"
+                            >Device</label
                         >
                         <!-- Multiple select using Select2 -->
                         <select
                             class="form-select d-none"
-                            id="status-select"
-                            name="status"
+                            id="device-select"
+                            name="devices"
+                            disabled
                         >
-                            <!-- "All Datacenters" default selection -->
-                            <option value="all" selected>All Statuses</option>
-                            <option value="online">Online</option>
-                            <option value="offline">Offline</option>
-                            <option value="warning">Warning</option>
+                            <option value="">Select Device</option>
                         </select>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2nd Row: Stats -->
-        <div class="row g-6 align-items-stretch">
-            <!-- Network Uptime -->
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body p-6">
-                        <!-- Top Row: Left Icon & Right Arrow + % -->
-                        <div class="d-flex justify-content-between">
-                            <!-- Left Icon with Light Background -->
-                            <div
-                                class="p-2 rounded d-flex align-items-center justify-content-center"
-                                style="
-                                    width: 40px;
-                                    height: 40px;
-                                    background-color: #eff6ff;
-                                "
-                            >
-                                <img
-                                    class="h-lg-24px"
-                                    src="{% static 'assets/media/svg/dashboard/network-uptime.svg' %}"
-                                    alt="Networking Icon"
-                                />
-                            </div>
-                            <!-- Arrow + % -->
-                            <div class="d-flex align-items-center text-success">
-                                <img
-                                    class="h-lg-16px"
-                                    src="{% static 'assets/media/svg/custom/arrow-green-up.svg' %}"
-                                    alt="Arrow Icon"
-                                />
-                                <span class="ms-1">+0.3%</span>
-                            </div>
-                        </div>
-
-                        <!-- Bottom Row: Title & Value -->
-                        <div class="mt-4">
-                            <h6 class="text-muted mb-1">Network Uptime</h6>
-                            <h2 class="mb-0 text-grey-900" id="network-uptime">
-                                ...
-                            </h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Device Status -->
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body p-6">
-                        <!-- Top Row: Left Icon & Right Arrow + % -->
-                        <div class="d-flex justify-content-between">
-                            <!-- Left Icon with Light Background -->
-                            <div
-                                class="p-2 rounded d-flex align-items-center justify-content-center"
-                                style="
-                                    width: 40px;
-                                    height: 40px;
-                                    background-color: #eff6ff;
-                                "
-                            >
-                                <img
-                                    class="h-lg-24px"
-                                    src="{% static 'assets/media/svg/dashboard/devices.svg' %}"
-                                    alt="Devices Icon"
-                                />
-                            </div>
-                            <!-- Arrow + % -->
-                            <div class="d-flex align-items-center text-danger">
-                                <img
-                                    class="h-lg-16px"
-                                    src="{% static 'assets/media/svg/custom/arrow-red-down.svg' %}"
-                                    alt="Arrow Icon"
-                                />
-                                <span class="ms-1">+0.3%</span>
-                            </div>
-                        </div>
-
-                        <!-- Bottom Row: Title & Value -->
-                        <div class="mt-4">
-                            <h6 class="text-muted mb-1">Device Status</h6>
-                            <div class="d-flex gap-4 align-items-end">
-                                <h2
-                                    class="mb-0 text-grey-900"
-                                    id="total-devices"
-                                >
-                                    ...
-                                </h2>
-                                <div
-                                    class="text-muted text-xs"
-                                    id="offline-devices"
-                                >
-                                    ... Offline
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Active Alerts -->
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body p-6">
-                        <!-- Top Row: Left Icon & Right Arrow + % -->
-                        <div class="d-flex justify-content-between">
-                            <!-- Left Icon with Light Background -->
-                            <div
-                                class="p-2 rounded d-flex align-items-center justify-content-center"
-                                style="
-                                    width: 40px;
-                                    height: 40px;
-                                    background-color: #fefce8;
-                                "
-                            >
-                                <img
-                                    class="h-lg-24px"
-                                    src="{% static 'assets/media/svg/dashboard/alert.svg' %}"
-                                    alt="Icon"
-                                />
-                            </div>
-                            <!-- Arrow + % -->
-                            <div class="d-flex align-items-center text-success">
-                                <img
-                                    class="h-lg-16px"
-                                    src="{% static 'assets/media/svg/custom/arrow-green-up.svg' %}"
-                                    alt="Arrow Icon"
-                                />
-                                <span class="ms-1">+0.3%</span>
-                            </div>
-                        </div>
-
-                        <!-- Bottom Row: Title & Value -->
-                        <div class="mt-4">
-                            <h6 class="text-muted mb-1">Active Alerts</h6>
-                            <h2 class="mb-0 text-grey-900" id="active-alerts">
-                                ...
-                            </h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm">
-            <div
-                class="card-header justify-content-between align-items-center p-6"
-            >
-                <h3 class="mb-0 mt-2 text-gray-900">Live Device Status</h3>
-            </div>
-            <div
-                class="card-body flex-column d-flex p-6 gap-6"
-                id="datacentersContainer"
-            >
-                <!-- Datacenter & Device Cards will be added here -->
-            </div>
-        </div>
-
-        <div class="card border-0 shadow-sm">
-            <div
-                class="card-header justify-content-between align-items-center p-6"
-            >
-                <h3 class="mb-0 mt-2 text-gray-900">
-                    Live Device Status
-                    <span class="badge badge-light-success ms-2">Online</span>
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <div class="card h-100 shadow-sm">
-                            <div
-                                class="card-header d-flex justify-content-between align-items-center"
-                            >
-                                <h5 class="fw-bold">
-                                    <img
-                                        class="h-lg-24px theme-light-show me-1"
-                                        src="{% static 'assets/media/svg/custom/traceroute.svg' %}"
-                                        alt="Icon"
-                                    />
-                                    <img
-                                        class="h-lg-24px theme-dark-show me-1"
-                                        src="{% static 'assets/media/svg/custom/traceroute-dark.svg' %}"
-                                        alt="Icon"
-                                    />
-                                    Latency
-                                </h5>
-                                <div>
-                                    Current:
-                                    <span class="text-primary">5ms</span>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="latencyChart" height="200"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card h-100 shadow-sm">
-                            <div
-                                class="card-header justify-content-between align-items-center p-6"
-                            >
-                                <h5 class="fw-bold">
-                                    <i class="fa-solid fa-clock me-1"></i>
-                                    Uptime
-                                </h5>
-                                <div class="text-success fw-bold">99.98%</div>
-                            </div>
-                            <div class="card-body">
-                                <div
-                                    class="d-flex flex-column justify-content-center align-items-center h-100"
-                                >
-                                    <h1 class="display-4 fw-bold mb-0">
-                                        99.98%
-                                    </h1>
-                                    <small class="text-muted"
-                                        >Last 30 days</small
-                                    >
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card h-100 shadow-sm">
-                            <div
-                                class="card-header justify-content-between align-items-center p-6"
-                            >
-                                <h5 class="fw-bold">
-                                    <i
-                                        class="fa-solid fa-network-wired me-1"
-                                    ></i>
-                                    BGP Peers
-                                </h5>
-                                <div class="text-muted">8/8 Established</div>
-                            </div>
-                            <div class="card-body">
-                                <div
-                                    class="row align-items-center text-center h-100"
-                                >
-                                    <div class="col">
-                                        <div class="fs-1 fw-bold">8</div>
-                                        <div class="text-muted">
-                                            Total Peers
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="fs-1 fw-bold text-success">
-                                            8
-                                        </div>
-                                        <div class="text-muted">
-                                            Established
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card h-100 shadow-sm">
-                            <div
-                                class="card-header justify-content-between align-items-center p-6"
-                            >
-                                <h5 class="fw-bold">
-                                    <i class="fa-solid fa-history me-2"></i>
-                                    Backup History
-                                </h5>
-                                <div class="text-success">
-                                    Last backup: 2025-02-13 10:00 AM
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <ul class="list-group list-group-flush">
-                                    <li
-                                        class="list-group-item d-flex justify-content-between align-items-center"
-                                    >
-                                        <div>
-                                            <i
-                                                class="fa-solid fa-check-circle text-success me-2"
-                                            ></i>
-                                            2025-02-13 10:00 AM
-                                        </div>
-                                        <span class="text-success"
-                                            >Success</span
-                                        >
-                                    </li>
-                                    <li
-                                        class="list-group-item d-flex justify-content-between align-items-center"
-                                    >
-                                        <div>
-                                            <i
-                                                class="fa-solid fa-check-circle text-success me-2"
-                                            ></i>
-                                            2025-02-12 10:00 AM
-                                        </div>
-                                        <span class="text-success"
-                                            >Success</span
-                                        >
-                                    </li>
-                                    <li
-                                        class="list-group-item d-flex justify-content-between align-items-center"
-                                    >
-                                        <div>
-                                            <i
-                                                class="fa-solid fa-check-circle text-success me-2"
-                                            ></i>
-                                            2025-02-11 10:00 AM
-                                        </div>
-                                        <span class="text-success"
-                                            >Success</span
-                                        >
-                                    </li>
-                                    <li
-                                        class="list-group-item d-flex justify-content-between align-items-center"
-                                    >
-                                        <div>
-                                            <i
-                                                class="fa-solid fa-exclamation-circle text-danger me-2"
-                                            ></i>
-                                            2025-02-10 10:00 AM
-                                        </div>
-                                        <span class="text-danger">Failed</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- 2nd Row -->
+        
+        <div class="card border-0 shadow-sm"></div>
     </div>
 </form>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        var ctx = document.getElementById("latencyChart").getContext("2d");
 
-        var data = {
-            labels: ["24h", "20h", "16h", "12h", "8h", "4h", "Now"],
-            datasets: [
-                {
-                    label: "Latency (ms)",
-                    data: [5, 4, 6, 3, 2, 4, 5],
-                    borderColor: "#3598dc",
-                    //backgroundColor: "rgba(63, 81, 181, 0.1)",
-                    //fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: "#3598dc",
-                    borderWidth: 2,
-                },
-            ],
-        };
-
-        var options = {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    title: {
-                        display: false,
-                        text: "ms",
-                    },
-                    beginAtZero: true,
-                    grid: {
-                        display: true,
-                        drawBorder: true,
-                    },
-                },
-                x: {
-                    title: {
-                        display: false,
-                        text: "Time",
-                    },
-                    grid: {
-                        display: false,
-                        drawBorder: false,
-                    },
-                },
-            },
-            plugins: {
-                legend: {
-                    display: false,
-                },
-            },
-        };
-
-        new Chart(ctx, {
-            type: "line",
-            data: data,
-            options: options,
-        });
-    });
-</script>
 <!-- end::Content Block -->
 {% endblock content %} {% block scripts %}
 <!-- gap -->
-{% include 'temp/links_scripts.html' %} {% endblock scripts %}
+{% include 'temp/alerts_scripts.html' %} {% endblock scripts %}
