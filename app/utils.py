@@ -14,7 +14,12 @@ ROUTER_SSH_DETAILS = {
 }
 
 
-def execute_ssh_command(command, command2=None, hostname=ROUTER_SSH_DETAILS["hostname"], delay_in_seconds=None):
+def execute_ssh_command(
+    command,
+    command2=None,
+    hostname=ROUTER_SSH_DETAILS["hostname"],
+    delay_in_seconds=None,
+):
     """
     Execute a command on the router via SSH and return the output.
     If wait is True, continuously read the output until the command completes.
@@ -28,7 +33,7 @@ def execute_ssh_command(command, command2=None, hostname=ROUTER_SSH_DETAILS["hos
             username=ROUTER_SSH_DETAILS["username"],
             password=ROUTER_SSH_DETAILS["password"],
         )
-        
+
         if command2:
             combined_cmd = f"{command}; echo '----SPLIT----'; {command2}"
         else:
@@ -36,23 +41,26 @@ def execute_ssh_command(command, command2=None, hostname=ROUTER_SSH_DETAILS["hos
 
         # Execute the traceroute command
         channel = client.get_transport().open_session()
-        channel.exec_command(combined_cmd) 
-        
+        channel.exec_command(combined_cmd)
+
         # Wait
-        if (delay_in_seconds):
+        if delay_in_seconds:
             time.sleep(delay_in_seconds)
 
         output = channel.recv(65535).decode()  # Get remaining output
-                
+
         channel.close()
         client.close()
-        
+
         return output
 
     except Exception as e:
         raise Exception(f"SSH command execution failed: {e}")
 
-def execute_ssh_command_while(command, hostname=ROUTER_SSH_DETAILS["hostname"], delay_in_seconds=None):
+
+def execute_ssh_command_while(
+    command, hostname=ROUTER_SSH_DETAILS["hostname"], delay_in_seconds=None
+):
     """
     Execute a command on the router via SSH and return the output.
     If wait is True, continuously read the output until the command completes.
@@ -66,12 +74,11 @@ def execute_ssh_command_while(command, hostname=ROUTER_SSH_DETAILS["hostname"], 
             username=ROUTER_SSH_DETAILS["username"],
             password=ROUTER_SSH_DETAILS["password"],
         )
-        
 
         # Execute the traceroute command
         channel = client.get_transport().open_session()
-        channel.exec_command(command) 
-        
+        channel.exec_command(command)
+
         collected_output = ""
 
         start_time = time.time()  # Record the start time for timeout
@@ -101,12 +108,12 @@ def execute_ssh_command_while(command, hostname=ROUTER_SSH_DETAILS["hostname"], 
         finally:
             channel.close()
             client.close()
-                
-        
+
         return collected_output
 
     except Exception as e:
         raise Exception(f"SSH command execution failed: {e}")
+
 
 def ping_device_once(ip_address):
     """
@@ -116,17 +123,18 @@ def ping_device_once(ip_address):
         # Example (Linux/Mac): "-c 1" => 1 ICMP request, "-W 1" => 1-second timeout
         # for windows use "-n 1" instead of "-c 1"
         output = subprocess.check_output(
-            ["ping", "-c", "1", "-w", "1", ip_address],
-            stderr=subprocess.STDOUT
-        ).decode('utf-8')
+            ["ping", "-c", "1", "-w", "1", ip_address], stderr=subprocess.STDOUT
+        ).decode("utf-8")
         # Attempt to extract the average latency from the rtt summary line.
         # Example line: "rtt min/avg/max/mdev = 7.963/7.963/7.963/0.000 ms"
-        match = re.search(r'rtt min/avg/max/mdev = [\d\.]+/([\d\.]+)/[\d\.]+/[\d\.]+ ms', output)
+        match = re.search(
+            r"rtt min/avg/max/mdev = [\d\.]+/([\d\.]+)/[\d\.]+/[\d\.]+ ms", output
+        )
         if match:
             avg_latency = float(match.group(1))
         else:
             # Fallback: extract latency from the reply line: "time=7.96 ms"
-            match = re.search(r'time=([\d\.]+) ms', output)
+            match = re.search(r"time=([\d\.]+) ms", output)
             avg_latency = float(match.group(1)) if match else None
 
         return True, avg_latency
@@ -163,16 +171,16 @@ def ping_device_n_times(ip_address, count=3):
     else:
         # All pings succeeded
         status = "online"
-        
+
     avg_latency = round(avg_latency / successes, 2)
 
     return {
         "successes": successes,
         "failures": failures,
         "status": status,
-        "avg_latency": avg_latency
+        "avg_latency": avg_latency,
     }
-    
+
 
 def get_device_stats(device_id=78):
     """
@@ -194,7 +202,7 @@ def get_device_stats(device_id=78):
     # Fake CPU & storage usage or retrieve real data from your source
     cpu_usage = 50
     overall_storage_usage = 80
-    
+
     # Get CPU and memory usage from the device
     # cpu_usage, mem_usage = get_cpu_and_mem(device.ip)
     # filesystems_usage, overall_storage_usage = get_storage(device.ip)
@@ -203,14 +211,15 @@ def get_device_stats(device_id=78):
         "status": "success",
         "stats": {
             "status": status,
-            "cpu": '...',
-            "storage": '...',
+            "cpu": "...",
+            "storage": "...",
             "successes": successes,
             "failures": failures,
-            "avg_latency": avg_latency
-        }
+            "avg_latency": avg_latency,
+        },
     }
-    
+
+
 def install_package_if_missing(command):
     """
     Check if a package is missing and install it via SSH.
@@ -220,6 +229,7 @@ def install_package_if_missing(command):
         return execute_ssh_command(install_command)
     except Exception as e:
         raise Exception(f"Failed to install missing package: {e}")
+
 
 def convert_to_bytes(size_str):
     """
@@ -240,13 +250,14 @@ def convert_to_bytes(size_str):
     value, unit = match.groups()
     value = float(value)
 
-    if unit == 'G':
+    if unit == "G":
         return int(value * 1024 * 1024 * 1024)
-    elif unit == 'M':
+    elif unit == "M":
         return int(value * 1024 * 1024)
-    elif unit == 'K':
+    elif unit == "K":
         return int(value * 1024)
     return int(value)
+
 
 def parse_junos_storage(output):
     """
@@ -279,7 +290,7 @@ def parse_junos_storage(output):
         return [], 0.0  # No valid header found
 
     # The actual data lines follow the header
-    data_lines = lines[header_index+1:]
+    data_lines = lines[header_index + 1 :]
 
     filesystems = []
     total_size_bytes = 0
@@ -311,17 +322,19 @@ def parse_junos_storage(output):
         match = re.match(r"(\d+)%", capacity_str)
         capacity_pct = int(match.group(1)) if match else 0
 
-        filesystems.append({
-            "filesystem": fs,
-            "size_str": size_str,
-            "used_str": used_str,
-            "avail_str": avail_str,
-            "capacity_str": capacity_str,
-            "mount": mount_on,
-            "size_bytes": size_bytes,
-            "used_bytes": used_bytes,
-            "capacity_pct": capacity_pct
-        })
+        filesystems.append(
+            {
+                "filesystem": fs,
+                "size_str": size_str,
+                "used_str": used_str,
+                "avail_str": avail_str,
+                "capacity_str": capacity_str,
+                "mount": mount_on,
+                "size_bytes": size_bytes,
+                "used_bytes": used_bytes,
+                "capacity_pct": capacity_pct,
+            }
+        )
 
         # Accumulate totals
         total_size_bytes += size_bytes
@@ -335,6 +348,7 @@ def parse_junos_storage(output):
     overall_usage_pct = round(overall_usage_pct, 2)
 
     return filesystems, overall_usage_pct
+
 
 def parse_show_system_processes_extensive(output):
     """
@@ -359,7 +373,7 @@ def parse_show_system_processes_extensive(output):
     cpu_usage = None
     if cpu_line:
         # Look for something like "99.0% idle upto 2 decimal places"
-        match = re.search(r'(\d+(\.\d+)?)%\s+idle', cpu_line)
+        match = re.search(r"(\d+(\.\d+)?)%\s+idle", cpu_line)
         if match:
             idle_val = float(match.group(1))
             cpu_usage = 100.0 - idle_val  # total usage
@@ -370,11 +384,11 @@ def parse_show_system_processes_extensive(output):
     if mem_line:
         # Example: Mem: 353M Active, 4621M Inact, 947M Wired, 300M Buf, 10G Free
         # We'll capture the numeric portion + unit for each label
-        active_match = re.search(r'(\S+)\s+Active', mem_line)
-        inact_match = re.search(r'(\S+)\s+Inact', mem_line)
-        wired_match = re.search(r'(\S+)\s+Wired', mem_line)
-        buf_match   = re.search(r'(\S+)\s+Buf',   mem_line)
-        free_match  = re.search(r'(\S+)\s+Free',  mem_line)
+        active_match = re.search(r"(\S+)\s+Active", mem_line)
+        inact_match = re.search(r"(\S+)\s+Inact", mem_line)
+        wired_match = re.search(r"(\S+)\s+Wired", mem_line)
+        buf_match = re.search(r"(\S+)\s+Buf", mem_line)
+        free_match = re.search(r"(\S+)\s+Free", mem_line)
 
         if all([active_match, inact_match, wired_match, buf_match, free_match]):
             # Convert "353M" -> float MB, "10G" -> float MB, etc.
@@ -382,51 +396,60 @@ def parse_show_system_processes_extensive(output):
                 # e.g. "353M" => 353.0, "10G" => 10240.0
                 unit = s[-1].upper()
                 val = float(s[:-1])
-                if unit == 'M':
+                if unit == "M":
                     return val
-                elif unit == 'G':
+                elif unit == "G":
                     return val * 1024
                 return val  # fallback if no unit, e.g. "512"
 
             active_val = to_mb(active_match.group(1))
-            inact_val  = to_mb(inact_match.group(1))
-            wired_val  = to_mb(wired_match.group(1))
-            buf_val    = to_mb(buf_match.group(1))
-            free_val   = to_mb(free_match.group(1))
+            inact_val = to_mb(inact_match.group(1))
+            wired_val = to_mb(wired_match.group(1))
+            buf_val = to_mb(buf_match.group(1))
+            free_val = to_mb(free_match.group(1))
 
             total = active_val + inact_val + wired_val + buf_val + free_val
-            used  = total - free_val
+            used = total - free_val
 
             if total > 0:
                 mem_usage = (used / total) * 100.0
 
     return cpu_usage, mem_usage
 
-def get_cpu_and_mem(device_ip='23.141.136.2'):
+
+def get_cpu_and_mem(device_ip="23.141.136.2"):
     # command to get cpu and memory usage, using ssh into that device 'show system processes extensive'
 
-    # ssh into the device and get the output    
-    output = execute_ssh_command("show system processes extensive | match nice", hostname=device_ip)
-    
+    # ssh into the device and get the output
+    output = execute_ssh_command(
+        "show system processes extensive | match nice", hostname=device_ip
+    )
+
     # Parse the output to get CPU and memory usage
     cpu_usage, mem_usage = parse_show_system_processes_extensive(output.splitlines())
-    
+
     return cpu_usage, mem_usage
-    
-def get_storage(device_ip='23.141.136.2'):
+
+
+def get_storage(device_ip="23.141.136.2"):
     # command to get storage usage, using ssh into that device 'show system storage'
 
-    # ssh into the device and get the output    
+    # ssh into the device and get the output
     output = execute_ssh_command("show system storage", hostname=device_ip)
-    
+
     # Parse the output to get storage usage
     filesystems, overall_usage_pct = parse_junos_storage(output.splitlines())
 
     return filesystems, overall_usage_pct
 
-def get_device_stats(device_ip='23.141.136.2'):
+
+def get_device_stats(device_ip="23.141.136.2"):
     # Get CPU, memory, storage usage of the device
-    output = execute_ssh_command("show system processes extensive | match nice", "show system storage", hostname=device_ip)
+    output = execute_ssh_command(
+        "show system processes extensive | match nice",
+        "show system storage",
+        hostname=device_ip,
+    )
     print(output)
     # split the output into two parts
     cpu_output = []
@@ -440,13 +463,49 @@ def get_device_stats(device_ip='23.141.136.2'):
             cpu_output.append(line)
         else:
             storage_output.append(line)
-    print(22,storage_output)
-    
+    print(22, storage_output)
+
     # Parse the output to get CPU and memory usage
     cpu_usage, mem_usage = parse_show_system_processes_extensive(cpu_output)
-    
+
     # Parse the output to get storage usage
     _, overall_storage_pct = parse_junos_storage(storage_output)
 
-    
     return cpu_usage, mem_usage, overall_storage_pct
+
+
+def compare_and_return_changes(file1_path, file2_path):
+    # # Example usage:
+    # file1 = "path/to/file1.txt"
+    # file2 = "path/to/file2.txt"
+
+    # changes_file1, changes_file2 = compare_and_return_changes(file1, file2)
+
+    # print("Lines that differ in File1:")
+    # for line in changes_file1:
+    #     print(repr(line))
+
+    # print("\nLines that differ in File2:")
+    # for line in changes_file2:
+    #     print(repr(line))
+
+    with open(file1_path, "r", encoding="utf-8") as f1, open(
+        file2_path, "r", encoding="utf-8"
+    ) as f2:
+        lines1 = f1.readlines()
+        lines2 = f2.readlines()
+
+    max_len = max(len(lines1), len(lines2))
+
+    changed_lines_file1 = []
+    changed_lines_file2 = []
+
+    for i in range(max_len):
+        line1 = lines1[i].rstrip("\n") if i < len(lines1) else None
+        line2 = lines2[i].rstrip("\n") if i < len(lines2) else None
+
+        if line1 != line2:
+            changed_lines_file1.append(line1)
+            changed_lines_file2.append(line2)
+
+    return changed_lines_file1, changed_lines_file2

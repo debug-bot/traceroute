@@ -376,7 +376,7 @@ def get_devices_by_cities(request):
                 "id", "name", "ip"
             )
         else:
-            city = request.GET.get('city','')
+            city = request.GET.get("city", "")
             try:
                 try:
                     city_name, state = city.split(", ")
@@ -627,14 +627,50 @@ def rsyslog_log_view(request):
     return render(request, "temp/syslog.html", context)
 
 
+import random
+
+
 def configuration_view(request):
+    requestType = request.GET.get("requestType")
+    if requestType == "getCompareFiles":
+        selected_ids = request.GET.getlist("ids[]", [])
+        return JsonResponse(
+            {
+                "message": "Comparison completed successfully.",
+                "selected_ids": selected_ids,
+            }
+        )
+
     unique_cities = [
         f"{city}, {state}" if state else f"{city}"
         for city, state in DataCenter.objects.values_list("city", "state")
         .distinct()
         .order_by("city")
     ]
-    context = {"unique_cities": unique_cities, "title": "Configuration"}
+    versions = ["v5.1", "v5.0", "v4.9", "v4.8", "v4.7"]
+    devices = ["Router-1", "Router-2", "Router-3"]
+
+    data = []
+    for i in range(5):
+        version = random.choice(versions)
+        device = random.choice(devices)
+        timestamp = datetime.now().strftime("%b %d, %Y - %I:%M %p")
+
+        # Add an 'id' field
+        data.append(
+            {
+                "id": i + 1,
+                "version": version,
+                "timestamp": timestamp,
+                "device": device,
+            }
+        )
+    context = {
+        "unique_cities": unique_cities,
+        "title": "Configuration",
+        "conf_data": data,
+    }
+
     return render(request, "temp/configuration.html", context)
 
 

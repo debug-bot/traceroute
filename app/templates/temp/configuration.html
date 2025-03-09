@@ -45,72 +45,204 @@
         </div>
 
         <!-- 2nd Row -->
-        
+
         <div class="card border-0 shadow-sm"></div>
     </div>
 </form>
+
+<div class="card shadow-sm">
+    <div class="card-header justify-content-between align-items-center p-6">
+        <h3 class="card-title">Configuration History</h3>
+        <div>
+            <button id="compareBtn" class="btn btn-sm btn-primary" disabled>
+                <i class="bi bi-arrow-left-right"></i> Compare Selected
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-4">SELECT</th>
+                        <th scope="col">Version</th>
+                        <th scope="col">Timestamp</th>
+                        <th scope="col">Device</th>
+                        <th
+                            scope="col"
+                            class="text-center"
+                            style="width: 100px"
+                        >
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in conf_data %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="form-check">
+                                <input
+                                    class="form-check-input tableCheckbox"
+                                    type="checkbox"
+                                    id="tableCheckbox{{item.id}}"
+                                    data-id="{{item.id}}"
+                                />
+                            </div>
+                        </td>
+                        <td>{{ item.version }}</td>
+                        <td>{{ item.timestamp }}</td>
+                        <td>{{ item.device }}</td>
+                        <td class="text-center">
+                            <button
+                                class="btn btn-sm btn-link p-0"
+                                title="File"
+                            >
+                                <i
+                                    class="bi bi-file-earmark-text fs-3 text-dark"
+                                ></i>
+                            </button>
+                            <button
+                                class="btn btn-sm btn-link p-0 me-2"
+                                title="Delete"
+                            >
+                                <i class="bi bi-trash fs-3 text-danger"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div
+    class="modal fade"
+    id="compareModal"
+    tabindex="-1"
+    aria-labelledby="compareModalLabel"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-xl">
+        <!-- Use modal-lg or modal-xl for larger width -->
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="compareModalLabel">
+                    Configuration Comparison
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Left Column (Version v5.1) -->
+                    <div class="col-md-6 mb-3">
+                        <h6 class="fw-semibold">Version v5.1</h6>
+                        <div
+                            class="border rounded p-3 bg-light"
+                        >
+                            interface GigabitEthernet0/1 description WAN
+                            Interface ip address dhcp no shutdown !
+                        </div>
+                    </div>
+
+                    <!-- Right Column (Version v6.0) -->
+                    <div class="col-md-6 mb-3">
+                        <h6 class="fw-semibold">Version v6.0</h6>
+                        <div
+                            class="border rounded p-3 bg-light"
+                        >
+                            interface GigabitEthernet0/1 description WAN
+                            Interface - Updated ip address 192.168.1.1
+                            255.255.255.0 no shutdown !
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    Close
+                </button>
+                <button type="button" class="btn btn-primary">
+                    Download Configuration
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- end::Content Block -->
+{% endblock content %} {% block scripts %}
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        var ctx = document.getElementById("latencyChart").getContext("2d");
+    $(document).ready(function () {
+        $(".tableCheckbox").on("change", function () {
+            let checkedCount = $(".tableCheckbox:checked").length;
 
-        var data = {
-            labels: ["24h", "20h", "16h", "12h", "8h", "4h", "Now"],
-            datasets: [
-                {
-                    label: "Latency (ms)",
-                    data: [5, 4, 6, 3, 2, 4, 5],
-                    borderColor: "#3598dc",
-                    //backgroundColor: "rgba(63, 81, 181, 0.1)",
-                    //fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: "#3598dc",
-                    borderWidth: 2,
-                },
-            ],
-        };
+            if (checkedCount > 2) {
+                $(this).prop("checked", false);
+                Swal.fire({
+                    icon: "warning",
+                    title: "Limit Reached",
+                    text: "You can only select up to 2 checkboxes at a time.",
+                    confirmButtonText: "OK",
+                });
+                checkedCount = $(".tableCheckbox:checked").length;
+            }
 
-        var options = {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    title: {
-                        display: false,
-                        text: "ms",
-                    },
-                    beginAtZero: true,
-                    grid: {
-                        display: true,
-                        drawBorder: true,
-                    },
-                },
-                x: {
-                    title: {
-                        display: false,
-                        text: "Time",
-                    },
-                    grid: {
-                        display: false,
-                        drawBorder: false,
-                    },
-                },
-            },
-            plugins: {
-                legend: {
-                    display: false,
-                },
-            },
-        };
+            $("#compareBtn").prop("disabled", checkedCount !== 2);
+        });
 
-        new Chart(ctx, {
-            type: "line",
-            data: data,
-            options: options,
+        $("#compareBtn").on("click", function () {
+            let selectedIds = $(".tableCheckbox:checked")
+                .map(function () {
+                    return $(this).data("id");
+                })
+                .get();
+
+            let originalBtnHtml = $(this).html();
+
+            $(this).html(
+                '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' +
+                    "Comparing..."
+            );
+            $(this).prop("disabled", true);
+
+            $.ajax({
+                url: window.location,
+                data: {
+                    ids: selectedIds,
+                    requestType: "getCompareFiles",
+                },
+                success: function (response) {
+                    console.log("Success:");
+                    $("#compareModal").modal("show");
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error:");
+                },
+                complete: function () {
+                    $("#compareBtn").html(originalBtnHtml);
+                    let checkedCount = $(".tableCheckbox:checked").length;
+                    $("#compareBtn").prop("disabled", checkedCount !== 2);
+                },
+            });
         });
     });
 </script>
-<!-- end::Content Block -->
-{% endblock content %} {% block scripts %}
 <!-- gap -->
 {% include 'temp/configuration_scripts.html' %} {% endblock scripts %}
