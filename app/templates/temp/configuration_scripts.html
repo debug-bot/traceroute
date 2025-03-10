@@ -106,68 +106,63 @@
                             `;
                         tbody.append(row);
                     });
-
-                    $(".tableCheckbox").on("change", function () {
-                        let checkedCount = $(".tableCheckbox:checked").length;
-
-                        if (checkedCount > 2) {
-                            $(this).prop("checked", false);
-                            Swal.fire({
-                                icon: "warning",
-                                title: "Limit Reached",
-                                text: "You can only select up to 2 checkboxes at a time.",
-                                confirmButtonText: "OK",
-                            });
-                            checkedCount = $(".tableCheckbox:checked").length;
-                        }
-
-                        $("#compareBtn").prop("disabled", checkedCount !== 2);
-                    });
-
-                    $("#compareBtn").on("click", function () {
-                        let selectedIds = $(".tableCheckbox:checked")
-                            .map(function () {
-                                return $(this).data("id");
-                            })
-                            .get();
-
-                        let originalBtnHtml = $(this).html();
-
-                        $(this).html(
-                            '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' +
-                                "Comparing..."
-                        );
-                        $(this).prop("disabled", true);
-
-                        $.ajax({
-                            url: window.location,
-                            data: {
-                                ids: selectedIds,
-                                requestType: "getCompareFiles",
-                            },
-                            success: function (response) {
-                                console.log("Success:");
-                                $("#compareModal").modal("show");
-                            },
-                            error: function (xhr, status, error) {
-                                console.error("Error:");
-                            },
-                            complete: function () {
-                                $("#compareBtn").html(originalBtnHtml);
-                                let checkedCount = $(
-                                    ".tableCheckbox:checked"
-                                ).length;
-                                $("#compareBtn").prop(
-                                    "disabled",
-                                    checkedCount !== 2
-                                );
-                            },
-                        });
-                    });
                 },
                 error: function (xhr, status, error) {
                     console.error("AJAX error: " + error);
                     // Optionally display an error message to the user
+                },
+            });
+        });
+
+        $(document).on("change", ".tableCheckbox", function () {
+            let checkedCount = $(".tableCheckbox:checked").length;
+
+            if (checkedCount > 2) {
+                $(this).prop("checked", false);
+                Swal.fire({
+                    icon: "warning",
+                    title: "Limit Reached",
+                    text: "You can only select up to 2 checkboxes at a time.",
+                    confirmButtonText: "OK",
+                });
+                checkedCount = $(".tableCheckbox:checked").length;
+            }
+
+            $("#compareBtn").prop("disabled", checkedCount !== 2);
+        });
+
+        $("#compareBtn").on("click", function () {
+            let selectedIds = $(".tableCheckbox:checked")
+                .map(function () {
+                    return $(this).data("id");
+                })
+                .get();
+
+            let originalBtnHtml = $(this).html();
+
+            $(this).html(
+                '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' +
+                    "Comparing..."
+            );
+            $(this).prop("disabled", true);
+
+            $.ajax({
+                url: window.location,
+                data: {
+                    ids: selectedIds,
+                    requestType: "getCompareFiles",
+                },
+                success: function (response) {
+                    console.log("Success:");
+                    $("#compareModal").modal("show");
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error:");
+                },
+                complete: function () {
+                    $("#compareBtn").html(originalBtnHtml);
+                    let checkedCount = $(".tableCheckbox:checked").length;
+                    $("#compareBtn").prop("disabled", checkedCount !== 2);
                 },
             });
         });
