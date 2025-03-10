@@ -74,7 +74,7 @@
                     // Empty the table body before adding new rows
                     let tbody = $("#configurationTable tbody");
                     tbody.empty();
-                    console.log(data.configs);
+                    console.log(response.configs);
                     // Loop through each config returned in the JSON response
                     $.each(response.configs, function (index, config) {
                         // Build a table row using the config data
