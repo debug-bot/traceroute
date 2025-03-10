@@ -80,10 +80,20 @@
                         // Build a table row using the config data
                         let row = `
                             <tr>
+                                <td class="ps-4">
+                                    <div class="form-check">
+                                        <input
+                                            class="form-check-input tableCheckbox"
+                                            type="checkbox"
+                                            id="${config.id}"
+                                            data-id="${config.id}"
+                                        />
+                                    </div>
+                                </td>
                                 <td>${config.version}</td>
                                 <td>${config.created_at}</td>
                                 <td>${config.router__name} (${config.router__ip})</td>
-                                <td>
+                                <td class="text-center">
                                 ${
                                     config.file
                                         ? `<a href="${config.file}" target="_blank"><i class="fa fa-download"></i></a>`
