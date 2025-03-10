@@ -643,7 +643,7 @@ def configuration_view(request):
         )
     if requestType == "getConfigurations":
         device_id = request.GET.get("device_id")
-        configs = Configuration.objects.filter(router__id=device_id).values_list('id','router__name','router__ip','version','created_at','file')
+        configs = list(Configuration.objects.filter(router__id=device_id).values('id','router__name','router__ip','version','created_at','file'))
         return JsonResponse({"configs": configs})
 
     unique_cities = [
