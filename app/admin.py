@@ -2,6 +2,10 @@ from django.contrib import admin
 from .models import Configuration, Router, SSHSettings, DataCenter, Category, Command, PopularCommand, CommandHistory
 from django.conf import settings
 from django.contrib import admin
+from django.core.management import call_command
+from django.utils.safestring import mark_safe
+import io
+from contextlib import redirect_stdout
 
 admin.site.site_header = f"{settings.PROJECT_NAME} Administration"
 admin.site.site_title = f"{settings.PROJECT_NAME} Admin Dashboard"
@@ -61,6 +65,26 @@ class SSHSettingsAdmin(admin.ModelAdmin):
 @admin.register(Configuration)
 class ConfigurationAdmin(admin.ModelAdmin):
     list_display = ("router", "version", "file", "created_at")
+    actions = ["update_configurations_now"]
+
+    def update_configurations_now(self, request, queryset):
+        """
+        Calls the 'update_device_configs' command and captures its output.
+        Displays the output in the admin as a success message.
+        """
+        # Capture command output
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            call_command("update_device_configs")
+        output = buf.getvalue()
+
+        # Display the output in the admin message area
+        # We can use mark_safe if we want to preserve newlines or do minimal formatting
+        safe_output = mark_safe(f"<pre>{output}</pre>")
+
+        self.message_user(request, f"Command output:<br>{safe_output}", level="INFO")
+
+    update_configurations_now.short_description = "Run update_device_configurations now"
 
 
 @admin.register(DataCenter)
