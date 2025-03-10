@@ -34,7 +34,7 @@
                 data: { city: selectedDatacenter },
                 success: function (data) {
                     deviceSelect.empty();
-					deviceSelect.prop("disabled", false);
+                    deviceSelect.prop("disabled", false);
                     if (data.devices.length > 0) {
                         deviceSelect.append(
                             '<option value="">Select Device</option>'
@@ -64,12 +64,44 @@
                 ip: selectedOption.data("ip"),
             };
             $.ajax({
-                url: '/configuration/',
-                data: {requestType:"getConfigurations",device_id:device.id},
-                success:function(data){
-                    console.log(data.configs)
-                }
-            })
+                url: "/configuration/",
+                data: {
+                    requestType: "getConfigurations",
+                    device_id: device.id,
+                },
+                dataType: "json",
+                success: function (response) {
+                    // Empty the table body before adding new rows
+                    let tbody = $("#configurationTable tbody");
+                    tbody.empty();
+                    console.log(data.configs);
+                    // Loop through each config returned in the JSON response
+                    $.each(response.configs, function (index, config) {
+                        // Build a table row using the config data
+                        let row = `
+                            <tr>
+                                <td>${config.id}</td>
+                                <td>${config.router__name}</td>
+                                <td>${config.router__ip}</td>
+                                <td>${config.version}</td>
+                                <td>${config.created_at}</td>
+                                <td>
+                                ${
+                                    config.file
+                                        ? `<a href="${config.file}" target="_blank">Download</a>`
+                                        : "No file"
+                                }
+                                </td>
+                            </tr>
+                            `;
+                        tbody.append(row);
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX error: " + error);
+                    // Optionally display an error message to the user
+                },
+            });
         });
     });
 </script>

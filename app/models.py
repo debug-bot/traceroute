@@ -240,6 +240,9 @@ class Configuration(models.Model):
     def __str__(self):
         return f'{self.router.name} {self.version}'
     
+    class Meta:
+        ordering = ['-created_at']
+    
 class CommandHistory(models.Model):
     """
     Model to store a history of commands executed by a user.
