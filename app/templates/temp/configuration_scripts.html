@@ -63,6 +63,13 @@
                 id: selectedOption.val(),
                 ip: selectedOption.data("ip"),
             };
+            $.ajax({
+                url: '/configuration/',
+                data: {requestType:"getConfigurations",device_id:device.id},
+                success:function(data){
+                    console.log(data.configs)
+                }
+            })
         });
     });
 </script>

@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from .models import (
     Category,
     CommandHistory,
+    Configuration,
     DataCenter,
     PopularCommand,
     Router,
@@ -640,6 +641,10 @@ def configuration_view(request):
                 "selected_ids": selected_ids,
             }
         )
+    if requestType == "getConfigurations":
+        device_id = request.GET.get("device_id")
+        configs = Configuration.objects.filter(router__id=device_id).all()
+        return JsonResponse({"configs": configs})
 
     unique_cities = [
         f"{city}, {state}" if state else f"{city}"
