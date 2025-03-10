@@ -61,7 +61,7 @@
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table id="configurationTable" class="table align-middle">
+            <table id="configurationTable" class="table align-middle table-striped table-hover">
                 <thead class="table-light">
                     <tr>
                         <th scope="col" class="ps-4">SELECT</th>
@@ -78,39 +78,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in conf_data %}
-                    <tr>
-                        <td class="ps-4">
-                            <div class="form-check">
-                                <input
-                                    class="form-check-input tableCheckbox"
-                                    type="checkbox"
-                                    id="tableCheckbox{{item.id}}"
-                                    data-id="{{item.id}}"
-                                />
-                            </div>
-                        </td>
-                        <td>{{ item.version }}</td>
-                        <td>{{ item.timestamp }}</td>
-                        <td>{{ item.device }}</td>
-                        <td class="text-center">
-                            <button
-                                class="btn btn-sm btn-link p-0"
-                                title="File"
-                            >
-                                <i
-                                    class="bi bi-file-earmark-text fs-3 text-dark"
-                                ></i>
-                            </button>
-                            <button
-                                class="btn btn-sm btn-link p-0 me-2"
-                                title="Delete"
-                            >
-                                <i class="bi bi-trash fs-3 text-danger"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
                 </tbody>
             </table>
         </div>
