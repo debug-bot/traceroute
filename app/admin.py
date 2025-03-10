@@ -59,7 +59,7 @@ class SSHSettingsAdmin(admin.ModelAdmin):
     list_display = ("settings_name", "port", "username", "password")
 
 @admin.register(Configuration)
-class SSHSettingsAdmin(admin.ModelAdmin):
+class ConfigurationAdmin(admin.ModelAdmin):
     list_display = ("router", "version", "file", "created_at")
 
 
