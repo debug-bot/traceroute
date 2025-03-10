@@ -231,7 +231,15 @@ class Router(models.Model):
             models.UniqueConstraint(fields=["asn", "ip"], name="unique_asn_ip"),
         ]
 
-
+class Configuration(models.Model):
+    router = models.ForeignKey(Router, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    version = models.CharField(max_length=200)
+    file = models.FileField(upload_to='configuration/')
+    
+    def __str__(self):
+        return f'{self.router.name} {self.version}'
+    
 class CommandHistory(models.Model):
     """
     Model to store a history of commands executed by a user.
