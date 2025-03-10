@@ -48,7 +48,7 @@ def test_ssh_connection(request):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
-@login_required(login_url="/login")
+# @login_required(login_url="/login")
 def network_tools_api(request):
     # Get query parameters
     router_id = request.GET.get("router_id", "")
