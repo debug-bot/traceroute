@@ -593,9 +593,12 @@ def rsyslog_log_view(request):
                                     timestamp_str = parts[0] if parts else "N/A"
                                     # Format the timestamp if possible
                                     try:
-                                        dt = datetime.fromisoformat(timestamp_str)
+
+                                        dt = datetime.fromisoformat(
+                                            timestamp_str.replace("Z", "+00:00")
+                                        )
                                         formatted_time = dt.strftime(
-                                            "%Y-%m-%d %H:%M:%S"
+                                            "%Y-%m-%d %I:%M:%S %p"
                                         )
                                     except ValueError:
                                         # If timestamp parsing fails, use the original string
