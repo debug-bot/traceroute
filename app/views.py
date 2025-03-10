@@ -15,6 +15,7 @@ from .utils import (
     ROUTER_SSH_DETAILS,
     execute_ssh_command_while,
     ping_device_n_times,
+    compare_and_return_changes,
 )
 import time
 import paramiko
@@ -635,15 +636,40 @@ def configuration_view(request):
     requestType = request.GET.get("requestType")
     if requestType == "getCompareFiles":
         selected_ids = request.GET.getlist("ids[]", [])
+        if len(selected_ids) != 2:
+            return JsonResponse(
+                {
+                    "error": "Please select exactly two configuration files for comparison."
+                },
+                status=400,
+            )
+        configs = Configuration.objects.filter(id__in=selected_ids)
+        if configs.count() != 2:
+            return JsonResponse(
+                {"error": "One or more configuration files could not be found."},
+                status=404,
+            )
+        file1_path = configs[0].file.path
+        file2_path = configs[1].file.path
+        changes_file1, changes_file2 = compare_and_return_changes(
+            file1_path, file2_path
+        )
+
         return JsonResponse(
             {
                 "message": "Comparison completed successfully.",
                 "selected_ids": selected_ids,
+                "changes_file1": changes_file1,
+                "changes_file2": changes_file2,
             }
         )
     if requestType == "getConfigurations":
         device_id = request.GET.get("device_id")
-        configs = list(Configuration.objects.filter(router__id=device_id).values('id','router__name','router__ip','version','created_at','file'))
+        configs = list(
+            Configuration.objects.filter(router__id=device_id).values(
+                "id", "router__name", "router__ip", "version", "created_at", "file"
+            )
+        )
         return JsonResponse({"configs": configs})
 
     unique_cities = [

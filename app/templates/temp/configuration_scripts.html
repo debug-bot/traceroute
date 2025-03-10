@@ -153,11 +153,46 @@
                     requestType: "getCompareFiles",
                 },
                 success: function (response) {
-                    console.log("Success:");
+                    // Build HTML for file1 differences
+                    let changes1 = response.changes_file1;
+                    let html1 = "";
+                    if (changes1 && changes1.length > 0) {
+                        html1 += "<ul>";
+                        changes1.forEach(function (line) {
+                            html1 += "<li>" + line + "</li>";
+                        });
+                        html1 += "</ul>";
+                    } else {
+                        html1 = "<p>No differences found in file1.</p>";
+                    }
+                    $("#changes_file1").html(html1);
+
+                    // Build HTML for file2 differences
+                    let changes2 = response.changes_file2;
+                    let html2 = "";
+                    if (changes2 && changes2.length > 0) {
+                        html2 += "<ul>";
+                        changes2.forEach(function (line) {
+                            html2 += "<li>" + line + "</li>";
+                        });
+                        html2 += "</ul>";
+                    } else {
+                        html2 = "<p>No differences found in file2.</p>";
+                    }
+                    $("#changes_file2").html(html2);
+
+                    // Show the comparison modal
                     $("#compareModal").modal("show");
                 },
                 error: function (xhr, status, error) {
-                    console.error("Error:");
+                    // Display error using SweetAlert
+                    swal(
+                        "Error",
+                        xhr.responseJSON
+                            ? xhr.responseJSON.error
+                            : "An error occurred while comparing files.",
+                        "error"
+                    );
                 },
                 complete: function () {
                     $("#compareBtn").html(originalBtnHtml);
