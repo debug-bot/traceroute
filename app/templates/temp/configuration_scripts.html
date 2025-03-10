@@ -80,15 +80,13 @@
                         // Build a table row using the config data
                         let row = `
                             <tr>
-                                <td>${config.id}</td>
-                                <td>${config.router__name}</td>
-                                <td>${config.router__ip}</td>
                                 <td>${config.version}</td>
                                 <td>${config.created_at}</td>
+                                <td>${config.router__name} (${config.router__ip})</td>
                                 <td>
                                 ${
                                     config.file
-                                        ? `<a href="${config.file}" target="_blank">Download</a>`
+                                        ? `<a href="${config.file}" target="_blank"><i class="fa fa-download"></i></a>`
                                         : "No file"
                                 }
                                 </td>
