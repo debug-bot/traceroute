@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Router, SSHSettings, DataCenter, Category, Command, PopularCommand, CommandHistory
+from .models import Configuration, Router, SSHSettings, DataCenter, Category, Command, PopularCommand, CommandHistory
 from django.conf import settings
 from django.contrib import admin
 
@@ -57,6 +57,10 @@ class RouterAdmin(admin.ModelAdmin):
 @admin.register(SSHSettings)
 class SSHSettingsAdmin(admin.ModelAdmin):
     list_display = ("settings_name", "port", "username", "password")
+
+@admin.register(Configuration)
+class SSHSettingsAdmin(admin.ModelAdmin):
+    list_display = ("router", "version", "file", "created_at")
 
 
 @admin.register(DataCenter)
