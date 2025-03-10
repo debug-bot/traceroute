@@ -153,10 +153,21 @@
                     requestType: "getCompareFiles",
                 },
                 success: function (response) {
+                    // Filter out null lines for file1 and file2 differences
+                    let changes1 = (response.changes_file1 || []).filter(
+                        function (line) {
+                            return line !== null;
+                        }
+                    );
+                    let changes2 = (response.changes_file2 || []).filter(
+                        function (line) {
+                            return line !== null;
+                        }
+                    );
+
                     // Build HTML for file1 differences
-                    let changes1 = response.changes_file1;
                     let html1 = "";
-                    if (changes1 && changes1.length > 0) {
+                    if (changes1.length > 0) {
                         html1 += "<ul>";
                         changes1.forEach(function (line) {
                             html1 += "<li>" + line + "</li>";
@@ -168,9 +179,8 @@
                     $("#changes_file1").html(html1);
 
                     // Build HTML for file2 differences
-                    let changes2 = response.changes_file2;
                     let html2 = "";
-                    if (changes2 && changes2.length > 0) {
+                    if (changes2.length > 0) {
                         html2 += "<ul>";
                         changes2.forEach(function (line) {
                             html2 += "<li>" + line + "</li>";
