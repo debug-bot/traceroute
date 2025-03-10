@@ -8,7 +8,6 @@ from django.core.management.base import BaseCommand
 from django.core.files.base import ContentFile
 from django.utils import timezone
 from app.models import Router, Configuration
-from app.utils import ROUTER_SSH_DETAILS
 
 class Command(BaseCommand):
     help = "Fetch 'show configuration | display set' from each router. If changed, store a new version."
@@ -27,10 +26,10 @@ class Command(BaseCommand):
                 client = paramiko.SSHClient()
                 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 client.connect(
-                    hostname=ROUTER_SSH_DETAILS["hostname"],
-                    port=ROUTER_SSH_DETAILS["port"],
-                    username=ROUTER_SSH_DETAILS["username"],
-                    password=ROUTER_SSH_DETAILS["password"],
+                    hostname=router.ip,
+                    port=router.ssh_settings.port,
+                    username=router.ssh_settings.username,
+                    password=router.ssh_settings.password,
                 )
                 channel = client.get_transport().open_session()
                 channel.exec_command(command)
