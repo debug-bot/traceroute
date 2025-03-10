@@ -678,28 +678,10 @@ def configuration_view(request):
         .distinct()
         .order_by("city")
     ]
-    versions = ["v5.1", "v5.0", "v4.9", "v4.8", "v4.7"]
-    devices = ["Router-1", "Router-2", "Router-3"]
-
-    data = []
-    for i in range(5):
-        version = random.choice(versions)
-        device = random.choice(devices)
-        timestamp = datetime.now().strftime("%b %d, %Y - %I:%M %p")
-
-        # Add an 'id' field
-        data.append(
-            {
-                "id": i + 1,
-                "version": version,
-                "timestamp": timestamp,
-                "device": device,
-            }
-        )
     context = {
         "unique_cities": unique_cities,
         "title": "Configuration",
-        "conf_data": data,
+        "conf_data": [],
     }
 
     return render(request, "temp/configuration.html", context)
