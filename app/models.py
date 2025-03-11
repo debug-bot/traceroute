@@ -213,7 +213,7 @@ class Router(models.Model):
         return (success_count / total_count) * 100.0
     
     def __str__(self):
-        return f"{self.name}:{self.ip} - {self.datacenter}"
+        return f"{self.name} ({self.ip}) - {self.datacenter}"
 
     def clean(self):
         """Custom validation logic for advanced constraints."""
