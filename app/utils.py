@@ -552,10 +552,12 @@ def router_latencies(router):
     final_results = []
     for hour_dt in hours_list:
         avg_val = data_dict.get(hour_dt, None)
+        if avg_val:
+            avg_val = round(avg_val, 2)
         final_results.append(
             {
                 "hour": hour_dt,
-                "avg_latency": round(avg_val, 2),
+                "avg_latency": avg_val,
             }
         )
 
