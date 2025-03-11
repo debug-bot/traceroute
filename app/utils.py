@@ -555,7 +555,7 @@ def router_latencies(router):
         final_results.append(
             {
                 "hour": hour_dt,
-                "avg_latency": avg_val,
+                "avg_latency": round(avg_val, 2),
             }
         )
 
