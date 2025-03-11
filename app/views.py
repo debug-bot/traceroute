@@ -16,6 +16,7 @@ from .utils import (
     execute_ssh_command_while,
     ping_device_n_times,
     compare_and_return_changes,
+    router_latencies,
 )
 import time
 import paramiko
@@ -261,6 +262,7 @@ def get_devices_by_datacenters(request):
                 # Build JSON-serializable list with property access
                 devices_list = []
                 for device in city_devices_qs:
+                    latencies = router_latencies(device)
                     devices_list.append(
                         {
                             "id": device.id,
@@ -277,6 +279,7 @@ def get_devices_by_datacenters(request):
                                 if device.uptime_percentage
                                 else "..."
                             ),
+                            "latencies": latencies
                             # "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
                             # "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
                         }
@@ -318,6 +321,7 @@ def get_devices_by_datacenters(request):
             # Build JSON-serializable list with property access
             devices_list = []
             for device in city_devices_qs:
+                latencies = router_latencies(device)
                 devices_list.append(
                     {
                         "id": device.id,
@@ -332,6 +336,7 @@ def get_devices_by_datacenters(request):
                             if device.uptime_percentage
                             else "..."
                         ),
+                        "latencies": latencies
                         # "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
                         # "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
                     }

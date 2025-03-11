@@ -1,9 +1,8 @@
-# yourapp/management/commands/check_device_status.py
-
-import subprocess
+from datetime import timedelta
 from django.core.management.base import BaseCommand
-from app.models import Router
-from app.utils import get_cpu_and_mem, get_storage, ping_device_once
+from app.models import Latency, Router
+from app.utils import ping_device_once
+from django.utils import timezone
 
 
 def update_last_pings(router, success):
@@ -35,6 +34,14 @@ class Command(BaseCommand):
         routers = Router.objects.all()
         for router in routers:
             success, new_latency = ping_device_once(router.ip)
+            # If we failed to measure latency, set new_latency = None
+            if not success:
+                new_latency = None
+            Latency.objects.create(router=router, latency=new_latency)    
+            
+            # Now remove records older than 24 hours
+            cutoff = timezone.now() - timedelta(hours=24)
+            Latency.objects.filter(router=router, timestamp__lt=cutoff).delete()
             
             latency_data = router.last_3_latency or {}
             latencies = latency_data.get("latency", [])
