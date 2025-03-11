@@ -246,8 +246,8 @@ class Configuration(models.Model):
 
 class Latency(models.Model):
     router = models.ForeignKey(Router, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
     latency = models.FloatField(help_text="Latency in ms", null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.router.name} - {self.latency} ms at {self.created_at}"
