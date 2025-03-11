@@ -1,4 +1,10 @@
 {% extends 'temp/base.html' %} {% load static %} {% block styles %}
+<style>
+    .selected-card {
+        background: var(--bs-gray-100);
+        border-color: #0275d8 !important;
+    }
+</style>
 <!-- gap -->
 {% endblock %} {% block content %}
 
@@ -379,67 +385,7 @@
         </div>
     </div>
 </form>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        var ctx = document.getElementById("latencyChart").getContext("2d");
 
-        var data = {
-            labels: ["24h", "20h", "16h", "12h", "8h", "4h", "Now"],
-            datasets: [
-                {
-                    label: "Latency (ms)",
-                    data: [5, 4, 6, 3, 2, 4, 5],
-                    borderColor: "#3598dc",
-                    //backgroundColor: "rgba(63, 81, 181, 0.1)",
-                    //fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: "#3598dc",
-                    borderWidth: 2,
-                },
-            ],
-        };
-
-        var options = {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    title: {
-                        display: false,
-                        text: "ms",
-                    },
-                    beginAtZero: true,
-                    grid: {
-                        display: true,
-                        drawBorder: true,
-                    },
-                },
-                x: {
-                    title: {
-                        display: false,
-                        text: "Time",
-                    },
-                    grid: {
-                        display: false,
-                        drawBorder: false,
-                    },
-                },
-            },
-            plugins: {
-                legend: {
-                    display: false,
-                },
-            },
-        };
-
-        new Chart(ctx, {
-            type: "line",
-            data: data,
-            options: options,
-        });
-    });
-</script>
 {% block modal %}
 <!--begin::Modal - History-->
 {% include 'temp/history_modal.html' %}

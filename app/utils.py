@@ -511,9 +511,11 @@ def compare_and_return_changes(file1_path, file2_path):
 
     return changed_lines_file1, changed_lines_file2
 
+
 from django.utils import timezone
 from django.db.models.functions import TruncHour
 from django.db.models import Avg
+
 
 def router_latencies(router):
     # 1) The cutoff time
@@ -530,7 +532,7 @@ def router_latencies(router):
 
     # 3) Query existing data grouped by truncated hour
     hourly_data_qs = (
-        Latency.objects.filter(router=router, craeted_at__gte=cutoff)
+        Latency.objects.filter(router=router, created_at__gte=cutoff)
         .annotate(hour=TruncHour("created_at"))
         .values("hour")
         .annotate(avg_latency=Avg("latency"))
