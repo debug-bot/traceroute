@@ -147,9 +147,9 @@
             }
 
             let latencyHistory = device.latencyHistory;
-            if (!latencyHistory || latencyHistory.length === 0) {
-                latencyHistory = generateDummyLatencyHistory();
-            }
+            //if (!latencyHistory || latencyHistory.length === 0) {
+             //   latencyHistory = generateDummyLatencyHistory();
+            //}
 
             const labels = latencyHistory.map((record) => {
                 const date = new Date(record.hour);
