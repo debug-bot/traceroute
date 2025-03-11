@@ -41,7 +41,7 @@ class Command(BaseCommand):
             
             # Now remove records older than 24 hours
             cutoff = timezone.now() - timedelta(hours=24)
-            Latency.objects.filter(router=router, timestamp__lt=cutoff).delete()
+            Latency.objects.filter(router=router, created_at__lt=cutoff).delete()
             
             latency_data = router.last_3_latency or {}
             latencies = latency_data.get("latency", [])
