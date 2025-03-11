@@ -146,12 +146,13 @@
                 myLatencyChart.destroy();
             }
 
-            let latencyHistory = device.latencyHistory;
-            //if (!latencyHistory || latencyHistory.length === 0) {
+            let latency = device.latency;
+            if (!latency || latency.length === 0) {
              //   latencyHistory = generateDummyLatencyHistory();
-            //}
+			 latency = []
+            }
 
-            const labels = latencyHistory.map((record) => {
+            const labels = latency.map((record) => {
                 const date = new Date(record.hour);
                 const hours = date.getHours();
                 return hours.toString().padStart(2, "0") + ":00";
@@ -164,7 +165,7 @@
                 datasets: [
                     {
                         label: `${device.name} Latency (ms)`,
-                        data: latencyHistory.map(
+                        data: latency.map(
                             (record) => record.avg_latency
                         ),
                         borderColor: "#3598dc",
