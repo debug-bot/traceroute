@@ -132,6 +132,26 @@
                         colDiv
                             .querySelector(".device-card")
                             .classList.add("selected-card");
+						
+						if (device.status == 'success') {
+							$("#liveDeviceStatus").removeClass('badge-light-danger');
+							$("#liveDeviceStatus").removeClass('badge-light-warning');
+							$("#liveDeviceStatus").addClass('badge-light-success');
+						}
+						else if (device.status == 'offline') {
+							$("#liveDeviceStatus").addClass('badge-light-danger');
+							$("#liveDeviceStatus").removeClass('badge-light-warning');
+							$("#liveDeviceStatus").removeClass('badge-light-success');
+						}
+						else if (device.status == 'warning') {
+							$("#liveDeviceStatus").removeClass('badge-light-danger');
+							$("#liveDeviceStatus").addClass('badge-light-warning');
+							$("#liveDeviceStatus").removeClass('badge-light-success');
+						}
+						$("#liveDeviceStatus").text(device.status)
+						$("#liveDeviceStatus").removeClass('d-none');
+						$("#deviceName").text(`${device.name} (${device.ip})`)
+
                         showLatencyChart(device);
                     });
                 });
@@ -150,7 +170,6 @@
 			$('#currentLatency').text(device.latency)
 
             let latencies = device.latencies;
-            console.log(device.latency);
             if (!latencies || latencies.length === 0) {
                 //   latencyHistory = generateDummyLatencyHistory();
                 latencies = [];
