@@ -146,17 +146,28 @@
                 myLatencyChart.destroy();
             }
 
+			// update current latency in chart
+			$('#currentLatency').text(device.latency)
+
             let latencies = device.latencies;
-			console.log(device.latency)
+            console.log(device.latency);
             if (!latencies || latencies.length === 0) {
-             //   latencyHistory = generateDummyLatencyHistory();
-			 latencies = []
+                //   latencyHistory = generateDummyLatencyHistory();
+                latencies = [];
             }
 
+            // Use the latest record's timestamp as the "Now" reference
+            const latestTime = new Date(
+                latencies[latencies.length - 1].hour
+            );
+
+            // Compute labels: for each record, calculate how many hours ago it is relative to "Now"
             const labels = latencies.map((record) => {
-                const date = new Date(record.hour);
-                const hours = date.getHours();
-                return hours.toString().padStart(2, "0") + ":00";
+                const recordTime = new Date(record.hour);
+                const diffHours = Math.round(
+                    (latestTime - recordTime) / (1000 * 60 * 60)
+                );
+                return diffHours === 0 ? "Now" : `${diffHours}h`;
             });
 
             var ctx = document.getElementById("latencyChart").getContext("2d");
@@ -166,9 +177,7 @@
                 datasets: [
                     {
                         label: `${device.name} Latency (ms)`,
-                        data: latencies.map(
-                            (record) => record.avg_latency
-                        ),
+                        data: latencies.map((record) => record.avg_latency),
                         borderColor: "#3598dc",
                         //backgroundColor: "rgba(63, 81, 181, 0.1)",
                         //fill: true,
@@ -186,7 +195,7 @@
                 scales: {
                     y: {
                         title: {
-                            display: false,
+                            display: true,
                             text: "ms",
                         },
                         beginAtZero: true,
@@ -198,7 +207,7 @@
                     x: {
                         title: {
                             display: false,
-                            text: "Time",
+                            text: "Time Ago",
                         },
                         grid: {
                             display: false,
