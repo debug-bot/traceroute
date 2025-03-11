@@ -68,7 +68,14 @@ class SSHSettingsAdmin(admin.ModelAdmin):
 @admin.register(Latency)
 class LatencyAdmin(admin.ModelAdmin):
     list_display = ("router", "latency", "created_at")
+    list_filter = ("router__name", "router__ip", "created_at")
+    search_fields = ("router__name", "router__ip")
     
+    ordering = ("latency","-created_at",)
+
+    # Pagination in the admin list view
+    list_per_page = 20
+
 @admin.register(Configuration)
 class ConfigurationAdmin(admin.ModelAdmin):
     list_display = ("router", "version", "file", "created_at")
