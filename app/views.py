@@ -110,7 +110,7 @@ def network_tools_api(request):
         def stream_output():
             """Generator that yields output chunks every second, auto-closing after 20 seconds."""
             collected_output = ""
-            yield f"STARTED QUERY AT {datetime.strftime('%Y/%m/%d %I:%M:%S %P')} CST\n"
+            yield f"STARTED QUERY AT {datetime.now().strftime('%Y/%m/%d %I:%M:%S %P')} CST\n"
             yield "\n"
 
             start_time = time.time()  # Record the start time for timeout
