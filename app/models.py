@@ -256,7 +256,7 @@ class AlertRule(models.Model):
     description = models.TextField()
     type = models.CharField(max_length=100, choices=TYPE_CHOICES)
     syslog_strings = models.TextField(null=True, blank=True, default="OSPF,BGP", help_text="Strings to match for syslog events separated by commas (e.g., OSPF,BGP)")
-    last_triggered = models.DateTimeField()
+    last_triggered = models.DateTimeField(null=True, default=None)
     
     @property
     def conditions(self):
