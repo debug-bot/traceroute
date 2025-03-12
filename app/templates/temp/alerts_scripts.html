@@ -122,5 +122,21 @@
 				},
 			});
 		});
+        $(".delete-alert").on("click",function (e){
+            e.stopPropagation();  // Prevent the accordion toggle
+            const alertId = $(this).data('alert-id')
+            // Send AJAX POST request to the Django backend
+			$.ajax({
+				url: "/delete_alert_rule/", // Adjust URL as needed
+				type: "POST",
+				data: {'id': alertId},
+				success: function (response) {
+					window.location.reload()
+				},
+				error: function (xhr, status, error) {
+					alert("Error deleting alert rule: " + error);
+				},
+			});
+        })
 	});
 </script>

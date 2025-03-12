@@ -637,6 +637,15 @@ def rsyslog_log_view(request):
     context = {"log_entries": log_entries, "title": "Syslog"}
     return render(request, "temp/syslog.html", context)
 
+def delete_alert_rule(request):
+    if request.method == 'POST':
+        alert_id = request.POST.get('id')
+        try:
+            alert_rule = AlertRule.objects.get(id=alert_id)
+            alert_rule.delete()
+            return JsonResponse({'status': 'success', 'id': alert_rule.id})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 def create_alert_rule(request):
     if request.method == 'POST':

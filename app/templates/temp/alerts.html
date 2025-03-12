@@ -23,83 +23,85 @@
 </div>
 
 <div class="">
-    <!-- Accordion -->
-    <div class="accordion" id="alertsAccordion">
-        {% for alert in alerts %}
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
-                <button
-                    class="accordion-button p-4"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#collapse{{ forloop.counter }}"
-                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
-                    aria-controls="collapse{{ forloop.counter }}"
-                >
-                    <span class="d-flex justify-content-between w-100">
-                        <span class="d-flex align-items-start gap-3 text-dark">
-                            <span class="bg-secondary rounded-2 p-1">
-                                <i class="bi bi-file-earmark-text fs-3"></i>
-                            </span>
-                            <div>
-                                <h2 class="text-gray-900">
-                                {{ alert.name }}
-                                </h2>
-                                <p class="text-gray-800 m-0">{{ alert.description }}</p>
-                            </div>
-                        </span>
-                        <!--
+	<!-- Accordion -->
+	<div class="accordion" id="alertsAccordion">
+		{% for alert in alerts %}
+		<div class="accordion-item">
+			<h2 class="accordion-header" id="heading{{ forloop.counter }}">
+				<button
+					class="accordion-button p-4"
+					type="button"
+					data-bs-toggle="collapse"
+					data-bs-target="#collapse{{ forloop.counter }}"
+					aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+					aria-controls="collapse{{ forloop.counter }}"
+				>
+					<span class="d-flex justify-content-between w-100">
+						<span class="d-flex align-items-start gap-3 text-dark">
+							<span class="bg-secondary rounded-2 p-1">
+								<i class="bi bi-file-earmark-text fs-3"></i>
+							</span>
+							<div>
+								<h2 class="text-gray-900">{{ alert.name }}</h2>
+								<p class="text-gray-800 m-0">
+									{{ alert.description }}
+								</p>
+							</div>
+						</span>
+						<!--
                         <span class="d-flex align-items-center gap-3 me-3">
                             <div class="form-check form-switch form-switch-sm no-collapse">
                                 <input
-                                    class="form-check-input"
-                                    type="checkbox"
-                                    id="flexSwitchAlert{{ forloop.counter }}"
-                                    {% if alert.enabled %}checked{% endif %}
+                                class="form-check-input"
+                                type="checkbox"
+                                id="flexSwitchAlert{{ forloop.counter }}"
+                                {% if alert.enabled %}checked{% endif %}
                                 />
-                            </div>
+                                </div>
                             <i class="bi bi-pencil-square fs-3 no-collapse"></i>
-                            <i class="bi bi-trash fs-3 text-danger no-collapse"></i>
-                        </span>
-                        -->
-                    </span>
-                </button>
-            </h2>
-            <div
-                id="collapse{{ forloop.counter }}"
-                class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
-                aria-labelledby="heading{{ forloop.counter }}"
-                data-bs-parent="#alertsAccordion"
-            >
-                <div class="accordion-body p-4">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>Conditions</h5>
-                            {% for condition in alert.conditions %}
-                                <p class="p-2 bg-light rounded mb-2 text-gray-800">
-                                    contains {{ condition }}
-                                </p>
-                            {% endfor %}
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Notifications</h5>
-                            <p class="text-gray-800">
-                                <i class="bi bi-envelope pe-1 fs-4"></i>
-                                Email notifications enabled
-                            </p>
-                        </div>
-                    </div>
-                    <p class="text-muted mb-0">
-                        Last triggered: {{ alert.last_triggered|default:"..." }}
-                    </p>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    <!-- End Accordion -->
+                            </span>
+                            -->
+						<i
+							class="delete-alert bi bi-trash fs-3 text-danger no-collapse align-content-center me-3"
+							data-alert-id="{{ alert.id }}"
+						></i>
+					</span>
+				</button>
+			</h2>
+			<div
+				id="collapse{{ forloop.counter }}"
+				class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+				aria-labelledby="heading{{ forloop.counter }}"
+				data-bs-parent="#alertsAccordion"
+			>
+				<div class="accordion-body p-4">
+					<div class="row">
+						<div class="col-md-6">
+							<h5>Conditions</h5>
+							{% for condition in alert.conditions %}
+							<p class="p-2 bg-light rounded mb-2 text-gray-800">
+								contains {{ condition }}
+							</p>
+							{% endfor %}
+						</div>
+						<div class="col-md-6">
+							<h5>Notifications</h5>
+							<p class="text-gray-800">
+								<i class="bi bi-envelope pe-1 fs-4"></i>
+								Email notifications enabled
+							</p>
+						</div>
+					</div>
+					<p class="text-muted mb-0">
+						Last triggered: {{ alert.last_triggered|default:"..." }}
+					</p>
+				</div>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+	<!-- End Accordion -->
 </div>
-
 
 <!-- Modal -->
 <div
@@ -138,7 +140,7 @@
 							class="form-control"
 							id="alertName"
 							placeholder="Enter alert name"
-                            required
+							required
 						/>
 					</div>
 
@@ -152,7 +154,7 @@
 							id="alertDescription"
 							rows="3"
 							placeholder="Describe the alert rule"
-                            required
+							required
 						></textarea>
 					</div>
 					<div class="row">
@@ -164,7 +166,9 @@
 							<select class="form-select" id="alertType">
 								<option value="SYSLOG" selected>Syslog</option>
 								<option value="MONITORING">Monitoring</option>
-								<option value="CONFIGURATION">Configuration</option>
+								<option value="CONFIGURATION">
+									Configuration
+								</option>
 							</select>
 						</div>
 
@@ -203,7 +207,6 @@
 									type="text"
 									class="form-control"
 									placeholder="Enter string to match (e.g., OSPF)"
-
 								/>
 							</div>
 						</div>
@@ -219,7 +222,7 @@
 								value=""
 								id="emailNotifications"
 								checked
-                                disabled
+								disabled
 							/>
 							<label
 								class="form-check-label"
@@ -234,7 +237,7 @@
 								type="checkbox"
 								value=""
 								id="slackNotifications"
-                                disabled
+								disabled
 							/>
 							<label
 								class="form-check-label"
@@ -249,7 +252,7 @@
 								type="checkbox"
 								value=""
 								id="webhookNotifications"
-                                disabled
+								disabled
 							/>
 							<label
 								class="form-check-label"
@@ -270,10 +273,7 @@
 					>
 						Close
 					</button>
-					<button
-						type="submit"
-						class="btn btn-sm btn-primary"
-					>
+					<button type="submit" class="btn btn-sm btn-primary">
 						Create Alert Rule
 					</button>
 				</div>
@@ -285,7 +285,6 @@
 {% endblock content %} {% block scripts %}
 <script>
 	$(document).ready(function () {
-        
 		$(".no-collapse").on("click", function (event) {
 			event.stopPropagation();
 		});

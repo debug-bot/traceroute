@@ -21,5 +21,6 @@ urlpatterns = [
     path("configuration/", views.configuration_view, name="configuration_view"),
     path("alerts/", views.alerts_view, name="alerts_view"),
     path('create_alert_rule/', views.create_alert_rule, name='create_alert_rule'),
+    path('delete_alert_rule/', views.delete_alert_rule, name='delete_alert_rule'),
 
 ]
