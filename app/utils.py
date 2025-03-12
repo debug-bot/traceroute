@@ -1,9 +1,10 @@
+from datetime import timedelta
 import subprocess
 import paramiko
 import time
 import re
 
-from app.models import Router
+from app.models import Latency, Router
 
 # Router SSH Details
 ROUTER_SSH_DETAILS = {
@@ -509,3 +510,55 @@ def compare_and_return_changes(file1_path, file2_path):
             changed_lines_file2.append(line2)
 
     return changed_lines_file1, changed_lines_file2
+
+
+from django.utils import timezone
+from django.db.models.functions import TruncHour
+from django.db.models import Avg
+
+
+def router_latencies(router):
+    # 1) The cutoff time
+    now = timezone.now()
+    cutoff = now - timedelta(hours=24)
+
+    # 2) Build a list of hourly datetimes from cutoff to now
+    #    We'll store them in ascending order
+    hours_list = []
+    current = cutoff.replace(minute=0, second=0, microsecond=0)
+    while current <= now:
+        hours_list.append(current)
+        current += timedelta(hours=1)
+
+    # 3) Query existing data grouped by truncated hour
+    hourly_data_qs = (
+        Latency.objects.filter(router=router, created_at__gte=cutoff)
+        .annotate(hour=TruncHour("created_at"))
+        .values("hour")
+        .annotate(avg_latency=Avg("latency"))
+        .order_by("hour")
+    )
+
+    # 4) Convert QuerySet to a dict keyed by the truncated hour, with the avg latency
+    data_dict = {}
+    for rec in hourly_data_qs:
+        # rec['hour'] is a datetime truncated to the hour
+        # rec['avg_latency'] is the average for that hour
+        data_dict[rec["hour"]] = rec["avg_latency"]
+
+    # 5) Merge results:
+    #    For each hour in hours_list, check if we have data in data_dict.
+    #    If not, set None.
+    final_results = []
+    for hour_dt in hours_list:
+        avg_val = data_dict.get(hour_dt, None)
+        if avg_val:
+            avg_val = round(avg_val, 2)
+        final_results.append(
+            {
+                "hour": hour_dt,
+                "avg_latency": avg_val,
+            }
+        )
+
+    return final_results

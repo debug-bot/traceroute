@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from .models import (
     Category,
     CommandHistory,
+    Configuration,
     DataCenter,
     PopularCommand,
     Router,
@@ -14,6 +15,8 @@ from .utils import (
     ROUTER_SSH_DETAILS,
     execute_ssh_command_while,
     ping_device_n_times,
+    compare_and_return_changes,
+    router_latencies,
 )
 import time
 import paramiko
@@ -259,6 +262,7 @@ def get_devices_by_datacenters(request):
                 # Build JSON-serializable list with property access
                 devices_list = []
                 for device in city_devices_qs:
+                    latencies = router_latencies(device)
                     devices_list.append(
                         {
                             "id": device.id,
@@ -275,6 +279,7 @@ def get_devices_by_datacenters(request):
                                 if device.uptime_percentage
                                 else "..."
                             ),
+                            "latencies": latencies
                             # "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
                             # "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
                         }
@@ -316,6 +321,7 @@ def get_devices_by_datacenters(request):
             # Build JSON-serializable list with property access
             devices_list = []
             for device in city_devices_qs:
+                latencies = router_latencies(device)
                 devices_list.append(
                     {
                         "id": device.id,
@@ -330,6 +336,7 @@ def get_devices_by_datacenters(request):
                             if device.uptime_percentage
                             else "..."
                         ),
+                        "latencies": latencies
                         # "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
                         # "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
                     }
@@ -591,9 +598,12 @@ def rsyslog_log_view(request):
                                     timestamp_str = parts[0] if parts else "N/A"
                                     # Format the timestamp if possible
                                     try:
-                                        dt = datetime.fromisoformat(timestamp_str)
+
+                                        dt = datetime.fromisoformat(
+                                            timestamp_str.replace("Z", "+00:00")
+                                        )
                                         formatted_time = dt.strftime(
-                                            "%Y-%m-%d %H:%M:%S"
+                                            "%Y-%m-%d %I:%M:%S %p"
                                         )
                                     except ValueError:
                                         # If timestamp parsing fails, use the original string
@@ -634,12 +644,41 @@ def configuration_view(request):
     requestType = request.GET.get("requestType")
     if requestType == "getCompareFiles":
         selected_ids = request.GET.getlist("ids[]", [])
+        if len(selected_ids) != 2:
+            return JsonResponse(
+                {
+                    "error": "Please select exactly two configuration files for comparison."
+                },
+                status=400,
+            )
+        configs = Configuration.objects.filter(id__in=selected_ids)
+        if configs.count() != 2:
+            return JsonResponse(
+                {"error": "One or more configuration files could not be found."},
+                status=404,
+            )
+        file1_path = configs[0].file.path
+        file2_path = configs[1].file.path
+        changes_file1, changes_file2 = compare_and_return_changes(
+            file1_path, file2_path
+        )
+
         return JsonResponse(
             {
                 "message": "Comparison completed successfully.",
                 "selected_ids": selected_ids,
+                "changes_file1": changes_file1,
+                "changes_file2": changes_file2,
             }
         )
+    if requestType == "getConfigurations":
+        device_id = request.GET.get("device_id")
+        configs = list(
+            Configuration.objects.filter(router__id=device_id).values(
+                "id", "router__name", "router__ip", "version", "created_at", "file"
+            )
+        )
+        return JsonResponse({"configs": configs})
 
     unique_cities = [
         f"{city}, {state}" if state else f"{city}"
@@ -647,28 +686,10 @@ def configuration_view(request):
         .distinct()
         .order_by("city")
     ]
-    versions = ["v5.1", "v5.0", "v4.9", "v4.8", "v4.7"]
-    devices = ["Router-1", "Router-2", "Router-3"]
-
-    data = []
-    for i in range(5):
-        version = random.choice(versions)
-        device = random.choice(devices)
-        timestamp = datetime.now().strftime("%b %d, %Y - %I:%M %p")
-
-        # Add an 'id' field
-        data.append(
-            {
-                "id": i + 1,
-                "version": version,
-                "timestamp": timestamp,
-                "device": device,
-            }
-        )
     context = {
         "unique_cities": unique_cities,
         "title": "Configuration",
-        "conf_data": data,
+        "conf_data": [],
     }
 
     return render(request, "temp/configuration.html", context)

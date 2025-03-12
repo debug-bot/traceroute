@@ -90,7 +90,7 @@ class Category(models.Model):
         
     def __str__(self):
         return self.name or "No Category"
-    
+
 
 class Command(models.Model):
     category = models.ForeignKey(Category, null=True, on_delete=models.CASCADE)
@@ -216,7 +216,7 @@ class Router(models.Model):
         return (success_count / total_count) * 100.0
     
     def __str__(self):
-        return f"{self.name}:{self.ip} - {self.datacenter}"
+        return f"{self.name} ({self.ip}) - {self.datacenter}"
 
     def clean(self):
         """Custom validation logic for advanced constraints."""
@@ -239,10 +239,28 @@ class Configuration(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     version = models.CharField(max_length=200)
     file = models.FileField(upload_to='configuration/')
-    
+
     def __str__(self):
         return f'{self.router.name} {self.version}'
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class Latency(models.Model):
+    router = models.ForeignKey(Router, on_delete=models.CASCADE)
+    latency = models.FloatField(help_text="Latency in ms", null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.router.name} - {self.latency} ms at {self.created_at}"
     
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Latency'
+        verbose_name_plural = 'Latencies'
+
+
 class CommandHistory(models.Model):
     """
     Model to store a history of commands executed by a user.

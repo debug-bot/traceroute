@@ -50,7 +50,7 @@
     </div>
 </form>
 
-<div class="card shadow-sm">
+<div class="card border-0 shadow-sm">
     <div class="card-header justify-content-between align-items-center p-6">
         <h3 class="card-title">Configuration History</h3>
         <div>
@@ -61,12 +61,15 @@
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table align-middle">
-                <thead class="table-light">
+            <table
+                id="configurationTable"
+                class="table align-middle table-striped table-hover table-row-bordered"
+            >
+                <thead>
                     <tr>
                         <th scope="col" class="ps-4">SELECT</th>
                         <th scope="col">Version</th>
-                        <th scope="col">Timestamp</th>
+                        <th scope="col">Created At</th>
                         <th scope="col">Device</th>
                         <th
                             scope="col"
@@ -77,41 +80,7 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for item in conf_data %}
-                    <tr>
-                        <td class="ps-4">
-                            <div class="form-check">
-                                <input
-                                    class="form-check-input tableCheckbox"
-                                    type="checkbox"
-                                    id="tableCheckbox{{item.id}}"
-                                    data-id="{{item.id}}"
-                                />
-                            </div>
-                        </td>
-                        <td>{{ item.version }}</td>
-                        <td>{{ item.timestamp }}</td>
-                        <td>{{ item.device }}</td>
-                        <td class="text-center">
-                            <button
-                                class="btn btn-sm btn-link p-0"
-                                title="File"
-                            >
-                                <i
-                                    class="bi bi-file-earmark-text fs-3 text-dark"
-                                ></i>
-                            </button>
-                            <button
-                                class="btn btn-sm btn-link p-0 me-2"
-                                title="Delete"
-                            >
-                                <i class="bi bi-trash fs-3 text-danger"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+                <tbody></tbody>
             </table>
         </div>
     </div>
@@ -125,7 +94,9 @@
     aria-labelledby="compareModalLabel"
     aria-hidden="true"
 >
-    <div class="modal-dialog modal-xl">
+    <div
+        class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+    >
         <!-- Use modal-lg or modal-xl for larger width -->
         <div class="modal-content">
             <!-- Modal Header -->
@@ -146,25 +117,18 @@
                 <div class="row">
                     <!-- Left Column (Version v5.1) -->
                     <div class="col-md-6 mb-3">
-                        <h6 class="fw-semibold">Version v5.1</h6>
                         <div
-                            class="border rounded p-3 bg-light"
-                        >
-                            interface GigabitEthernet0/1 description WAN
-                            Interface ip address dhcp no shutdown !
-                        </div>
+                            id="changes_file1"
+                            class="border rounded p-3 bg-light overflow-auto"
+                        ></div>
                     </div>
 
                     <!-- Right Column (Version v6.0) -->
                     <div class="col-md-6 mb-3">
-                        <h6 class="fw-semibold">Version v6.0</h6>
                         <div
-                            class="border rounded p-3 bg-light"
-                        >
-                            interface GigabitEthernet0/1 description WAN
-                            Interface - Updated ip address 192.168.1.1
-                            255.255.255.0 no shutdown !
-                        </div>
+                            id="changes_file2"
+                            class="border rounded p-3 bg-light overflow-auto"
+                        ></div>
                     </div>
                 </div>
             </div>
@@ -178,9 +142,11 @@
                 >
                     Close
                 </button>
+                <!--
                 <button type="button" class="btn btn-primary">
                     Download Configuration
                 </button>
+                -->
             </div>
         </div>
     </div>
@@ -188,61 +154,5 @@
 
 <!-- end::Content Block -->
 {% endblock content %} {% block scripts %}
-<script>
-    $(document).ready(function () {
-        $(".tableCheckbox").on("change", function () {
-            let checkedCount = $(".tableCheckbox:checked").length;
-
-            if (checkedCount > 2) {
-                $(this).prop("checked", false);
-                Swal.fire({
-                    icon: "warning",
-                    title: "Limit Reached",
-                    text: "You can only select up to 2 checkboxes at a time.",
-                    confirmButtonText: "OK",
-                });
-                checkedCount = $(".tableCheckbox:checked").length;
-            }
-
-            $("#compareBtn").prop("disabled", checkedCount !== 2);
-        });
-
-        $("#compareBtn").on("click", function () {
-            let selectedIds = $(".tableCheckbox:checked")
-                .map(function () {
-                    return $(this).data("id");
-                })
-                .get();
-
-            let originalBtnHtml = $(this).html();
-
-            $(this).html(
-                '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' +
-                    "Comparing..."
-            );
-            $(this).prop("disabled", true);
-
-            $.ajax({
-                url: window.location,
-                data: {
-                    ids: selectedIds,
-                    requestType: "getCompareFiles",
-                },
-                success: function (response) {
-                    console.log("Success:");
-                    $("#compareModal").modal("show");
-                },
-                error: function (xhr, status, error) {
-                    console.error("Error:");
-                },
-                complete: function () {
-                    $("#compareBtn").html(originalBtnHtml);
-                    let checkedCount = $(".tableCheckbox:checked").length;
-                    $("#compareBtn").prop("disabled", checkedCount !== 2);
-                },
-            });
-        });
-    });
-</script>
 <!-- gap -->
 {% include 'temp/configuration_scripts.html' %} {% endblock scripts %}

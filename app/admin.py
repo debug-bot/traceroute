@@ -1,7 +1,14 @@
 from django.contrib import admin
-from .models import Configuration, Router, SSHSettings, DataCenter, Category, Command, PopularCommand, CommandHistory
+from django.shortcuts import render
+from .models import Configuration, Latency, Router, SSHSettings, DataCenter, Category, Command, PopularCommand, CommandHistory
 from django.conf import settings
 from django.contrib import admin
+from django.core.management import call_command
+from django.utils.safestring import mark_safe
+import io
+from contextlib import redirect_stdout
+from django.urls import path
+
 
 admin.site.site_header = f"{settings.PROJECT_NAME} Administration"
 admin.site.site_title = f"{settings.PROJECT_NAME} Admin Dashboard"
@@ -58,9 +65,56 @@ class RouterAdmin(admin.ModelAdmin):
 class SSHSettingsAdmin(admin.ModelAdmin):
     list_display = ("settings_name", "port", "username", "password")
 
+@admin.register(Latency)
+class LatencyAdmin(admin.ModelAdmin):
+    list_display = ("router", "latency", "created_at")
+    list_filter = ("router__name", "router__ip", "created_at")
+    search_fields = ("router__name", "router__ip")
+    
+    ordering = ("latency","-created_at",)
+
+    # Pagination in the admin list view
+    list_per_page = 20
+
 @admin.register(Configuration)
 class ConfigurationAdmin(admin.ModelAdmin):
     list_display = ("router", "version", "file", "created_at")
+
+    # 1) Use a custom change list template
+    change_list_template = "admin/configuration_change_list.html"
+
+    def get_urls(self):
+        """
+        Add a custom URL for our 'Update Device Configs' action.
+        """
+        urls = super().get_urls()
+        my_urls = [
+            path(
+                "update-configs-now/",
+                self.admin_site.admin_view(self.update_configs_now),
+                name="update_configs_now",
+            ),
+        ]
+        return my_urls + urls
+
+    def update_configs_now(self, request):
+        """
+        Runs 'update_device_configs' mgmt command, captures output, and shows it in a custom template.
+        """
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            call_command("update_device_configs")
+        output = buf.getvalue()
+
+        # Render a simple template that shows the command output
+        return render(
+            request,
+            "admin/update_configs_result.html",
+            {
+                "title": "Update Device Configs Output",
+                "output": output,  # We'll display with newlines
+            },
+        )
 
 
 @admin.register(DataCenter)

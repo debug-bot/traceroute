@@ -34,7 +34,7 @@
                 data: { city: selectedDatacenter },
                 success: function (data) {
                     deviceSelect.empty();
-					deviceSelect.prop("disabled", false);
+                    deviceSelect.prop("disabled", false);
                     if (data.devices.length > 0) {
                         deviceSelect.append(
                             '<option value="">Select Device</option>'
@@ -63,6 +63,164 @@
                 id: selectedOption.val(),
                 ip: selectedOption.data("ip"),
             };
+            $.ajax({
+                url: "/configuration/",
+                data: {
+                    requestType: "getConfigurations",
+                    device_id: device.id,
+                },
+                dataType: "json",
+                success: function (response) {
+                    // Empty the table body before adding new rows
+                    let tbody = $("#configurationTable tbody");
+                    tbody.empty();
+                    console.log(response.configs);
+                    // Loop through each config returned in the JSON response
+                    $.each(response.configs, function (index, config) {
+                        let date = new Date(config.created_at)
+                        const dateOptions = {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            second: 'numeric',
+                            // timeZoneName: 'short' // optional; remove if you don't need the time zone abbreviation
+                            };
+                        date = date.toLocaleDateString('en-US', dateOptions)
+                        // Build a table row using the config data
+                        let row = `
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="form-check">
+                                        <input
+                                            class="form-check-input tableCheckbox"
+                                            type="checkbox"
+                                            id="tableCheckbox${config.id}"
+                                            data-id="${config.id}"
+                                        />
+                                    </div>
+                                </td>
+                                <td>${config.version}</td>
+                                <td>${date}</td>
+                                <td>${config.router__name} (${
+                            config.router__ip
+                        })</td>
+                                <td class="text-center">
+                                ${
+                                    config.file
+                                        ? `<a href="https://fastcli.com/media/${config.file}" download><i class="fa fa-download"></i></a>`
+                                        : "No file"
+                                }
+                                </td>
+                            </tr>
+                            `;
+                        tbody.append(row);
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX error: " + error);
+                    // Optionally display an error message to the user
+                },
+            });
+        });
+
+        $(document).on("change", ".tableCheckbox", function () {
+            let checkedCount = $(".tableCheckbox:checked").length;
+
+            if (checkedCount > 2) {
+                $(this).prop("checked", false);
+                Swal.fire({
+                    icon: "warning",
+                    title: "Limit Reached",
+                    text: "You can only select up to 2 checkboxes at a time.",
+                    confirmButtonText: "OK",
+                });
+                checkedCount = $(".tableCheckbox:checked").length;
+            }
+
+            $("#compareBtn").prop("disabled", checkedCount !== 2);
+        });
+
+        $("#compareBtn").on("click", function () {
+            let selectedIds = $(".tableCheckbox:checked")
+                .map(function () {
+                    return $(this).data("id");
+                })
+                .get();
+
+            let originalBtnHtml = $(this).html();
+
+            $(this).html(
+                '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' +
+                    "Comparing..."
+            );
+            $(this).prop("disabled", true);
+
+            $.ajax({
+                url: window.location,
+                data: {
+                    ids: selectedIds,
+                    requestType: "getCompareFiles",
+                },
+                success: function (response) {
+                    // Filter out null lines for file1 and file2 differences
+                    let changes1 = (response.changes_file1 || []).filter(
+                        function (line) {
+                            return line !== null;
+                        }
+                    );
+                    let changes2 = (response.changes_file2 || []).filter(
+                        function (line) {
+                            return line !== null;
+                        }
+                    );
+
+                    // Build HTML for file1 differences
+                    let html1 = "";
+                    if (changes1.length > 0) {
+                        html1 += "<ul>";
+                        changes1.forEach(function (line) {
+                            html1 += "<li>" + line + "</li>";
+                        });
+                        html1 += "</ul>";
+                    } else {
+                        html1 = "<p>No differences found in file1.</p>";
+                    }
+                    $("#changes_file1").html(html1);
+
+                    // Build HTML for file2 differences
+                    let html2 = "";
+                    if (changes2.length > 0) {
+                        html2 += "<ul>";
+                        changes2.forEach(function (line) {
+                            html2 += "<li>" + line + "</li>";
+                        });
+                        html2 += "</ul>";
+                    } else {
+                        html2 = "<p>No differences found in file2.</p>";
+                    }
+                    $("#changes_file2").html(html2);
+
+                    // Show the comparison modal
+                    $("#compareModal").modal("show");
+                },
+                error: function (xhr, status, error) {
+                    // Display error using SweetAlert
+                    swal(
+                        "Error",
+                        xhr.responseJSON
+                            ? xhr.responseJSON.error
+                            : "An error occurred while comparing files.",
+                        "error"
+                    );
+                },
+                complete: function () {
+                    $("#compareBtn").html(originalBtnHtml);
+                    let checkedCount = $(".tableCheckbox:checked").length;
+                    $("#compareBtn").prop("disabled", checkedCount !== 2);
+                },
+            });
         });
     });
 </script>

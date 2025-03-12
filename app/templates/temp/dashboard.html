@@ -48,6 +48,7 @@
                             />
                         </div>
                         <!-- Arrow + % -->
+                        <!-- 
                         <div class="d-flex align-items-center text-success">
                             <img
                                 class="h-lg-16px"
@@ -56,6 +57,7 @@
                             />
                             <span class="ms-1">+0.3%</span>
                         </div>
+                        -->
                     </div>
 
                     <!-- Bottom Row: Title & Value -->
@@ -88,14 +90,16 @@
                             />
                         </div>
                         <!-- Arrow + % -->
+                        <!-- 
                         <div class="d-flex align-items-center text-danger">
                             <img
                                 class="h-lg-16px"
                                 src="{% static 'assets/media/svg/custom/arrow-red-down.svg' %}"
-                                alt="Arrow Icon"
+                                alt="Icon"
                             />
                             <span class="ms-1">+0.3%</span>
                         </div>
+                        -->
                     </div>
 
                     <!-- Bottom Row: Title & Value -->
@@ -126,15 +130,6 @@
                                 src="{% static 'assets/media/svg/dashboard/alert.svg' %}"
                                 alt="Icon"
                             />
-                        </div>
-                        <!-- Arrow + % -->
-                        <div class="d-flex align-items-center text-success">
-                            <img
-                                class="h-lg-16px"
-                                src="{% static 'assets/media/svg/custom/arrow-green-up.svg' %}"
-                                alt="Arrow Icon"
-                            />
-                            <span class="ms-1">+0.3%</span>
                         </div>
                     </div>
 
@@ -168,14 +163,6 @@
                             />
                         </div>
                         <!-- Arrow + % -->
-                        <div class="d-flex align-items-center text-success">
-                            <img
-                                class="h-lg-16px"
-                                src="{% static 'assets/media/svg/custom/arrow-green-up.svg' %}"
-                                alt="Arrow Icon"
-                            />
-                            <span class="ms-1">+0.3%</span>
-                        </div>
                     </div>
 
                     <!-- Bottom Row: Title & Value -->
@@ -450,8 +437,8 @@
                     <h5 class="card-title mb-0">Recent Alerts</h5>
                 </div>
                 <div class="card-body card-body-dashboard table-responsive">
-                    <table class="table table-bordered rounded">
-                        <thead class="bg-light">
+                    <table class="table table-bordered table-hover table-striped table-row-bordered border rounded mb-0">
+                        <thead>
                             <tr>
                                 <th scope="col">Time</th>
                                 <th scope="col">Alert Type</th>
@@ -496,7 +483,7 @@
                                 <td>Device-2</td>
                                 <td>
                                     <span class="badge badge-light-success"
-                                        >Sucess</span
+                                        >Success</span
                                     >
                                 </td>
                             </tr>
