@@ -124,6 +124,7 @@
 					rowDiv.appendChild(colDiv);
 					colDiv.addEventListener("click", function () {
 						$("#liveDeviceStatusCard").removeClass("d-none");
+						slowScrollToBottom(500);
 						document
 							.querySelectorAll(".device-card")
 							.forEach((el) =>
