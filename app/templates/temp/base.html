@@ -1040,13 +1040,13 @@
 		<script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
 		<script src="{% static 'assets/js/scripts.bundle.js' %}"></script>
 		<!--end::Global Javascript Bundle-->
-		<!--begin::Custom Javascript(used for this page only)-->
-		{% block scripts %}{% endblock %}
-		<!-- 
-        <script src="{% static 'assets/js/widgets.bundle.js' %}"></script>
-        <script src="{% static 'assets/js/custom/widgets.js' %}"></script> 
-        -->
-		<script src="{% static 'assets/js/custom/script.js' %}?v=1.1"></script>
+		<!--begin::Custom Javascript-->
+			<!-- 
+			<script src="{% static 'assets/js/widgets.bundle.js' %}"></script>
+			<script src="{% static 'assets/js/custom/widgets.js' %}"></script> 
+			-->
+			<script src="{% static 'assets/js/custom/script.js' %}?v=1.1"></script>
+			{% block scripts %}{% endblock %}
 		<!--end::Custom Javascript-->
 		<!--end::Javascript-->
 	</body>
