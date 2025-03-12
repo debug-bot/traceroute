@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import (
+    AlertRule,
     Category,
     CommandHistory,
     Configuration,
@@ -637,7 +638,26 @@ def rsyslog_log_view(request):
     return render(request, "temp/syslog.html", context)
 
 
-import random
+def create_alert_rule(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        type_value = request.POST.get('type')
+        syslog_strings = request.POST.get('syslog_strings', '')
+        if type_value != 'SYSLOG':
+            syslog_strings = ''
+
+        # Create the AlertRule object
+        alert_rule = AlertRule.objects.create(
+            name=name,
+            description=description,
+            type=type_value,  # Assuming the value matches one of the model's choices
+            syslog_strings=syslog_strings
+        )
+
+        return JsonResponse({'status': 'success', 'id': alert_rule.id})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
 
 def configuration_view(request):
@@ -696,5 +716,6 @@ def configuration_view(request):
 
 
 def alerts_view(request):
-    context = {"title": "Alerts"}
+    alerts = AlertRule.objects.all()  # Retrieve all alert rules
+    context = {"title": "Alerts", "alerts": alerts}
     return render(request, "temp/alerts.html", context)

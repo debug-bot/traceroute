@@ -1,68 +1,126 @@
 <script>
-    $(document).ready(function () {
-        // Global variables to manage active requests and command state
-        let activeXhrs = [];
-        let commandRunning = false;
+	$(document).ready(function () {
+		// Global variables to manage active requests and command state
+		let activeXhrs = [];
+		let commandRunning = false;
 
-        // Do not show both select until select2 initializes
-        $("#datacenter-select").removeClass("d-none");
-        $("#device-select").removeClass("d-none");
+		// Do not show both select until select2 initializes
+		$("#datacenter-select").removeClass("d-none");
+		$("#device-select").removeClass("d-none");
 
-        // 1) Initialize Select2 for Datacenters and Devices
-        $("#datacenter-select").select2({
-            placeholder: "Select Datacenter",
-            allowClear: true,
-        });
-        $("#device-select").select2({
-            placeholder: "Select Device",
-            allowClear: true,
-        });
+		// 1) Initialize Select2 for Datacenters and Devices
+		$("#datacenter-select").select2({
+			placeholder: "Select Datacenter",
+			allowClear: true,
+		});
+		$("#device-select").select2({
+			placeholder: "Select Device",
+			allowClear: true,
+		});
 
-        $("#datacenter-select").on("change", function () {
-            const selectedDatacenter = $(this).val();
-            const deviceSelect = $("#device-select");
+		$("#datacenter-select").on("change", function () {
+			const selectedDatacenter = $(this).val();
+			const deviceSelect = $("#device-select");
 
-            if (!selectedDatacenter) {
-                deviceSelect.empty();
-                deviceSelect.append('<option value="">Select Device</option>');
-                return;
-            }
+			if (!selectedDatacenter) {
+				deviceSelect.empty();
+				deviceSelect.append('<option value="">Select Device</option>');
+				return;
+			}
 
-            $.ajax({
-                url: "/get-devices/",
-                method: "GET",
-                data: { city: selectedDatacenter },
-                success: function (data) {
-                    deviceSelect.empty();
-                    deviceSelect.prop("disabled", false);
-                    if (data.devices.length > 0) {
-                        deviceSelect.append(
-                            '<option value="">Select Device</option>'
-                        );
-                        data.devices.forEach((device) => {
-                            deviceSelect.append(
-                                `<option value="${device.id}" data-ip="${device.ip}">${device.name} (${device.ip})</option>`
-                            );
-                        });
-                    } else {
-                        deviceSelect.append(
-                            `<option value="">No devices available</option>`
-                        );
-                    }
-                },
-                error: function () {
-                    alert("Failed to fetch devices.");
-                },
-            });
-        });
+			$.ajax({
+				url: "/get-devices/",
+				method: "GET",
+				data: { city: selectedDatacenter },
+				success: function (data) {
+					deviceSelect.empty();
+					deviceSelect.prop("disabled", false);
+					if (data.devices.length > 0) {
+						deviceSelect.append(
+							'<option value="">Select Device</option>'
+						);
+						data.devices.forEach((device) => {
+							deviceSelect.append(
+								`<option value="${device.id}" data-ip="${device.ip}">${device.name} (${device.ip})</option>`
+							);
+						});
+					} else {
+						deviceSelect.append(
+							`<option value="">No devices available</option>`
+						);
+					}
+				},
+				error: function () {
+					alert("Failed to fetch devices.");
+				},
+			});
+		});
 
-        $("#device-select").on("change", function () {
-            const selectedOption = $(this).find(":selected");
-            const device = {
-                name: selectedOption.text(),
-                id: selectedOption.val(),
-                ip: selectedOption.data("ip"),
-            };
-        });
-    });
+		$("#device-select").on("change", function () {
+			const selectedOption = $(this).find(":selected");
+			const device = {
+				name: selectedOption.text(),
+				id: selectedOption.val(),
+				ip: selectedOption.data("ip"),
+			};
+		});
+		function toggleSyslogConditions() {
+            const alertType = $("#alertType").val().toLowerCase()
+            console.log(alertType)
+			// Check if the selected alert type is 'syslog'
+			if (alertType === "syslog") {
+				$("#syslogConditionsContainer").show();
+			} else {
+				$("#syslogConditionsContainer").hide();
+			}
+		}
+
+		// Run on page load to set the initial state (default is syslog, so it will be shown)
+		toggleSyslogConditions();
+
+		// Bind the change event to update when the alert type is modified
+		$("#alertType").on("change", function () {
+			toggleSyslogConditions();
+		});
+
+		$("#alertForm").on("submit", function (e) {
+			e.preventDefault();
+
+			// Collect values from the form fields
+			var name = $("#alertName").val();
+			var description = $("#alertDescription").val();
+			var type = $("#alertType").val();
+
+			// Gather all syslog string conditions and join them with commas
+			var syslogStrings = [];
+			$("#conditionContainer input").each(function () {
+				if ($(this).val()) {
+					syslogStrings.push($(this).val());
+				}
+			});
+			syslogStrings = syslogStrings.join(",");
+
+			const data = {
+				name: name,
+				description: description,
+				type: type,
+				syslog_strings: syslogStrings,
+				csrfmiddlewaretoken: $(
+					'input[name="csrfmiddlewaretoken"]'
+				).val(),
+			};
+			// Send AJAX POST request to the Django backend
+			$.ajax({
+				url: "/create_alert_rule/", // Adjust URL as needed
+				type: "POST",
+				data: data,
+				success: function (response) {
+					window.location.reload()
+				},
+				error: function (xhr, status, error) {
+					alert("Error creating alert rule: " + error);
+				},
+			});
+		});
+	});
 </script>

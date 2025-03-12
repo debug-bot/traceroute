@@ -1,332 +1,294 @@
 {% extends 'temp/base.html' %} {% load static %} {% block styles %}
 <style>
-    /* Custom class to make the switch smaller */
-    .form-switch-sm .form-check-input {
-        width: 2.5rem;
-        height: 1.3rem;
-        margin-left: -1rem;
-        margin-top: 0.1rem;
-    }
+	/* Custom class to make the switch smaller */
+	.form-switch-sm .form-check-input {
+		width: 2.5rem;
+		height: 1.3rem;
+		margin-left: -1rem;
+		margin-top: 0.1rem;
+	}
 </style>
 <!-- gap -->
 {% endblock styles %} {% block content %}
 
-<form id="commandForm" method="POST">
-    <div class="d-flex gap-6 flex-column mt-6">
-        {% csrf_token %}
-        <!-- Top Row: Datacenter & Device -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-6">
-                <div class="row g-6">
-                    <div class="col-md-6">
-                        <label for="datacenter-select" class="form-label"
-                            >Datacenter</label
-                        >
-                        <!-- Multiple select using Select2 -->
-                        <select
-                            class="form-select d-none"
-                            id="datacenter-select"
-                            name="datacenters"
-                        >
-                            <option value="">Select Datacenter</option>
-                            {% for item in unique_cities %}
-                            <option value="{{ item }}">{{ item }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="device-select" class="form-label"
-                            >Device</label
-                        >
-                        <!-- Multiple select using Select2 -->
-                        <select
-                            class="form-select d-none"
-                            id="device-select"
-                            name="devices"
-                            disabled
-                        >
-                            <option value="">Select Device</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2nd Row -->
-
-        <div class="card border-0 shadow-sm"></div>
-    </div>
-</form>
 <div class="mb-4">
-    <button
-        type="button"
-        class="btn btn-sm btn-primary"
-        data-bs-toggle="modal"
-        data-bs-target="#createAlertRuleModal"
-    >
-        <i class="fa-solid fa-plus"></i> New Alert Rule
-    </button>
+	<button
+		type="button"
+		class="btn btn-sm btn-primary"
+		data-bs-toggle="modal"
+		data-bs-target="#createAlertRuleModal"
+	>
+		<i class="fa-solid fa-plus"></i> New Alert Rule
+	</button>
 </div>
 
 <div class="">
     <!-- Accordion -->
     <div class="accordion" id="alertsAccordion">
-        <!-- OSPF Neighbor Changes -->
+        {% for alert in alerts %}
         <div class="accordion-item">
-            <h2 class="accordion-header" id="headingOspf">
+            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
                 <button
                     class="accordion-button"
                     type="button"
                     data-bs-toggle="collapse"
-                    data-bs-target="#collapseOspf"
-                    aria-expanded="true"
-                    aria-controls="collapseOspf"
+                    data-bs-target="#collapse{{ forloop.counter }}"
+                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                    aria-controls="collapse{{ forloop.counter }}"
                 >
                     <span class="d-flex justify-content-between w-100">
                         <span class="d-flex align-items-center gap-3 text-dark">
-                            <span class="bg-secondary rounded-2 p-1"
-                                ><i class="bi bi-file-earmark-text fs-3"></i
-                            ></span>
-                            OSPF Neighbor Changes
-                            <span class="badge badge-light-warning"
-                                ><i
-                                    class="bi bi-exclamation-triangle text-warning pe-1"
-                                ></i>
-                                Warning</span
-                            >
+                            <span class="bg-secondary rounded-2 p-1">
+                                <i class="bi bi-file-earmark-text fs-3"></i>
+                            </span>
+                            {{ alert.name }}
                         </span>
+                        <!--
                         <span class="d-flex align-items-center gap-3 me-3">
-                            <div
-                                class="form-check form-switch form-switch-sm no-collapse"
-                            >
+                            <div class="form-check form-switch form-switch-sm no-collapse">
                                 <input
                                     class="form-check-input"
                                     type="checkbox"
-                                    id="flexSwitchAlert"
+                                    id="flexSwitchAlert{{ forloop.counter }}"
+                                    {% if alert.enabled %}checked{% endif %}
                                 />
                             </div>
                             <i class="bi bi-pencil-square fs-3 no-collapse"></i>
-                            <i
-                                class="bi bi-trash fs-3 text-danger no-collapse"
-                            ></i>
+                            <i class="bi bi-trash fs-3 text-danger no-collapse"></i>
                         </span>
+                        -->
                     </span>
                 </button>
             </h2>
             <div
-                id="collapseOspf"
-                class="accordion-collapse collapse show"
-                aria-labelledby="headingOspf"
+                id="collapse{{ forloop.counter }}"
+                class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                aria-labelledby="heading{{ forloop.counter }}"
                 data-bs-parent="#alertsAccordion"
             >
                 <div class="accordion-body">
-                    <p>Alert when OSPF neighbor state changes are detected.</p>
+                    <p>{{ alert.description }}</p>
                     <hr />
                     <div class="row">
                         <div class="col-md-6">
                             <h5>Conditions</h5>
-                            <p class="p-2 bg-light rounded">
-                                contains OSPF-5-ADJCHG
-                            </p>
+                            {% for condition in alert.conditions %}
+                                <p class="p-2 bg-light rounded mb-1">
+                                    contains {{ condition }}
+                                </p>
+                            {% endfor %}
                         </div>
                         <div class="col-md-6">
                             <h5>Notifications</h5>
                             <p>
-                                <i class="bi bi-envelope pe-1 fs-4"></i> Email
-                                notifications enabled
+                                <i class="bi bi-envelope pe-1 fs-4"></i>
+                                Email notifications enabled
                             </p>
                         </div>
                     </div>
                     <p class="text-muted mb-0">
-                        Last triggered: 2025-02-13T15:30:00Z
+                        Last triggered: {{ alert.last_triggered|default:"..." }}
                     </p>
                 </div>
             </div>
         </div>
+        {% endfor %}
     </div>
     <!-- End Accordion -->
 </div>
 
+
 <!-- Modal -->
 <div
-    class="modal fade"
-    id="createAlertRuleModal"
-    tabindex="-1"
-    aria-labelledby="createAlertRuleModalLabel"
-    aria-hidden="true"
+	class="modal fade"
+	id="createAlertRuleModal"
+	tabindex="-1"
+	aria-labelledby="createAlertRuleModalLabel"
+	aria-hidden="true"
 >
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <!-- Modal Header -->
-            <div class="modal-header">
-                <h5 class="modal-title" id="createAlertRuleModalLabel">
-                    Create New Alert Rule
-                </h5>
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                ></button>
-            </div>
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<!-- Modal Header -->
+			<form id="alertForm">
+				{% csrf_token %}
+				<div class="modal-header">
+					<h5 class="modal-title" id="createAlertRuleModalLabel">
+						Create New Alert Rule
+					</h5>
+					<button
+						type="button"
+						class="btn-close"
+						data-bs-dismiss="modal"
+						aria-label="Close"
+					></button>
+				</div>
 
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <form>
-                    <!-- Alert Name -->
-                    <div class="mb-3">
-                        <label for="alertName" class="form-label"
-                            >Alert Name</label
-                        >
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="alertName"
-                            placeholder="Enter alert name"
-                        />
-                    </div>
+				<!-- Modal Body -->
+				<div class="modal-body">
+					<!-- Alert Name -->
+					<div class="mb-3">
+						<label for="alertName" class="form-label"
+							>Alert Name</label
+						>
+						<input
+							type="text"
+							class="form-control"
+							id="alertName"
+							placeholder="Enter alert name"
+                            required
+						/>
+					</div>
 
-                    <!-- Description -->
-                    <div class="mb-3">
-                        <label for="alertDescription" class="form-label"
-                            >Description</label
-                        >
-                        <textarea
-                            class="form-control"
-                            id="alertDescription"
-                            rows="3"
-                            placeholder="Describe the alert rule"
-                        ></textarea>
-                    </div>
-                    <div class="row">
-                        <!-- Alert Type -->
-                        <div class="mb-3 col-md-6">
-                            <label for="alertType" class="form-label"
-                                >Alert Type</label
-                            >
-                            <select class="form-select" id="alertType">
-                                <option value="syslog" selected>Syslog</option>
-                                <option value="snmp">SNMP</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
+					<!-- Description -->
+					<div class="mb-3">
+						<label for="alertDescription" class="form-label"
+							>Description</label
+						>
+						<textarea
+							class="form-control"
+							id="alertDescription"
+							rows="3"
+							placeholder="Describe the alert rule"
+                            required
+						></textarea>
+					</div>
+					<div class="row">
+						<!-- Alert Type -->
+						<div class="mb-3 col-12">
+							<label for="alertType" class="form-label"
+								>Alert Type</label
+							>
+							<select class="form-select" id="alertType">
+								<option value="SYSLOG" selected>Syslog</option>
+								<option value="MONITORING">Monitoring</option>
+								<option value="CONFIGURATION">Configuration</option>
+							</select>
+						</div>
 
-                        <!-- Severity -->
-                        <div class="mb-3 col-md-6">
-                            <label for="alertSeverity" class="form-label"
-                                >Severity</label
-                            >
-                            <select class="form-select" id="alertSeverity">
-                                <option value="warning" selected>
-                                    Warning
-                                </option>
-                                <option value="critical">Critical</option>
-                                <option value="info">Info</option>
-                            </select>
-                        </div>
-                    </div>
-                    <!-- Syslog String Conditions -->
-                    <div class="mb-3">
-                        <div class="w-100 d-flex justify-content-between">
-                            <label class="form-label"
-                                >Syslog String Conditions</label
-                            >
-                            <span
-                                id="addAlertCondition"
-                                class="d-flex align-items-center gap-2 ps-3 cursor-pointer"
-                            >
-                                <span class="text-primary">Add Condition</span>
-                                <i class="fa-solid fa-plus text-primary"></i>
-                            </span>
-                        </div>
+						<!-- Severity -->
+						<!--<div class="mb-3 col-md-6">
+							<label for="alertSeverity" class="form-label"
+								>Severity</label
+							>
+							<select class="form-select" id="alertSeverity">
+								<option value="warning" selected>
+									Warning
+								</option>
+								<option value="critical">Critical</option>
+								<option value="info">Info</option>
+							</select>
+						</div>-->
+					</div>
+					<!-- Syslog String Conditions -->
+					<div class="mb-3" id="syslogConditionsContainer">
+						<div class="w-100 d-flex justify-content-between">
+							<label class="form-label"
+								>Syslog String Conditions</label
+							>
+							<span
+								id="addAlertCondition"
+								class="d-flex align-items-center gap-2 ps-3 cursor-pointer"
+							>
+								<span class="text-primary">Add Condition</span>
+								<i class="fa-solid fa-plus text-primary"></i>
+							</span>
+						</div>
 
-                        <div id="conditionContainer">
-                            <div class="input-group mb-2">
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    placeholder="Enter string to match (e.g., OSPF)"
-                                />
-                            </div>
-                        </div>
-                    </div>
+						<div id="conditionContainer">
+							<div class="input-group mb-2">
+								<input
+									type="text"
+									class="form-control"
+									placeholder="Enter string to match (e.g., OSPF)"
 
-                    <!-- Notifications -->
-                    <div class="mb-3">
-                        <label class="form-label">Notifications</label>
-                        <div class="form-check">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                value=""
-                                id="emailNotifications"
-                                checked
-                            />
-                            <label
-                                class="form-check-label"
-                                for="emailNotifications"
-                            >
-                                Email notifications
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                value=""
-                                id="slackNotifications"
-                            />
-                            <label
-                                class="form-check-label"
-                                for="slackNotifications"
-                            >
-                                Slack notifications
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                value=""
-                                id="webhookNotifications"
-                            />
-                            <label
-                                class="form-check-label"
-                                for="webhookNotifications"
-                            >
-                                Webhook notifications
-                            </label>
-                        </div>
-                    </div>
-                </form>
-            </div>
+								/>
+							</div>
+						</div>
+					</div>
 
-            <!-- Modal Footer -->
-            <div class="modal-footer">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-secondary"
-                    data-bs-dismiss="modal"
-                >
-                    Close
-                </button>
-                <button type="button" class="btn btn-sm btn-primary">
-                    Create Alert Rule
-                </button>
-            </div>
-        </div>
-    </div>
+					<!-- Notifications -->
+					<div class="mb-3">
+						<label class="form-label">Notifications</label>
+						<div class="form-check">
+							<input
+								class="form-check-input"
+								type="checkbox"
+								value=""
+								id="emailNotifications"
+								checked
+                                disabled
+							/>
+							<label
+								class="form-check-label"
+								for="emailNotifications"
+							>
+								Email notifications
+							</label>
+						</div>
+						<div class="form-check">
+							<input
+								class="form-check-input"
+								type="checkbox"
+								value=""
+								id="slackNotifications"
+                                disabled
+							/>
+							<label
+								class="form-check-label"
+								for="slackNotifications"
+							>
+								Slack notifications
+							</label>
+						</div>
+						<div class="form-check">
+							<input
+								class="form-check-input"
+								type="checkbox"
+								value=""
+								id="webhookNotifications"
+                                disabled
+							/>
+							<label
+								class="form-check-label"
+								for="webhookNotifications"
+							>
+								Webhook notifications
+							</label>
+						</div>
+					</div>
+				</div>
+
+				<!-- Modal Footer -->
+				<div class="modal-footer">
+					<button
+						type="button"
+						class="btn btn-sm btn-secondary"
+						data-bs-dismiss="modal"
+					>
+						Close
+					</button>
+					<button
+						type="submit"
+						class="btn btn-sm btn-primary"
+					>
+						Create Alert Rule
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
 </div>
 <!-- end::Content Block -->
 {% endblock content %} {% block scripts %}
 <script>
-    $(document).ready(function () {
-        $(".no-collapse").on("click", function (event) {
-            event.stopPropagation();
-        });
+	$(document).ready(function () {
+        
+		$(".no-collapse").on("click", function (event) {
+			event.stopPropagation();
+		});
 
-        $("#addAlertCondition").click(function () {
-            var newInput = `
+		$("#addAlertCondition").click(function () {
+			var newInput = `
           <div class="input-group mb-2">
             <input
               type="text"
@@ -338,13 +300,13 @@
             </button>
           </div>
         `;
-            $("#conditionContainer").append(newInput);
-        });
+			$("#conditionContainer").append(newInput);
+		});
 
-        $("#conditionContainer").on("click", ".remove-condition", function () {
-            $(this).closest(".input-group").remove();
-        });
-    });
+		$("#conditionContainer").on("click", ".remove-condition", function () {
+			$(this).closest(".input-group").remove();
+		});
+	});
 </script>
 <!-- gap -->
 {% include 'temp/alerts_scripts.html' %} {% endblock scripts %}

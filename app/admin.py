@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.shortcuts import render
-from .models import Configuration, Latency, Router, SSHSettings, DataCenter, Category, Command, PopularCommand, CommandHistory
+from .models import AlertRule, Configuration, Latency, Router, SSHSettings, DataCenter, Category, Command, PopularCommand, CommandHistory
 from django.conf import settings
 from django.contrib import admin
 from django.core.management import call_command
@@ -65,6 +65,10 @@ class RouterAdmin(admin.ModelAdmin):
 class SSHSettingsAdmin(admin.ModelAdmin):
     list_display = ("settings_name", "port", "username", "password")
 
+@admin.register(AlertRule)
+class AlertRuleAdmin(admin.ModelAdmin):
+    list_display = ("name","description","type","syslog_strings")
+    
 @admin.register(Latency)
 class LatencyAdmin(admin.ModelAdmin):
     list_display = ("router", "latency", "created_at")

@@ -20,4 +20,6 @@ urlpatterns = [
     path("syslog/", views.rsyslog_log_view, name="rsyslog_log"),
     path("configuration/", views.configuration_view, name="configuration_view"),
     path("alerts/", views.alerts_view, name="alerts_view"),
+    path('create_alert_rule/', views.create_alert_rule, name='create_alert_rule'),
+
 ]

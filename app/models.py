@@ -246,6 +246,30 @@ class Configuration(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+class AlertRule(models.Model):
+    TYPE_CHOICES = [
+        ("SYSLOG","Syslog"),
+        ("MONITORING","Monitoring"),
+        ("CONFIGURATION","Configuration"),
+    ]
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    type = models.CharField(max_length=100, choices=TYPE_CHOICES)
+    syslog_strings = models.TextField(null=True, blank=True, default="OSPF,BGP", help_text="Strings to match for syslog events separated by commas (e.g., OSPF,BGP)")
+    last_triggered = models.DateTimeField()
+    
+    @property
+    def conditions(self):
+        """
+        Returns a list of conditions extracted from syslog_strings.
+        Strips extra whitespace and ignores empty strings.
+        """
+        if self.syslog_strings:
+            return [cond.strip() for cond in self.syslog_strings.split(",") if cond.strip()]
+        return []
+    
+    class Meta:
+        ordering = ['-id']
 
 class Latency(models.Model):
     router = models.ForeignKey(Router, on_delete=models.CASCADE)
