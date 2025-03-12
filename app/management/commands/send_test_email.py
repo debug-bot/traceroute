@@ -9,8 +9,8 @@ class Command(BaseCommand):
             send_mail(
                 'Test Email Subject',
                 'This is a test email message.',
-                'your_email@example.com',
-                ['recipient@example.com'],
+                'info@fastcli.com',
+                ['adnanashraf4423@gmail.com'],
                 fail_silently=False,
             )
             self.stdout.write(self.style.SUCCESS("Test email sent successfully."))
