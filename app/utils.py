@@ -562,3 +562,25 @@ def router_latencies(router):
         )
 
     return final_results
+
+def parse_bgp_peers(output):
+    """
+    Given the BGP summary output as a string, returns (total_peers, established_peers).
+    If the line 'Groups: X Peers: Y Down peers: Z' is found, we parse directly.
+    Otherwise, returns (0, 0).
+    """
+    total_peers = 0
+    established_peers = 0
+
+    for line in output.splitlines():
+        line = line.strip()
+        # Look for a line like: "Groups: 3 Peers: 3 Down peers: 1"
+        match = re.search(r"Groups:\s+(\d+)\s+Peers:\s+(\d+)\s+Down peers:\s+(\d+)", line)
+        if match:
+            groups = int(match.group(1))
+            total_peers = int(match.group(2))
+            down_peers = int(match.group(3))
+            established_peers = total_peers - down_peers
+            break
+
+    return (total_peers, established_peers)
