@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.shortcuts import render
-from .models import AlertRule, Configuration, Latency, Router, SSHSettings, DataCenter, Category, Command, PopularCommand, CommandHistory
+from .models import Alert, AlertRule, Configuration, Latency, Router, SSHSettings, DataCenter, Category, Command, PopularCommand, CommandHistory
 from django.conf import settings
 from django.contrib import admin
 from django.core.management import call_command
@@ -68,6 +68,10 @@ class SSHSettingsAdmin(admin.ModelAdmin):
 @admin.register(AlertRule)
 class AlertRuleAdmin(admin.ModelAdmin):
     list_display = ("name","description","type","syslog_strings")
+    
+@admin.register(Alert)
+class AlertAdmin(admin.ModelAdmin):
+    list_display = ("type","subject","message","created_at")
     
 @admin.register(Latency)
 class LatencyAdmin(admin.ModelAdmin):
