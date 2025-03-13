@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from .models import (
+    Alert,
     AlertRule,
     Category,
     CommandHistory,
@@ -18,6 +19,7 @@ from .utils import (
     ping_device_n_times,
     compare_and_return_changes,
     router_latencies,
+    send_alert_email,
 )
 import time
 import paramiko
@@ -731,6 +733,7 @@ def alerts_view(request):
 
 
 from django.views.decorators.csrf import csrf_exempt
+import re
 
 @csrf_exempt
 def check_syslog_view(request):
@@ -739,9 +742,35 @@ def check_syslog_view(request):
         if not file_name:
             return JsonResponse({"error": "No file_name provided"}, status=400)
 
-        # Here, you can call your existing logic (the one in your management command)
-        # For example, process the syslog file and send an email if necessary.
-        # process_syslog(file_name)  <-- your function
+        if not os.path.exists(file_name):
+            raise Exception(f"Log file {file_name} does not exist.")
+
+        keywords_str = "BGP, OSPF"  # Keywords as a comma-separated string
+        keywords = [kw.strip() for kw in keywords_str.split(",")]
+        pattern = re.compile("|".join(keywords), re.IGNORECASE)
+
+        matching_lines = []
+
+        # Read the log file and search for keywords.
+        with open(file_name, "r", encoding="utf-8") as f:
+            for line in f:
+                if pattern.search(line):
+                    matching_lines.append(line.strip())
+
+        email_subject = (
+            f"Alert: Syslog contains keywords for {os.path.basename(file_name)}"
+        )
+        email_body = (
+            f"The following log lines in {file_name} match the keywords ({', '.join(keywords)}):\n\n"
+            + "\n".join(matching_lines)
+        )
+
+        # Send the email (customize from_email and recipient_list as needed).
+        send_alert_email(
+            alert_type="SYSLOG",
+            subject=email_subject,
+            message=email_body,
+        )
 
         return JsonResponse({"status": "success", "file_name": file_name})
     else:
