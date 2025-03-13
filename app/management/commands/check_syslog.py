@@ -17,10 +17,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         log_file = options["log_file"]
+        self.stdout.write(f"Started check_syslog, {log_file}")
 
         if not os.path.exists(log_file):
             raise CommandError(f"Log file {log_file} does not exist.")
-
 
         keywords_str = "BGP, OSPF"  # Keywords as a comma-separated string
         keywords = [kw.strip() for kw in keywords_str.split(",")]
@@ -32,7 +32,7 @@ class Command(BaseCommand):
         with open(log_file, "r", encoding="utf-8") as f:
             for line in f:
                 # if pattern.search(line):
-                    matching_lines.append(line.strip())
+                matching_lines.append(line.strip())
 
         if matching_lines:
             email_subject = (
