@@ -7,7 +7,8 @@ import datetime
 from django.core.management.base import BaseCommand
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from app.models import Router, Configuration
+from app.models import TYPE_CHOICES, Router, Configuration
+from app.utils import compare_and_return_changes_text, send_alert_email
 
 class Command(BaseCommand):
     help = "Fetch 'show configuration | display set' from each router. If changed, store a new version."
@@ -86,6 +87,24 @@ class Command(BaseCommand):
                         f"No change for {router.name}."
                     ))
                     continue
+                
+                else:
+                    # Compare the old and new configuration texts.
+                    changes_old, changes_new = compare_and_return_changes_text(old_config_text, config_text)
+
+                    # Build an email message with the changes.
+                    email_body = f"Configuration changes detected for {router.name}:\n\n"
+                    email_body += "Changed lines in the OLD configuration:\n"
+                    email_body += "\n".join([repr(line) for line in changes_old]) + "\n\n"
+                    email_body += "Changed lines in the NEW configuration:\n"
+                    email_body += "\n".join([repr(line) for line in changes_new])
+
+                    # Send the email (customize sender, recipients, etc. as needed).
+                    send_alert_email(
+                        alert_type=TYPE_CHOICES['CONFIGURATION'],
+                        subject=f"Configuration Update for {router.name} ({router.ip})",
+                        message=email_body,
+                    )
 
             # 3) If different (or no previous config), store a new version
             #    We'll make a simple version scheme like "vYYYYMMDD-HHMMSS"

@@ -4,7 +4,7 @@ import paramiko
 import time
 import re
 
-from app.models import Latency, Router
+from app.models import Alert, Latency, Router
 
 # Router SSH Details
 ROUTER_SSH_DETAILS = {
@@ -512,6 +512,32 @@ def compare_and_return_changes(file1_path, file2_path):
     return changed_lines_file1, changed_lines_file2
 
 
+def compare_and_return_changes_text(text1, text2):
+    """
+    Compare two text strings line-by-line and return the differing lines.
+
+    Returns:
+        tuple: (changed_lines_text1, changed_lines_text2)
+    """
+    # Split the texts into lines (automatically handles different newline types)
+    lines1 = text1.splitlines()
+    lines2 = text2.splitlines()
+
+    max_len = max(len(lines1), len(lines2))
+    changed_lines_text1 = []
+    changed_lines_text2 = []
+
+    for i in range(max_len):
+        line1 = lines1[i] if i < len(lines1) else None
+        line2 = lines2[i] if i < len(lines2) else None
+
+        if line1 != line2:
+            changed_lines_text1.append(line1)
+            changed_lines_text2.append(line2)
+
+    return changed_lines_text1, changed_lines_text2
+
+
 from django.utils import timezone
 from django.db.models.functions import TruncHour
 from django.db.models import Avg
@@ -563,6 +589,7 @@ def router_latencies(router):
 
     return final_results
 
+
 def parse_bgp_peers(output):
     """
     Given the BGP summary output as a string, returns (total_peers, established_peers).
@@ -575,7 +602,9 @@ def parse_bgp_peers(output):
     for line in output.splitlines():
         line = line.strip()
         # Look for a line like: "Groups: 3 Peers: 3 Down peers: 1"
-        match = re.search(r"Groups:\s+(\d+)\s+Peers:\s+(\d+)\s+Down peers:\s+(\d+)", line)
+        match = re.search(
+            r"Groups:\s+(\d+)\s+Peers:\s+(\d+)\s+Down peers:\s+(\d+)", line
+        )
         if match:
             groups = int(match.group(1))
             total_peers = int(match.group(2))
@@ -584,3 +613,9 @@ def parse_bgp_peers(output):
             break
 
     return (total_peers, established_peers)
+
+
+def send_alert_email(alert_type, subject, message):
+    print(alert_type, subject, message)
+    Alert.objects.create(type="SYSLOG", subject=subject, message=message)
+    

@@ -1,7 +1,7 @@
 from datetime import timedelta
 from django.core.management.base import BaseCommand
-from app.models import Latency, Router
-from app.utils import ping_device_once
+from app.models import TYPE_CHOICES, Latency, Router
+from app.utils import ping_device_once, send_alert_email
 from django.utils import timezone
 
 
@@ -15,10 +15,10 @@ def update_last_pings(router, success):
 def derive_status_from_pings(last_pings):
     # If we have fewer than 3 pings so far, treat as 'offline' 
     if len(last_pings) < 3:
-        status = "0"  # default to offline if no pings yet
+        status = "0"  # default to warning if no pings yet
         if len(last_pings) > 0:
             status = last_pings[-1]
-        return "offline" if status == "0" else "online"
+        return "warning" if status == "0" else "online"
     fails = last_pings.count("0")
     if fails == 3:
         return "offline"
@@ -64,6 +64,9 @@ class Command(BaseCommand):
             # 2) Derive new status
             router.status = derive_status_from_pings(router.last_pings)
             
+            if router.status == "offline":
+                send_alert_email(TYPE_CHOICES['MONITORING'], None, None)
+                
             # 3) Update total pings
             router.total_pings += 1
             if success:

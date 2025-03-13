@@ -4,23 +4,37 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+TYPE_CHOICES = [
+    ("SYSLOG", "Syslog"),
+    ("MONITORING", "Monitoring"),
+    ("CONFIGURATION", "Configuration"),
+]
+
 
 # Django model for SSH settings
 class SSHSettings(models.Model):
-    settings_name = models.CharField(unique=True, max_length=255, help_text="Enter the unique settings name, This will be used to connect to each router/probe", default="default")
+    settings_name = models.CharField(
+        unique=True,
+        max_length=255,
+        help_text="Enter the unique settings name, This will be used to connect to each router/probe",
+        default="default",
+    )
     port = models.PositiveIntegerField(default=22)
     username = models.CharField(max_length=255, default="txfiber")
     password = models.CharField(max_length=255, default="southtx956")
 
     def __str__(self):
         return f"SSH Settings: '{self.settings_name}'"
-    
+
     class Meta:
         verbose_name = "SSH Settings"
         verbose_name_plural = "SSH Settings"
         constraints = [
-            models.UniqueConstraint(fields=["port","username", "password"], name="unique_settings"),
+            models.UniqueConstraint(
+                fields=["port", "username", "password"], name="unique_settings"
+            ),
         ]
+
 
 class DataCenter(models.Model):
     city = models.CharField(
@@ -43,18 +57,17 @@ class DataCenter(models.Model):
         help_text="Enter the country where the probe is located (optional)",
         verbose_name="Country",
     )
-    
+
     def __str__(self):
         state = ", " + self.state if self.state else ""
-        country = ", "+ self.country if self.country else ""
+        country = ", " + self.country if self.country else ""
         return self.city + state + country
-    
-    
+
     def clean(self):
         # Ensure the city contains only alphabetic characters
         if not self.city.replace(" ", "").isalpha():
             raise ValidationError("City name must contain only alphabetic characters")
-        
+
     class Meta:
         verbose_name = "Data Center"
         verbose_name_plural = "Data Centers"
@@ -62,6 +75,7 @@ class DataCenter(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["city", "state"], name="unique_datacenter"),
         ]
+
 
 class Category(models.Model):
     name = models.CharField(
@@ -83,11 +97,12 @@ class Category(models.Model):
         help_text="Enter the order of the category in accending order",
         verbose_name="Order",
     )
+
     class Meta:
         verbose_name = "Category"
         verbose_name_plural = "Categories"
         ordering = ["order"]
-        
+
     def __str__(self):
         return self.name or "No Category"
 
@@ -132,14 +147,16 @@ class Router(models.Model):
         ("v4", "IPv4"),
         ("v6", "IPv6"),
     ]
-    
-    STATUS_CHOICES = [ 
+
+    STATUS_CHOICES = [
         ("online", "Online"),
         ("offline", "Offline"),
         ("warning", "Warning"),
     ]
 
-    ssh_settings = models.ForeignKey(SSHSettings, verbose_name="SSH Settings", on_delete=models.CASCADE)
+    ssh_settings = models.ForeignKey(
+        SSHSettings, verbose_name="SSH Settings", on_delete=models.CASCADE
+    )
     type = models.CharField(
         max_length=20,
         choices=TYPE_CHOICES,
@@ -167,30 +184,53 @@ class Router(models.Model):
         help_text="Specify whether the IP version is IPv4 or IPv6. Ensure it matches the IP format.",
         verbose_name="IP Version",
     )
-    datacenter = models.ForeignKey(DataCenter, verbose_name="Data Center Location", default=None, null=True, on_delete=models.CASCADE)
+    datacenter = models.ForeignKey(
+        DataCenter,
+        verbose_name="Data Center Location",
+        default=None,
+        null=True,
+        on_delete=models.CASCADE,
+    )
 
     # We store the last 3 pings as "1" for success, "0" for fail. Example: "110", "101", etc.
-    last_pings = models.CharField(max_length=3, default="", help_text="Last 3 ping results, '1' for success, '0' for failure.", verbose_name="Last 3 Pings")
-    
+    last_pings = models.CharField(
+        max_length=3,
+        default="",
+        help_text="Last 3 ping results, '1' for success, '0' for failure.",
+        verbose_name="Last 3 Pings",
+    )
+
     # Track how many pings have succeeded vs. total
     total_pings = models.PositiveIntegerField(default=0)
     successful_pings = models.PositiveIntegerField(default=0)
-    
+
     # If the device fails 3 times in a row => offline
-    consecutive_failures = models.PositiveIntegerField(default=0, help_text="Number of consecutive failures", verbose_name="Consecutive Failures") 
+    consecutive_failures = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of consecutive failures",
+        verbose_name="Consecutive Failures",
+    )
 
     # online / warning / offline, based on consecutive failures, 0 => online, 1-2 => warning, >=3 => offline
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="offline", help_text="Current status of the device", verbose_name="Device Status")
-        
-    last_3_latency = models.JSONField(default=dict, help_text="Last 3 latency values in ms")
-    
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="offline",
+        help_text="Current status of the device",
+        verbose_name="Device Status",
+    )
+
+    last_3_latency = models.JSONField(
+        default=dict, help_text="Last 3 latency values in ms"
+    )
+
     # Following 3 fields are in percentage
     cpu_usage = models.FloatField(default=0.0)
     mem_usage = models.FloatField(default=0.0)
     storage_usage = models.FloatField(default=0.0)
-    
+
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     @property
     def avg_latency(self):
         data = self.last_3_latency or {}
@@ -199,7 +239,7 @@ class Router(models.Model):
         clean_latencies = [v for v in latencies if v is not None]
         if not clean_latencies:
             return 0.0
-        
+
         # Compute average of non-None values
         return round(sum(clean_latencies) / len(clean_latencies), 2)
 
@@ -214,7 +254,7 @@ class Router(models.Model):
         success_count = self.last_pings.count("1")
         total_count = len(self.last_pings)  # could be 1, 2, or 3
         return (success_count / total_count) * 100.0
-    
+
     def __str__(self):
         return f"{self.name} ({self.ip}) - {self.datacenter}"
 
@@ -234,30 +274,32 @@ class Router(models.Model):
             models.UniqueConstraint(fields=["asn", "ip"], name="unique_asn_ip"),
         ]
 
+
 class Configuration(models.Model):
     router = models.ForeignKey(Router, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     version = models.CharField(max_length=200)
-    file = models.FileField(upload_to='configuration/')
+    file = models.FileField(upload_to="configuration/")
 
     def __str__(self):
-        return f'{self.router.name} {self.version}'
+        return f"{self.router.name} {self.version}"
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
+
 
 class AlertRule(models.Model):
-    TYPE_CHOICES = [
-        ("SYSLOG","Syslog"),
-        ("MONITORING","Monitoring"),
-        ("CONFIGURATION","Configuration"),
-    ]
     name = models.CharField(max_length=200)
     description = models.TextField()
     type = models.CharField(max_length=100, choices=TYPE_CHOICES)
-    syslog_strings = models.TextField(null=True, blank=True, default="OSPF,BGP", help_text="Strings to match for syslog events separated by commas (e.g., OSPF,BGP)")
+    syslog_strings = models.TextField(
+        null=True,
+        blank=True,
+        default="OSPF,BGP",
+        help_text="Strings to match for syslog events separated by commas (e.g., OSPF,BGP)",
+    )
     last_triggered = models.DateTimeField(null=True, default=None)
-    
+
     @property
     def conditions(self):
         """
@@ -265,11 +307,24 @@ class AlertRule(models.Model):
         Strips extra whitespace and ignores empty strings.
         """
         if self.syslog_strings:
-            return [cond.strip() for cond in self.syslog_strings.split(",") if cond.strip()]
+            return [
+                cond.strip() for cond in self.syslog_strings.split(",") if cond.strip()
+            ]
         return []
-    
+
     class Meta:
-        ordering = ['-id']
+        ordering = ["-id"]
+
+
+class Alert(models.Model):
+    type = models.CharField(max_length=100, choices=TYPE_CHOICES)
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
 
 class Latency(models.Model):
     router = models.ForeignKey(Router, on_delete=models.CASCADE)
@@ -278,11 +333,11 @@ class Latency(models.Model):
 
     def __str__(self):
         return f"{self.router.name} - {self.latency} ms at {self.created_at}"
-    
+
     class Meta:
-        ordering = ['-created_at']
-        verbose_name = 'Latency'
-        verbose_name_plural = 'Latencies'
+        ordering = ["-created_at"]
+        verbose_name = "Latency"
+        verbose_name_plural = "Latencies"
 
 
 class CommandHistory(models.Model):
@@ -297,7 +352,7 @@ class CommandHistory(models.Model):
         help_text="User who executed the command",
     )
     device = models.ForeignKey(
-        Router, 
+        Router,
         on_delete=models.CASCADE,
         null=True,
         default=None,
