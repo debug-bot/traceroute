@@ -31,7 +31,7 @@ class Command(BaseCommand):
         # Read the log file and search for keywords.
         with open(log_file, "r", encoding="utf-8") as f:
             for line in f:
-                if pattern.search(line):
+                # if pattern.search(line):
                     matching_lines.append(line.strip())
 
         if matching_lines:
