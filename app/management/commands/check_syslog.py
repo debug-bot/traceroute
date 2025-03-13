@@ -10,15 +10,15 @@ from app.utils import send_alert_email
 class Command(BaseCommand):
     help = "Checks a syslog file for specific keywords (e.g., BGP, OSPF) and sends an email alert if found."
 
-    def add_arguments(self, parser):
-        parser.add_argument(
-            "log_file", type=str, help="Path to the syslog file to be scanned."
-        )
+    # def add_arguments(self, parser):
+    #     parser.add_argument(
+    #         "log_file", type=str, help="Path to the syslog file to be scanned."
+    #     )
 
     def handle(self, *args, **options):
+        Alert.objects.create(type="SYSLOG",subject='Test',message='Test')
         log_file = options["log_file"]
         self.stdout.write(f"Started check_syslog, {log_file}")
-        Alert.objects.create(type="SYSLOG",subject=log_file,message='Test')
 
         if not os.path.exists(log_file):
             raise CommandError(f"Log file {log_file} does not exist.")
