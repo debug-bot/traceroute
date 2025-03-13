@@ -282,7 +282,7 @@ def get_devices_by_datacenters(request):
                                 if device.uptime_percentage
                                 else "..."
                             ),
-                            "latencies": latencies
+                            "latencies": latencies,
                             # "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
                             # "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
                         }
@@ -339,7 +339,7 @@ def get_devices_by_datacenters(request):
                             if device.uptime_percentage
                             else "..."
                         ),
-                        "latencies": latencies
+                        "latencies": latencies,
                         # "cpu_usage":  f'{device.cpu_usage}%' if device.cpu_usage else '...',
                         # "storage_usage": f'{device.storage_usage}%' if device.storage_usage else '...'
                     }
@@ -639,36 +639,40 @@ def rsyslog_log_view(request):
     context = {"log_entries": log_entries, "title": "Syslog"}
     return render(request, "temp/syslog.html", context)
 
+
 def delete_alert_rule(request):
-    if request.method == 'POST':
-        alert_id = request.POST.get('id')
+    if request.method == "POST":
+        alert_id = request.POST.get("id")
         try:
             alert_rule = AlertRule.objects.get(id=alert_id)
             alert_rule.delete()
-            return JsonResponse({'status': 'success', 'id': alert_rule.id})
+            return JsonResponse({"status": "success", "id": alert_rule.id})
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
 
 def create_alert_rule(request):
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        description = request.POST.get('description')
-        type_value = request.POST.get('type')
-        syslog_strings = request.POST.get('syslog_strings', '')
-        if type_value != 'SYSLOG':
-            syslog_strings = ''
+    if request.method == "POST":
+        name = request.POST.get("name")
+        description = request.POST.get("description")
+        type_value = request.POST.get("type")
+        syslog_strings = request.POST.get("syslog_strings", "")
+        if type_value != "SYSLOG":
+            syslog_strings = ""
 
         # Create the AlertRule object
         alert_rule = AlertRule.objects.create(
             name=name,
             description=description,
             type=type_value,  # Assuming the value matches one of the model's choices
-            syslog_strings=syslog_strings
+            syslog_strings=syslog_strings,
         )
 
-        return JsonResponse({'status': 'success', 'id': alert_rule.id})
+        return JsonResponse({"status": "success", "id": alert_rule.id})
     else:
-        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+        return JsonResponse(
+            {"status": "error", "message": "Invalid request method."}, status=400
+        )
 
 
 def configuration_view(request):
@@ -735,43 +739,42 @@ def alerts_view(request):
 from django.views.decorators.csrf import csrf_exempt
 import re
 
+
 @csrf_exempt
 def check_syslog_view(request):
     if request.method == "POST":
-        file_name = request.POST.get("file_name")
-        if not file_name:
-            return JsonResponse({"error": "No file_name provided"}, status=400)
+        # Get the complete syslog alert from the POST data
+        alert_message = request.POST.get("alert")
+        if not alert_message:
+            return JsonResponse({"error": "No alert provided"}, status=400)
 
-        if not os.path.exists(file_name):
-            raise Exception(f"Log file {file_name} does not exist.")
-
-        keywords_str = "BGP, OSPF"  # Keywords as a comma-separated string
+        # Define keywords as a comma-separated string
+        keywords_str = "BGP, OSPF"
         keywords = [kw.strip() for kw in keywords_str.split(",")]
         pattern = re.compile("|".join(keywords), re.IGNORECASE)
 
-        matching_lines = []
+        # Find all matching keywords in the alert message
+        matching_keywords = pattern.findall(alert_message)
 
-        # Read the log file and search for keywords.
-        with open(file_name, "r", encoding="utf-8") as f:
-            for line in f:
-                if pattern.search(line):
-                    matching_lines.append(line.strip())
+        if matching_keywords:
+            email_subject = "Alert: Syslog contains keywords"
+            # Using set() to list each matching keyword only once
+            email_body = (
+                f"The following keywords were found in the alert message: {', '.join(set(matching_keywords))}\n\n"
+                f"Alert message:\n{alert_message}"
+            )
 
-        email_subject = (
-            f"Alert: Syslog contains keywords for {os.path.basename(file_name)}"
-        )
-        email_body = (
-            f"The following log lines in {file_name} match the keywords ({', '.join(keywords)}):\n\n"
-            + "\n".join(matching_lines)
-        )
+            # Send the email (customize from_email and recipient_list as needed in send_alert_email)
+            send_alert_email(
+                alert_type="SYSLOG",
+                subject=email_subject,
+                message=email_body,
+            )
 
-        # Send the email (customize from_email and recipient_list as needed).
-        send_alert_email(
-            alert_type="SYSLOG",
-            subject=email_subject,
-            message=email_body,
-        )
-
-        return JsonResponse({"status": "success", "file_name": file_name})
+            return JsonResponse({"status": "success", "alert": alert_message})
+        else:
+            return JsonResponse(
+                {"status": "no matching keywords found", "alert": alert_message}
+            )
     else:
         return JsonResponse({"error": "Invalid request method"}, status=405)
