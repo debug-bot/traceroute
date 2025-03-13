@@ -617,5 +617,5 @@ def parse_bgp_peers(output):
 
 def send_alert_email(alert_type, subject, message):
     print(alert_type, subject, message)
-    Alert.objects.create(type="SYSLOG", subject=subject, message=message)
+    #Alert.objects.create(type="SYSLOG", subject=subject, message=message)
     
