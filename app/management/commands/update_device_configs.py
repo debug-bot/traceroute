@@ -1,4 +1,3 @@
-
 import time
 import paramiko
 import os
@@ -10,6 +9,7 @@ from django.utils import timezone
 from app.models import TYPE_CHOICES, Router, Configuration
 from app.utils import compare_and_return_changes_text, send_alert_email
 
+
 class Command(BaseCommand):
     help = "Fetch 'show configuration | display set' from each router. If changed, store a new version."
 
@@ -17,9 +17,11 @@ class Command(BaseCommand):
         command = "show configuration | display set"
         routers = Router.objects.all()
         for router in routers:
-            self.stdout.write(self.style.NOTICE(
-                f"Checking configuration for {router.name} ({router.ip})..."
-            ))
+            self.stdout.write(
+                self.style.NOTICE(
+                    f"Checking configuration for {router.name} ({router.ip})..."
+                )
+            )
 
             # 1) Fetch the config via SSH
             try:
@@ -45,9 +47,7 @@ class Command(BaseCommand):
                         if channel.exit_status_ready():
                             break
                         if time.time() - start_time >= 20:
-                            collected_output += (
-                                "\nTimeout reached (20 seconds). Closing connection...\n"
-                            )
+                            collected_output += "\nTimeout reached (20 seconds). Closing connection...\n"
                             break
                         time.sleep(1)
                     # Flush any remaining output.
@@ -55,53 +55,65 @@ class Command(BaseCommand):
                         chunk = channel.recv(1024).decode()
                         collected_output += chunk
                 except Exception as e:
-                    collected_output += f"\nConnection aborted: {e}. Terminating SSH session.\n"
+                    collected_output += (
+                        f"\nConnection aborted: {e}. Terminating SSH session.\n"
+                    )
                 finally:
                     channel.close()
                     client.close()
             except Exception as e:
-                self.stdout.write(self.style.ERROR(
-                    f"Failed to get config for {router.name}: {e}"
-                ))
+                self.stdout.write(
+                    self.style.ERROR(f"Failed to get config for {router.name}: {e}")
+                )
                 continue
 
             # Convert config_text to a standard string or list of lines as needed
             if not collected_output:
-                self.stdout.write(self.style.WARNING(
-                    f"No output for {router.name}. Skipping."
-                ))
+                self.stdout.write(
+                    self.style.WARNING(f"No output for {router.name}. Skipping.")
+                )
                 continue
-            
+
             config_text = collected_output
 
             # 2) Compare with the latest stored config
-            last_config = Configuration.objects.filter(router=router).order_by('-created_at').first()
+            last_config = (
+                Configuration.objects.filter(router=router)
+                .order_by("-created_at")
+                .first()
+            )
             if last_config:
                 # Read the file from FileField and compare
-                with last_config.file.open('r') as f:
+                with last_config.file.open("r") as f:
                     old_config_text = f.read()
 
                 # If they match exactly, skip
                 if old_config_text.strip() == config_text.strip():
-                    self.stdout.write(self.style.SUCCESS(
-                        f"No change for {router.name}."
-                    ))
+                    self.stdout.write(
+                        self.style.SUCCESS(f"No change for {router.name}.")
+                    )
                     continue
-                
+
                 else:
                     # Compare the old and new configuration texts.
-                    changes_old, changes_new = compare_and_return_changes_text(old_config_text, config_text)
+                    changes_old, changes_new = compare_and_return_changes_text(
+                        old_config_text, config_text
+                    )
 
                     # Build an email message with the changes.
-                    email_body = f"Configuration changes detected for {router.name}:\n\n"
+                    email_body = (
+                        f"Configuration changes detected for {router.name}:\n\n"
+                    )
                     email_body += "Changed lines in the OLD configuration:\n"
-                    email_body += "\n".join([repr(line) for line in changes_old]) + "\n\n"
+                    email_body += (
+                        "\n".join([repr(line) for line in changes_old]) + "\n\n"
+                    )
                     email_body += "Changed lines in the NEW configuration:\n"
                     email_body += "\n".join([repr(line) for line in changes_new])
 
                     # Send the email (customize sender, recipients, etc. as needed).
                     send_alert_email(
-                        alert_type=TYPE_CHOICES['CONFIGURATION'],
+                        alert_type="CONFIGURATION",
                         subject=f"Configuration Update for {router.name} ({router.ip})",
                         message=email_body,
                     )
@@ -110,23 +122,21 @@ class Command(BaseCommand):
             #    We'll make a simple version scheme like "vYYYYMMDD-HHMMSS"
             new_version = timezone.now().strftime("v%Y%m%d-%H%M%S")
 
-            config_obj = Configuration(
-                router=router,
-                version=new_version
-            )
+            config_obj = Configuration(router=router, version=new_version)
 
             # 4) Save the config text to the FileField
             #    We'll name it something like "routerID_version.txt"
             filename = f"{router.name}_{router.ip}_{new_version}.txt"
             config_obj.file.save(
-                filename,
-                ContentFile(config_text)  # Wrap the string in a ContentFile
+                filename, ContentFile(config_text)  # Wrap the string in a ContentFile
             )
 
             config_obj.save()
 
-            self.stdout.write(self.style.SUCCESS(
-                f"Stored new config for {router.name} as version {new_version}."
-            ))
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Stored new config for {router.name} as version {new_version}."
+                )
+            )
 
         self.stdout.write(self.style.SUCCESS("Done updating device configs."))

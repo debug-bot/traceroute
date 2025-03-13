@@ -12,8 +12,9 @@ def update_last_pings(router, success):
     new_ping = "1" if success else "0"
     router.last_pings = old_pings + new_ping
 
+
 def derive_status_from_pings(last_pings):
-    # If we have fewer than 3 pings so far, treat as 'offline' 
+    # If we have fewer than 3 pings so far, treat as 'offline'
     if len(last_pings) < 3:
         status = "0"  # default to warning if no pings yet
         if len(last_pings) > 0:
@@ -27,6 +28,7 @@ def derive_status_from_pings(last_pings):
     else:
         return "warning"
 
+
 class Command(BaseCommand):
     help = "Ping each device, update status based on last 3 pings, also fetch CPU/mem/storage"
 
@@ -37,36 +39,35 @@ class Command(BaseCommand):
             # If we failed to measure latency, set new_latency = None
             if not success:
                 new_latency = None
-            Latency.objects.create(router=router, latency=new_latency)    
-            
+            Latency.objects.create(router=router, latency=new_latency)
+
             # Now remove records older than 24 hours
             cutoff = timezone.now() - timedelta(hours=24)
             Latency.objects.filter(router=router, created_at__lt=cutoff).delete()
-            
+
             latency_data = router.last_3_latency or {}
             latencies = latency_data.get("latency", [])
 
             # 1) If we already have 3, remove the oldest
             if len(latencies) >= 3:
                 latencies.pop(0)
-                
+
             # 2) Append the new latency
             latencies.append(new_latency)
-            
+
             # 3) Store back in the JSONField
             latency_data["latency"] = latencies
             router.last_3_latency = latency_data
 
-            
             # 1) Shift last_pings and add new result
             update_last_pings(router, success)
 
             # 2) Derive new status
             router.status = derive_status_from_pings(router.last_pings)
-            
+
             if router.status == "offline":
-                send_alert_email(TYPE_CHOICES['MONITORING'], None, None)
-                
+                send_alert_email("MONITORING", None, None)
+
             # 3) Update total pings
             router.total_pings += 1
             if success:
@@ -76,7 +77,7 @@ class Command(BaseCommand):
 
             else:
                 router.consecutive_failures += 1
-            
+
             # 4) Update CPU, memory, storage usage
             # try:
             #     # 1) Get CPU + memory usage
@@ -89,7 +90,7 @@ class Command(BaseCommand):
             #         f"[{router.name}:{router.ip}] Error getting CPU/MEM usage: {e}"
             #     ))
             #     cpu_usage, mem_usage = 0, 0
-            
+
             # try:
             #     # 2) Get storage usage
             #     _, overall_storage_pct = get_storage(router.ip)
@@ -106,11 +107,11 @@ class Command(BaseCommand):
             # router.cpu_usage = cpu_usage or 0.0
             # router.mem_usage = mem_usage or 0.0
             # router.storage_usage = overall_storage_pct or 0.0
-            
+
             router.save()
 
             # 6) Optional: If router goes offline, send an alert
-            if router.status == 'offline':
-                self.stdout.write(self.style.WARNING(
-                    f"[ALERT] {router.name}:{router.ip} is offline!"
-                ))
+            if router.status == "offline":
+                self.stdout.write(
+                    self.style.WARNING(f"[ALERT] {router.name}:{router.ip} is offline!")
+                )
