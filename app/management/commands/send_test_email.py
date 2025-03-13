@@ -9,7 +9,7 @@ class Command(BaseCommand):
             send_mail(
                 'Test Email Subject',
                 'This is a test email message.',
-                'info@fastcli.com',
+                'alerts@fastcli.com',
                 ['adnanashraf4423@gmail.com'],
                 fail_silently=False,
             )
