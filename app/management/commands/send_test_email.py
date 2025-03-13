@@ -10,7 +10,7 @@ class Command(BaseCommand):
                 'Test Email Subject',
                 'This is a test email message.',
                 'alerts@fastcli.com',
-                ['adnanashraf4423@gmail.com'],
+                ['netops@txfiber.co'],
                 fail_silently=False,
             )
             self.stdout.write(self.style.SUCCESS("Test email sent successfully."))
