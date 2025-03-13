@@ -614,8 +614,17 @@ def parse_bgp_peers(output):
 
     return (total_peers, established_peers)
 
+from django.core.mail import send_mail
 
 def send_alert_email(alert_type, subject, message):
-    print(alert_type, subject, message)
-    #Alert.objects.create(type="SYSLOG", subject=subject, message=message)
-    
+    try:
+        send_mail(
+            subject,
+            message,
+            "alerts@fastcli.com",
+            ["netops@txfiber.co"],
+            fail_silently=False,
+        )
+    except Exception as e:
+        print('Error sending mail:', str(e))
+    # Alert.objects.create(type="SYSLOG", subject=subject, message=message)
