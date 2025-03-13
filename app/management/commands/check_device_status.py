@@ -66,7 +66,7 @@ class Command(BaseCommand):
             router.status = derive_status_from_pings(router.last_pings)
 
             if router.status == "offline":
-                send_alert_email("MONITORING", 'Test', 'Test ABC')
+                send_alert_email("MONITORING", str(router), 'Test ABC')
 
             # 3) Update total pings
             router.total_pings += 1
