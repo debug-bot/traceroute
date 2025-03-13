@@ -728,3 +728,21 @@ def alerts_view(request):
     alerts = AlertRule.objects.all()  # Retrieve all alert rules
     context = {"title": "Alerts", "alerts": alerts}
     return render(request, "temp/alerts.html", context)
+
+
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def check_syslog_view(request):
+    if request.method == "POST":
+        file_name = request.POST.get("file_name")
+        if not file_name:
+            return JsonResponse({"error": "No file_name provided"}, status=400)
+
+        # Here, you can call your existing logic (the one in your management command)
+        # For example, process the syslog file and send an email if necessary.
+        # process_syslog(file_name)  <-- your function
+
+        return JsonResponse({"status": "success", "file_name": file_name})
+    else:
+        return JsonResponse({"error": "Invalid request method"}, status=405)
