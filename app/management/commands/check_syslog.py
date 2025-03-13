@@ -3,7 +3,7 @@ import re
 from django.core.management.base import BaseCommand, CommandError
 from django.core.mail import send_mail
 
-from app.models import TYPE_CHOICES
+from app.models import TYPE_CHOICES, Alert
 from app.utils import send_alert_email
 
 
@@ -18,6 +18,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         log_file = options["log_file"]
         self.stdout.write(f"Started check_syslog, {log_file}")
+        Alert.objects.create(type="SYSLOG",subject=log_file,message='Test')
 
         if not os.path.exists(log_file):
             raise CommandError(f"Log file {log_file} does not exist.")
