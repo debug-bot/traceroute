@@ -16,8 +16,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        Alert.objects.create(type="SYSLOG",subject='Test',message='Test')
         log_file = options["log_file"]
+        Alert.objects.create(type="SYSLOG",subject=log_file,message='Test')
         self.stdout.write(f"Started check_syslog, {log_file}")
 
         if not os.path.exists(log_file):
@@ -46,7 +46,7 @@ class Command(BaseCommand):
 
             # Send the email (customize from_email and recipient_list as needed).
             send_alert_email(
-                alert_type=TYPE_CHOICES["SYSLOG"],
+                alert_type="SYSLOG",
                 subject=email_subject,
                 message=email_body,
             )
