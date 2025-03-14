@@ -180,6 +180,7 @@ class Router(models.Model):
     )
     version = models.CharField(
         max_length=2,
+        default="v4",
         choices=VERSION_CHOICES,
         help_text="Specify whether the IP version is IPv4 or IPv6. Ensure it matches the IP format.",
         verbose_name="IP Version",
