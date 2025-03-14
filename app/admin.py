@@ -51,8 +51,8 @@ class RouterAdmin(admin.ModelAdmin):
         ("Router SSH Settings", {"fields": ("ssh_settings",)}),
         ("Router Details", {"fields": ("type", "name", "asn", "ip", "version")}),
         ("Location Information", {"fields": ("datacenter",)}),
-        ("Status Information", {"fields": ("status",  "last_pings", "total_pings", "successful_pings", "consecutive_failures")}),
-        ("Resource Usage", {"fields": ("cpu_usage", "mem_usage", "storage_usage")}),
+        # ("Status Information", {"fields": ("status",  "last_pings", "total_pings", "successful_pings", "consecutive_failures")}),
+        # ("Resource Usage", {"fields": ("cpu_usage", "mem_usage", "storage_usage")}),
     )
 
     # Enable ordering by fields
