@@ -796,7 +796,7 @@ def check_syslog_view(request):
                 subject=email_subject,
                 message=email_body,
                 hostname=hostname,
-                source=program
+                program=program
             )
 
             return JsonResponse({"status": "success", "alert": msg})
