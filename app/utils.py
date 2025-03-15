@@ -624,7 +624,7 @@ def send_alert_email(alert_type, subject, message):
         send_mail(
             subject,
             message,
-            "alerts@fastcli.com",
+            "FastCLI Alert <alerts@fastcli.com>",
             ["netops@txfiber.co", "umairashraf5252@gmail.com"],
             fail_silently=False,
         )
