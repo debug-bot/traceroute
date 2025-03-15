@@ -774,6 +774,9 @@ def check_syslog_view(request):
             # Log the alert details; replace this with your processing logic.
             print(f"Received alert from {hostname} ({program}): {msg}")
 
+        if hostname == 'net-tools':
+            return JsonResponse({"error": "Invalid request, 'Same Hostname'"}, status=400)
+
         # Define keywords as a comma-separated string
         keywords_str = "BGP, OSPF, RPD, ISIS, MPLS"
         keywords = [kw.strip() for kw in keywords_str.split(",")]
