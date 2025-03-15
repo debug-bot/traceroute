@@ -405,51 +405,29 @@
                             <tr>
                                 <th scope="col">Time</th>
                                 <th scope="col">Alert Type</th>
+                                <th scope="col">Source</th>
                                 <th scope="col">Device</th>
+                                <!--
                                 <th scope="col">Status</th>
+                                -->
                             </tr>
                         </thead>
                         <tbody>
+                            {% for alert in alerts %}
                             <tr>
-                                <td>10:32 AM</td>
-                                <td>High CPU Usage</td>
-                                <td>Router-1</td>
+                                <td>{{ alert.created_at|date:"M d h:i A" }}</td>
+                                <td>{{ alert.type }}</td>
+                                <td>{{ alert.source }}</td>
+                                <td>{{ alert.hostname }}</td>
+                                <!--
                                 <td>
                                     <span class="badge badge-light-warning"
                                         >Warn</span
                                     >
                                 </td>
+                                -->
                             </tr>
-                            <tr>
-                                <td>10:16 AM</td>
-                                <td>Interface Down</td>
-                                <td>Switch-3</td>
-                                <td>
-                                    <span class="badge badge-light-danger"
-                                        >Critical</span
-                                    >
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>10:10 AM</td>
-                                <td>Syslog Error</td>
-                                <td>Firewall-5</td>
-                                <td>
-                                    <span class="badge badge-light-danger"
-                                        >Critical</span
-                                    >
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>9:56 AM</td>
-                                <td>Sync Error</td>
-                                <td>Device-2</td>
-                                <td>
-                                    <span class="badge badge-light-success"
-                                        >Success</span
-                                    >
-                                </td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>

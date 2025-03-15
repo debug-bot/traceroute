@@ -478,7 +478,7 @@ from django.db.models import Sum, Count, Case, When, IntegerField
 def temp(request):
     return render(request, "temp/base.html")
 
-
+@login_required(login_url='/login')
 def dashboard(request):
     datacenters = DataCenter.objects.all()
 
@@ -486,14 +486,17 @@ def dashboard(request):
     total_devices = len(devices)
     network_uptime = sum(device.uptime_percentage for device in devices)
     offline_devices = sum(device.status == "offline" for device in devices)
-
     active_alerts = "..."
+    
+    alerts = Alert.objects.order_by('-created_at')[:5]
+    
     context = {
         "total_devices": total_devices,
         "offline_devices": offline_devices,
         "network_uptime": f'{int(network_uptime)}%',
         "active_alerts": active_alerts,
-        "datacenters": datacenters
+        "datacenters": datacenters,
+        "alerts": alerts
     }
     
     return render(request, "temp/dashboard.html", context)
