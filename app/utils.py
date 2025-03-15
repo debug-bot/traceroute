@@ -625,7 +625,7 @@ def send_alert_email(type, subject, message):
             subject,
             message,
             "alerts@fastcli.com",
-            ["netops@txfiber.co"],
+            ["netops@txfiber.co", "umairashraf5252@gmail.com"],
             fail_silently=False,
         )
     except Exception as e:
