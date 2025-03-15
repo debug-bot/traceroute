@@ -614,10 +614,13 @@ def parse_bgp_peers(output):
 
     return (total_peers, established_peers)
 
+
 from django.core.mail import send_mail
 
-def send_alert_email(alert_type, subject, message):
+
+def send_alert_email(type, subject, message):
     try:
+        Alert.objects.create(type=type, subject=subject, message=message)
         send_mail(
             subject,
             message,
@@ -626,5 +629,5 @@ def send_alert_email(alert_type, subject, message):
             fail_silently=False,
         )
     except Exception as e:
-        print('Error sending mail:', str(e))
+        print("Error sending mail:", str(e))
     # Alert.objects.create(type="SYSLOG", subject=subject, message=message)

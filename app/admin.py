@@ -1,6 +1,18 @@
 from django.contrib import admin
 from django.shortcuts import render
-from .models import Alert, AlertRule, Configuration, Latency, Router, SSHSettings, DataCenter, Category, Command, PopularCommand, CommandHistory
+from .models import (
+    Alert,
+    AlertRule,
+    Configuration,
+    Latency,
+    Router,
+    SSHSettings,
+    DataCenter,
+    Category,
+    Command,
+    PopularCommand,
+    CommandHistory,
+)
 from django.conf import settings
 from django.contrib import admin
 from django.core.management import call_command
@@ -13,6 +25,7 @@ from django.urls import path
 admin.site.site_header = f"{settings.PROJECT_NAME} Administration"
 admin.site.site_title = f"{settings.PROJECT_NAME} Admin Dashboard"
 admin.site.index_title = f"Welcome to the {settings.PROJECT_NAME} Management System"
+
 
 @admin.register(CommandHistory)
 class CommandHistoryAdmin(admin.ModelAdmin):
@@ -28,9 +41,9 @@ class CommandHistoryAdmin(admin.ModelAdmin):
         return ""
 
     command_summary.short_description = "Command Summary"
-    
+
     ordering = ("-timestamp",)
-    
+
     # Pagination in the admin list view
     list_per_page = 20
 
@@ -38,7 +51,25 @@ class CommandHistoryAdmin(admin.ModelAdmin):
 @admin.register(Router)
 class RouterAdmin(admin.ModelAdmin):
     # Fields to display in the admin list view
-    list_display = ("ssh_settings", "type", "name", "asn", "ip", "version", "datacenter", "status", "last_pings", "updated_at", "cpu_usage", "mem_usage", "storage_usage", "uptime_percentage", "total_pings", "successful_pings", "consecutive_failures",)
+    list_display = (
+        "ssh_settings",
+        "type",
+        "name",
+        "asn",
+        "ip",
+        "version",
+        "datacenter",
+        "status",
+        "last_pings",
+        "updated_at",
+        "cpu_usage",
+        "mem_usage",
+        "storage_usage",
+        "uptime_percentage",
+        "total_pings",
+        "successful_pings",
+        "consecutive_failures",
+    )
 
     # Add filters for these fields
     list_filter = ("type", "version", "datacenter", "status")
@@ -51,7 +82,18 @@ class RouterAdmin(admin.ModelAdmin):
         ("Router SSH Settings", {"fields": ("ssh_settings",)}),
         ("Router Details", {"fields": ("type", "name", "asn", "ip", "version")}),
         ("Location Information", {"fields": ("datacenter",)}),
-        ("Status Information", {"fields": ("status",  "last_pings", "total_pings", "successful_pings", "consecutive_failures")}),
+        (
+            "Status Information",
+            {
+                "fields": (
+                    "status",
+                    "last_pings",
+                    "total_pings",
+                    "successful_pings",
+                    "consecutive_failures",
+                )
+            },
+        ),
         ("Resource Usage", {"fields": ("cpu_usage", "mem_usage", "storage_usage")}),
     )
 
@@ -61,28 +103,36 @@ class RouterAdmin(admin.ModelAdmin):
     # Pagination in the admin list view
     list_per_page = 20
 
+
 @admin.register(SSHSettings)
 class SSHSettingsAdmin(admin.ModelAdmin):
     list_display = ("settings_name", "port", "username", "password")
 
+
 @admin.register(AlertRule)
 class AlertRuleAdmin(admin.ModelAdmin):
-    list_display = ("name","description","type","syslog_strings")
-    
-# @admin.register(Alert)
-# class AlertAdmin(admin.ModelAdmin):
-#     list_display = ("type","subject","message","created_at")
-    
+    list_display = ("name", "description", "type", "syslog_strings")
+
+
+@admin.register(Alert)
+class AlertAdmin(admin.ModelAdmin):
+    list_display = ("type", "subject", "message", "created_at")
+
+
 @admin.register(Latency)
 class LatencyAdmin(admin.ModelAdmin):
     list_display = ("router", "latency", "created_at")
     list_filter = ("router__name", "router__ip", "created_at")
     search_fields = ("router__name", "router__ip")
-    
-    ordering = ("latency","-created_at",)
+
+    ordering = (
+        "latency",
+        "-created_at",
+    )
 
     # Pagination in the admin list view
     list_per_page = 20
+
 
 @admin.register(Configuration)
 class ConfigurationAdmin(admin.ModelAdmin):
@@ -138,23 +188,28 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ("name", "summary", "order", "command_count")
     search_fields = ("name", "summary")
     ordering = ("order",)
-    
+
     def command_count(self, obj):
         return obj.command_set.count()
-    
+
     command_count.short_description = "No. of Commands"
 
 
 @admin.register(Command)
 class CommandAdmin(admin.ModelAdmin):
-    list_display = ("label", "command", "purpose", "category_name",)
+    list_display = (
+        "label",
+        "command",
+        "purpose",
+        "category_name",
+    )
     search_fields = ("label", "command", "purpose")
-    list_filter = ("category__name", )
-    ordering = ("label", )
-    
+    list_filter = ("category__name",)
+    ordering = ("label",)
+
     def category_name(self, obj):
         return obj.category.name if obj.category else "No Category"
-    
+
     category_name.short_description = "Category"
 
 
