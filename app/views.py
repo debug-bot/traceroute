@@ -755,25 +755,39 @@ import re
 @csrf_exempt
 def check_syslog_view(request):
     if request.method == "POST":
-        # Get the complete syslog alert from the POST data
-        alert_message = request.POST.get("alert")
-        if not alert_message:
-            return JsonResponse({"error": "No alert provided"}, status=400)
+        try:
+            # Decode and load the JSON payload from the request body.
+            data = json.loads(request.body.decode("utf-8"))
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON payload"}, status=400)
+        # Expecting the payload to contain an "alerts" key.
+        alerts = data.get("alerts")
+        if alerts is None:
+            return JsonResponse({"error": "No alerts provided"}, status=400)
+
+        # Process alerts here. For example, you might log each one or perform further processing.
+        for alert in alerts:
+            # Extract fields with default values if not provided.
+            hostname = alert.get("hostname", "Unknown")
+            program = alert.get("program", "Unknown")
+            msg = alert.get("msg", "")
+            # Log the alert details; replace this with your processing logic.
+            print(f"Received alert from {hostname} ({program}): {msg}")
 
         # Define keywords as a comma-separated string
-        keywords_str = "BGP, OSPF"
+        keywords_str = "BGP, OSPF, RPD, ISIS, MPLS"
         keywords = [kw.strip() for kw in keywords_str.split(",")]
         pattern = re.compile("|".join(keywords), re.IGNORECASE)
 
         # Find all matching keywords in the alert message
-        matching_keywords = pattern.findall(alert_message)
+        matching_keywords = pattern.findall(msg)
 
         if matching_keywords:
-            email_subject = "Alert: Syslog contains keywords"
+            email_subject = f"Syslog Alert ({program}): {hostname}"
             # Using set() to list each matching keyword only once
             email_body = (
-                f"The following keywords were found in the alert message: {', '.join(set(matching_keywords))}\n\n"
-                f"Alert message:\n{alert_message}"
+                # f"The following keywords were found in the alert message: {', '.join(set(matching_keywords))}\n\n"
+                f"Alert message:\n{msg}"
             )
 
             # Send the email (customize from_email and recipient_list as needed in send_alert_email)
@@ -783,10 +797,10 @@ def check_syslog_view(request):
                 message=email_body,
             )
 
-            return JsonResponse({"status": "success", "alert": alert_message})
+            return JsonResponse({"status": "success", "alert": msg})
         else:
             return JsonResponse(
-                {"status": "no matching keywords found", "alert": alert_message}
+                {"status": "no matching keywords found", "alert": msg}
             )
     else:
         return JsonResponse({"error": "Invalid request method"}, status=405)
