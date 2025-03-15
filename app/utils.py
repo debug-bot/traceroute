@@ -618,7 +618,7 @@ def parse_bgp_peers(output):
 from django.core.mail import send_mail
 
 
-def send_alert_email(alert_type, subject, message):
+def send_alert_email(alert_type, subject, message, hostname=None,program=None):
     try:
         Alert.objects.create(type=alert_type, subject=subject, message=message)
         send_mail(

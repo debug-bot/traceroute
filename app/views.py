@@ -782,7 +782,7 @@ def check_syslog_view(request):
         # Find all matching keywords in the alert message
         matching_keywords = pattern.findall(msg)
 
-        if matching_keywords:
+        if matching_keywords and hostname != 'net-tools':
             email_subject = f"Syslog Alert ({program}): {hostname}"
             # Using set() to list each matching keyword only once
             email_body = (
@@ -795,6 +795,8 @@ def check_syslog_view(request):
                 alert_type="SYSLOG",
                 subject=email_subject,
                 message=email_body,
+                hostname=hostname,
+                source=program
             )
 
             return JsonResponse({"status": "success", "alert": msg})
