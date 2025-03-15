@@ -321,6 +321,8 @@ class Alert(models.Model):
     type = models.CharField(max_length=100, choices=TYPE_CHOICES)
     subject = models.CharField(max_length=255)
     message = models.TextField()
+    hostname = models.CharField(max_length=255, null=True, default=None)
+    source = models.CharField(max_length=100, null=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

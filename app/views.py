@@ -228,14 +228,10 @@ def dashboard2(request):
     )
     popular_commands = PopularCommand.objects.all()
 
+    
     return render(
         request,
-        "dashboard.html",
-        {
-            "unique_cities": unique_cities,
-            "categories": categories,
-            "popular_commands": popular_commands,
-        },
+        "dashboard.html"
     )
 
 
@@ -476,6 +472,7 @@ def download_configuration(request):
 
 
 from django.utils.dateformat import DateFormat
+from django.db.models import Sum, Count, Case, When, IntegerField
 
 
 def temp(request):
@@ -483,7 +480,22 @@ def temp(request):
 
 
 def dashboard(request):
-    context = {"title": "Dashboard"}
+    datacenters = DataCenter.objects.all()
+
+    devices = list(Router.objects.all())
+    total_devices = len(devices)
+    network_uptime = sum(device.uptime_percentage for device in devices)
+    offline_devices = sum(device.status == "offline" for device in devices)
+
+    active_alerts = "..."
+    context = {
+        "total_devices": total_devices,
+        "offline_devices": offline_devices,
+        "network_uptime": f'{int(network_uptime)}%',
+        "active_alerts": active_alerts,
+        "datacenters": datacenters
+    }
+    
     return render(request, "temp/dashboard.html", context)
 
 
