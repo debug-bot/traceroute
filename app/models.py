@@ -180,6 +180,7 @@ class Router(models.Model):
     )
     version = models.CharField(
         max_length=2,
+        default="v4",
         choices=VERSION_CHOICES,
         help_text="Specify whether the IP version is IPv4 or IPv6. Ensure it matches the IP format.",
         verbose_name="IP Version",
@@ -195,7 +196,7 @@ class Router(models.Model):
     # We store the last 3 pings as "1" for success, "0" for fail. Example: "110", "101", etc.
     last_pings = models.CharField(
         max_length=3,
-        default="",
+        default="000",
         help_text="Last 3 ping results, '1' for success, '0' for failure.",
         verbose_name="Last 3 Pings",
     )
