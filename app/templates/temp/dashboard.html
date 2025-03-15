@@ -415,7 +415,7 @@
                         <tbody>
                             {% for alert in alerts %}
                             <tr>
-                                <td>{{ alert.created_at|date:"M d h:i A" }}</td>
+                                <td>{{ alert.created_at|date:"M d, h:i A" }}</td>
                                 <td>{{ alert.type }}</td>
                                 <td>{{ alert.source }}</td>
                                 <td>{{ alert.hostname }}</td>
