@@ -620,12 +620,14 @@ from django.core.mail import send_mail
 
 def send_alert_email(alert_type, subject, message, hostname=None, program=None):
     try:
+        router = Router.objects.filter(name=hostname).first()
         Alert.objects.create(
             type=alert_type,
             subject=subject,
             message=message,
             hostname=hostname,
             source=program,
+            router=router
         )
         send_mail(
             subject,

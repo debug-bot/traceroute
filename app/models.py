@@ -322,6 +322,7 @@ class Alert(models.Model):
     subject = models.CharField(max_length=255)
     message = models.TextField()
     hostname = models.CharField(max_length=255, null=True, default=None)
+    router = models.ForeignKey(Router, on_delete=models.CASCADE, null=True, default=None)
     source = models.CharField(max_length=100, null=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 

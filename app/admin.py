@@ -105,12 +105,17 @@ class AlertRuleAdmin(admin.ModelAdmin):
 
 @admin.register(Alert)
 class AlertAdmin(admin.ModelAdmin):
-    list_display = ("type", "subject", "message", "hostname", "source", "created_at")
-    list_filter = ("type", "hostname", "source")
+    list_display = ("type", "subject", "message", "hostname", "router_display", "source", "created_at")
+    list_filter = ("type", "hostname", "router", "source")
 
     ordering = ("-created_at",)
-
     list_per_page = 20
+
+    def router_display(self, obj):
+        return obj.router if obj.router else "Router with this HOSTNAME not added in database"
+
+    router_display.short_description = "Router"
+
 
 
 @admin.register(Latency)
