@@ -69,9 +69,9 @@ class SSHSettingsAdmin(admin.ModelAdmin):
 class AlertRuleAdmin(admin.ModelAdmin):
     list_display = ("name","description","type","syslog_strings")
     
-# @admin.register(Alert)
-# class AlertAdmin(admin.ModelAdmin):
-#     list_display = ("type","subject","message","created_at")
+@admin.register(Alert)
+class AlertAdmin(admin.ModelAdmin):
+    list_display = ("type","subject","message","created_at")
     
 @admin.register(Latency)
 class LatencyAdmin(admin.ModelAdmin):
