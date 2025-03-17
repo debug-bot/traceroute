@@ -179,7 +179,7 @@ def main():
                             data["matched_rule_names"] = list(matched_rule_names)
                             alerts.append(data)
                         except Exception as e:
-                            log_debug(e)
+                            log_debug(str(e))
                     else:
                         # If the line doesn't match the expected format, include the raw line
                         alerts.append({"raw": line})
