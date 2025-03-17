@@ -49,7 +49,7 @@ def get_keywords():
 
 
 def get_alert_rule_data():
-        """
+    """
     Retrieve and combine the comma-separated keywords from all AlertRule objects,
     and keep track of which rule(s) each keyword belongs to.
 
@@ -63,9 +63,9 @@ def get_alert_rule_data():
       }
     }
     """
-        data = {"keywords": [], "keyword_map": {}}
+    data = {"keywords": [], "keyword_map": {}}
 
-    # try:
+    try:
         alert_rules = AlertRule.objects.all()
         all_keywords = set()
 
@@ -85,14 +85,14 @@ def get_alert_rule_data():
 
         data["keywords"] = list(all_keywords)
 
-    # except Exception as e:
-    #     log_debug(f"Error fetching keywords from DB: {e}")
+    except Exception as e:
+        log_debug(f"Error fetching keywords from DB: {e}")
 
-    #     # Fallback if DB query fails or there's no data
-    #     fallback_keywords = ["BGP", "OSPF", "RPD", "ISIS", "MPLS"]
-    #     data["keywords"] = fallback_keywords
-    #     # Associate all fallback keywords with a generic rule name
-        # data["keyword_map"] = {kw: ["Fallback Alert Rule"] for kw in fallback_keywords}
+        # Fallback if DB query fails or there's no data
+        fallback_keywords = ["BGP", "OSPF", "RPD", "ISIS", "MPLS"]
+        data["keywords"] = fallback_keywords
+        # Associate all fallback keywords with a generic rule name
+        data["keyword_map"] = {kw: ["Fallback Alert Rule"] for kw in fallback_keywords}
 
         return data
 
@@ -144,15 +144,15 @@ def main():
                 log_debug(233)
                 for line in buffer:
                     match = header_pattern.match(line)
-                    print(23,match)
-                    log_debug(23,match)
+                    print(23, match)
+                    log_debug(23, match)
                     if match:
                         data = match.groupdict()
                         msg = data.get("msg", "")
 
                         # 2) Find all matching keywords in the msg
                         matched_keywords = keyword_pattern.findall(msg)
-                        print(23,matched_keywords)
+                        print(23, matched_keywords)
                         # 3) Collect rule names for each matched keyword
                         matched_rule_names = set()
                         for mk in matched_keywords:
@@ -194,5 +194,5 @@ def main():
 
 
 if __name__ == "__main__":
-    print('DATABASES',settings.DATABASES)
+    print("DATABASES", settings.DATABASES)
     main()
