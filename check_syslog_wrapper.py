@@ -18,6 +18,7 @@ django.setup()
 from app.models import Alert, AlertRule  # Import your Alert model
 
 from django.utils import timezone
+from django.conf import settings
 
 DEBUG_LOG = "/var/log/rsyslog_wrapper/check_syslog_wrapper_debug.log"
 POST_URL = "https://fastcli.com/check-syslog/"  # Django endpoint to receive POST data
@@ -188,4 +189,5 @@ def main():
 
 
 if __name__ == "__main__":
+    print('DATABASES',settings.DATABASES)
     main()
