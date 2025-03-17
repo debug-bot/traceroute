@@ -154,8 +154,8 @@ def main():
                         # 2) Find all matching keywords in the msg
                         matched_keywords = keyword_pattern.findall(msg)
                         print(23, matched_keywords)
-                        log_debug(223)
-                        
+                        log_debug(223, matched_keywords)
+
                         # 3) Collect rule names for each matched keyword
                         matched_rule_names = set()
                         for mk in matched_keywords:
@@ -168,6 +168,7 @@ def main():
 
                         # If we found any matched rule names, update last_triggered
                         if matched_rule_names:
+                            log_debug(2342)
                             # Single DB query: update all matched rules in one go
                             AlertRule.objects.filter(
                                 name__in=matched_rule_names
