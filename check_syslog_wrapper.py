@@ -60,7 +60,11 @@ def main():
                 payload = {"alerts": alerts}
                 try:
                     response = requests.post(POST_URL, json=payload, timeout=10)
-                    log_debug("POST to {} returned status code: {}".format(POST_URL, response.status_code))
+                    log_debug(
+                        "POST to {} returned status code: {}".format(
+                            POST_URL, response.status_code
+                        )
+                    )
                 except Exception as e:
                     log_debug("Error during POST: {}".format(e))
                 # Clear buffer after sending
@@ -68,6 +72,6 @@ def main():
             # Reset the last read time to avoid immediate repeated timeouts
             last_read_time = time.time()
 
+
 if __name__ == "__main__":
     main()
-        
