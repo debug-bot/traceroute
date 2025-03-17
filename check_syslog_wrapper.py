@@ -28,7 +28,7 @@ AGGREGATION_TIMEOUT = 2  # seconds
 def log_debug(message):
     try:
         with open(DEBUG_LOG, "a") as f:
-            f.write(message + "\n")
+            f.write(json.dumps(message) + "\n")
     except Exception:
         pass
 
@@ -108,6 +108,8 @@ def main():
 
     # 1) Fetch the alert rule data (keywords + mapping) once at startup
     alert_rule_data = get_alert_rule_data()
+    print(alert_rule_data)
+    log_debug(alert_rule_data)
 
     # Prepare a regex pattern from the list of all unique keywords
     keywords = alert_rule_data["keywords"]
@@ -128,6 +130,7 @@ def main():
         if ready:
             # Read a single line from STDIN
             line = sys.stdin.readline()
+            log_debug(line)
             if line:
                 buffer.append(line.strip())
                 last_read_time = time.time()  # reset timer with each new line
@@ -179,7 +182,7 @@ def main():
                         # If the line doesn't match the expected format, include the raw line
                         alerts.append({"raw": line})
 
-                log_debug("Aggregated alert: " + json.dumps(alerts))
+                log_debug(alerts)
                 payload = {"alerts": alerts}
                 try:
                     response = requests.post(POST_URL, json=payload, timeout=10)
