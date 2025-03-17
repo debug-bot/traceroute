@@ -108,8 +108,6 @@ def main():
 
     # 1) Fetch the alert rule data (keywords + mapping) once at startup
     alert_rule_data = get_alert_rule_data()
-    print(alert_rule_data)
-    log_debug(alert_rule_data)
 
     # Prepare a regex pattern from the list of all unique keywords
     keywords = alert_rule_data["keywords"]
@@ -130,7 +128,6 @@ def main():
         if ready:
             # Read a single line from STDIN
             line = sys.stdin.readline()
-            log_debug(line)
             if line:
                 buffer.append(line.strip())
                 last_read_time = time.time()  # reset timer with each new line
@@ -159,30 +156,22 @@ def main():
                             ].items():
                                 if mk.lower() == stored_kw.lower():
                                     matched_rule_names.update(rule_names)
-                        try:
-                            # If we found any matched rule names, update last_triggered
-                            # if matched_rule_names:
-                                # Single DB query: update all matched rules in one go
-                                # AlertRule.objects.all().update(last_triggered=timezone.now())
-                                # AlertRule.objects.filter(
-                                #     name__in=matched_rule_names
-                                # ).update(last_triggered=timezone.now())
-                                
+                        # If we found any matched rule names, update last_triggered
+                        if matched_rule_names:
+                            # Single DB query: update all matched rules in one go
+                            AlertRule.objects.filter(
+                                name__in=matched_rule_names
+                            ).update(last_triggered=timezone.now())
+                            
 
-                            # Add matched keywords and rule names to your payload
-                            data["matching_keywords"] = matched_keywords
-                            data["matched_rule_names"] = list(matched_rule_names)
-                            alerts.append(data)
-                            # log_debug(333)
-                        except Exception as e:
-                            log_debug('234a2'+str(e))
+                        # Add matched keywords and rule names to your payload
+                        data["matching_keywords"] = matched_keywords
+                        data["matched_rule_names"] = list(matched_rule_names)
+                        alerts.append(data)
                     else:
                         # If the line doesn't match the expected format, include the raw line
                         alerts.append({"raw": line})
 
-                # log_debug(23422)
-                # log_debug(alerts)
-                print(12,alerts)
                 payload = {"alerts": alerts}
                 try:
                     response = requests.post(POST_URL, json=payload, timeout=10)
@@ -198,5 +187,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print("DATABASES", settings.DATABASES)
     main()
