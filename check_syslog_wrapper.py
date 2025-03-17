@@ -22,7 +22,7 @@ from django.conf import settings
 
 DEBUG_LOG = "/var/log/rsyslog_wrapper/check_syslog_wrapper_debug.log"
 POST_URL = "https://fastcli.com/check-syslog/"  # Django endpoint to receive POST data
-AGGREGATION_TIMEOUT = 2  # seconds
+AGGREGATION_TIMEOUT = 4  # seconds
 
 
 def log_debug(message):
