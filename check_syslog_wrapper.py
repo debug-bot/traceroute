@@ -170,7 +170,7 @@ def main():
                             if matched_rule_names:
                                 log_debug(2342)
                                 # Single DB query: update all matched rules in one go
-                                AlertRule.objects.all().update(last_triggered=timezone.now())
+                                # AlertRule.objects.all().update(last_triggered=timezone.now())
                                 log_debug(2342224)
                                 # AlertRule.objects.filter(
                                 #     name__in=matched_rule_names
