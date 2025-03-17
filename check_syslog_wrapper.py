@@ -48,7 +48,7 @@ def get_keywords():
 
 
 def get_alert_rule_data():
-    """
+        """
     Retrieve and combine the comma-separated keywords from all AlertRule objects,
     and keep track of which rule(s) each keyword belongs to.
 
@@ -62,9 +62,9 @@ def get_alert_rule_data():
       }
     }
     """
-    data = {"keywords": [], "keyword_map": {}}
+        data = {"keywords": [], "keyword_map": {}}
 
-    try:
+    # try:
         alert_rules = AlertRule.objects.all()
         all_keywords = set()
 
@@ -84,16 +84,16 @@ def get_alert_rule_data():
 
         data["keywords"] = list(all_keywords)
 
-    except Exception as e:
-        log_debug(f"Error fetching keywords from DB: {e}")
+    # except Exception as e:
+    #     log_debug(f"Error fetching keywords from DB: {e}")
 
-        # Fallback if DB query fails or there's no data
-        fallback_keywords = ["BGP", "OSPF", "RPD", "ISIS", "MPLS"]
-        data["keywords"] = fallback_keywords
-        # Associate all fallback keywords with a generic rule name
-        data["keyword_map"] = {kw: ["Fallback Alert Rule"] for kw in fallback_keywords}
+    #     # Fallback if DB query fails or there's no data
+    #     fallback_keywords = ["BGP", "OSPF", "RPD", "ISIS", "MPLS"]
+    #     data["keywords"] = fallback_keywords
+    #     # Associate all fallback keywords with a generic rule name
+        # data["keyword_map"] = {kw: ["Fallback Alert Rule"] for kw in fallback_keywords}
 
-    return data
+        return data
 
 
 def main():
