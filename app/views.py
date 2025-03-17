@@ -775,8 +775,9 @@ def check_syslog_view(request):
             hostname = alert.get("hostname", "Unknown")
             program = alert.get("program", "Unknown")
             msg = alert.get("msg", "")
+            rule_names = alert.get("matched_rule_names", [])
             # Log the alert details; replace this with your processing logic.
-            print(f"Received alert from {hostname} ({program}): {msg}")
+            print(f"Received alert [{rule_names.join(', ')}] from {hostname} ({program}): {msg}")
 
         if hostname == "net-tools":
             return JsonResponse(
@@ -789,10 +790,10 @@ def check_syslog_view(request):
         pattern = re.compile("|".join(keywords), re.IGNORECASE)
 
         # Find all matching keywords in the alert message
-        matching_keywords = pattern.findall(msg)
+        # matching_keywords = pattern.findall(msg)
 
-        if matching_keywords and hostname != "net-tools":
-            email_subject = f"Syslog Alert ({program}): {hostname}"
+        if msg and hostname != "net-tools":
+            email_subject = f" ({program}): {hostname}"
             # Using set() to list each matching keyword only once
             email_body = (
                 # f"The following keywords were found in the alert message: {', '.join(set(matching_keywords))}\n\n"
