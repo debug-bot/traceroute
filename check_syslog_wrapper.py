@@ -146,7 +146,7 @@ def main():
                 for line in buffer:
                     match = header_pattern.match(line)
                     print(23, match)
-                    log_debug(23, match)
+                    log_debug(23)
                     if match:
                         data = match.groupdict()
                         msg = data.get("msg", "")
@@ -154,6 +154,8 @@ def main():
                         # 2) Find all matching keywords in the msg
                         matched_keywords = keyword_pattern.findall(msg)
                         print(23, matched_keywords)
+                        log_debug(223)
+                        
                         # 3) Collect rule names for each matched keyword
                         matched_rule_names = set()
                         for mk in matched_keywords:
