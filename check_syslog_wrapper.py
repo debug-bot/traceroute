@@ -157,11 +157,14 @@ def main():
                                 if mk.lower() == stored_kw.lower():
                                     matched_rule_names.update(rule_names)
                         # If we found any matched rule names, update last_triggered
-                        # if matched_rule_names:
+                        if matched_rule_names:
                         #     # Single DB query: update all matched rules in one go
-                        #     AlertRule.objects.filter(
-                        #         name__in=matched_rule_names
-                        #     ).update(last_triggered=timezone.now())
+                            try:
+                                AlertRule.objects.filter(
+                                    name__in=matched_rule_names
+                                ).update(last_triggered=timezone.now())
+                            except Exception as e:
+                                log_debug('Error updating db:'+str(e))
                             
 
                         # Add matched keywords and rule names to your payload
