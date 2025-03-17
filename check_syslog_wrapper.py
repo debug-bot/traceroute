@@ -94,7 +94,7 @@ def get_alert_rule_data():
         # Associate all fallback keywords with a generic rule name
         data["keyword_map"] = {kw: ["Fallback Alert Rule"] for kw in fallback_keywords}
 
-        return data
+    return data
 
 
 def main():
