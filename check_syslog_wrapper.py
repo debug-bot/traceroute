@@ -141,20 +141,14 @@ def main():
             # Timeout reached without new input: process the buffered lines
             if buffer:
                 alerts = []
-                print(233)
-                log_debug(233)
                 for line in buffer:
                     match = header_pattern.match(line)
-                    print(23, match)
-                    log_debug(23)
                     if match:
                         data = match.groupdict()
                         msg = data.get("msg", "")
 
                         # 2) Find all matching keywords in the msg
                         matched_keywords = keyword_pattern.findall(msg)
-                        print(23, matched_keywords)
-                        log_debug(223)
 
                         # 3) Collect rule names for each matched keyword
                         matched_rule_names = set()
@@ -167,28 +161,27 @@ def main():
                                     matched_rule_names.update(rule_names)
                         try:
                             # If we found any matched rule names, update last_triggered
-                            if matched_rule_names:
-                                log_debug(2342)
+                            # if matched_rule_names:
                                 # Single DB query: update all matched rules in one go
                                 # AlertRule.objects.all().update(last_triggered=timezone.now())
-                                log_debug(2342224)
                                 # AlertRule.objects.filter(
                                 #     name__in=matched_rule_names
                                 # ).update(last_triggered=timezone.now())
+                                
 
                             # Add matched keywords and rule names to your payload
                             data["matching_keywords"] = matched_keywords
                             data["matched_rule_names"] = list(matched_rule_names)
                             alerts.append(data)
-                            log_debug(333)
+                            # log_debug(333)
                         except Exception as e:
                             log_debug('234a2'+str(e))
                     else:
                         # If the line doesn't match the expected format, include the raw line
                         alerts.append({"raw": line})
 
-                log_debug(23422)
-                log_debug(alerts)
+                # log_debug(23422)
+                # log_debug(alerts)
                 payload = {"alerts": alerts}
                 try:
                     response = requests.post(POST_URL, json=payload, timeout=10)
