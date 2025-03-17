@@ -633,7 +633,10 @@ def send_alert_email(alert_type, subject, message, hostname=None, program=None):
             subject,
             message,
             "FastCLI Alert <alerts@fastcli.com>",
-            ["netops@txfiber.co"],
+            [
+                # "netops@txfiber.co",
+                "umairashraf5252@gmail.com"
+            ],
             fail_silently=False,
         )
     except Exception as e:

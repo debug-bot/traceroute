@@ -17,6 +17,8 @@ django.setup()
 
 from app.models import Alert, AlertRule  # Import your Alert model
 
+from django.utils import timezone
+
 DEBUG_LOG = "/var/log/rsyslog_wrapper/check_syslog_wrapper_debug.log"
 POST_URL = "https://fastcli.com/check-syslog/"  # Django endpoint to receive POST data
 AGGREGATION_TIMEOUT = 2  # seconds
@@ -103,6 +105,16 @@ def main():
         r"^hostname=(?P<hostname>\S+)\s+program=(?P<program>\S+)\s+msg=(?P<msg>.*)$"
     )
 
+    # 1) Fetch the alert rule data (keywords + mapping) once at startup
+    alert_rule_data = get_alert_rule_data()
+    # Prepare a regex pattern from the list of all unique keywords
+    keywords = alert_rule_data["keywords"]
+    if keywords:
+        keyword_pattern = re.compile("|".join(keywords), re.IGNORECASE)
+    else:
+        # Fallback to a pattern that won't match anything
+        keyword_pattern = re.compile("$^")
+
     while True:
         # Calculate remaining time until aggregation timeout
         timeout = AGGREGATION_TIMEOUT - (time.time() - last_read_time)
@@ -128,28 +140,42 @@ def main():
                     match = header_pattern.match(line)
                     if match:
                         data = match.groupdict()
-                        # Retrieve keywords from the DB
-                        keywords_str = get_keywords()
-                        # Create a list of keywords from the comma-separated string
-                        keywords = [kw.strip() for kw in keywords_str.split(",")]
-                        # Compile a regex pattern to match any of the keywords (case-insensitive)
-                        keyword_pattern = re.compile("|".join(keywords), re.IGNORECASE)
                         msg = data.get("msg", "")
-                        matching_keywords = keyword_pattern.findall(msg)
-                        # Add matching keywords to the data dictionary
-                        data["matching_keywords"] = matching_keywords
+
+                        # 2) Find all matching keywords in the msg
+                        matched_keywords = keyword_pattern.findall(msg)
+
+                        # 3) Collect rule names for each matched keyword
+                        matched_rule_names = set()
+                        for mk in matched_keywords:
+                            # Compare ignoring case
+                            for stored_kw, rule_names in alert_rule_data[
+                                "keyword_map"
+                            ].items():
+                                if mk.lower() == stored_kw.lower():
+                                    matched_rule_names.update(rule_names)
+
+                        # If we found any matched rule names, update last_triggered
+                        if matched_rule_names:
+                            # Single DB query: update all matched rules in one go
+                            AlertRule.objects.filter(
+                                name__in=matched_rule_names
+                            ).update(last_triggered=timezone.now())
+
+                        # Add matched keywords and rule names to your payload
+                        data["matching_keywords"] = matched_keywords
+                        data["matched_rule_names"] = list(matched_rule_names)
                         alerts.append(data)
                     else:
                         # If the line doesn't match the expected format, include the raw line
                         alerts.append({"raw": line})
+
                 log_debug("Aggregated alert: " + json.dumps(alerts))
                 payload = {"alerts": alerts}
                 try:
                     response = requests.post(POST_URL, json=payload, timeout=10)
                     log_debug(
-                        "POST to {} returned status code: {}".format(
-                            POST_URL, response.status_code
-                        )
+                        f"POST to {POST_URL} returned status code: {response.status_code}"
                     )
                 except Exception as e:
                     log_debug("Error during POST: {}".format(e))
