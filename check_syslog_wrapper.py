@@ -171,10 +171,12 @@ def main():
                                 log_debug(2342)
                                 log_debug(matched_rule_names)
                                 log_debug(matched_keywords)
+                                log_debug(2342224)
                                 # Single DB query: update all matched rules in one go
-                                AlertRule.objects.filter(
-                                    name__in=matched_rule_names
-                                ).update(last_triggered=timezone.now())
+                                AlertRule.objects.all().update(last_triggered=timezone.now())
+                                # AlertRule.objects.filter(
+                                #     name__in=matched_rule_names
+                                # ).update(last_triggered=timezone.now())
 
                             # Add matched keywords and rule names to your payload
                             data["matching_keywords"] = matched_keywords
