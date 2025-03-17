@@ -104,9 +104,11 @@ def main():
     header_pattern = re.compile(
         r"^hostname=(?P<hostname>\S+)\s+program=(?P<program>\S+)\s+msg=(?P<msg>.*)$"
     )
+    
 
     # 1) Fetch the alert rule data (keywords + mapping) once at startup
     alert_rule_data = get_alert_rule_data()
+    print(alert_rule_data)
     # Prepare a regex pattern from the list of all unique keywords
     keywords = alert_rule_data["keywords"]
     if keywords:
@@ -144,7 +146,7 @@ def main():
 
                         # 2) Find all matching keywords in the msg
                         matched_keywords = keyword_pattern.findall(msg)
-
+                        print(23,matched_keywords)
                         # 3) Collect rule names for each matched keyword
                         matched_rule_names = set()
                         for mk in matched_keywords:
