@@ -100,22 +100,33 @@ class SSHSettingsAdmin(admin.ModelAdmin):
 
 @admin.register(AlertRule)
 class AlertRuleAdmin(admin.ModelAdmin):
-    list_display = ("name", "description", "type", "syslog_strings")
+    list_display = ("name", "description", "type", "syslog_strings", "last_triggered")
 
 
 @admin.register(Alert)
 class AlertAdmin(admin.ModelAdmin):
-    list_display = ("type", "subject", "message", "hostname", "router_display", "source", "created_at")
+    list_display = (
+        "type",
+        "subject",
+        "message",
+        "hostname",
+        "router_display",
+        "source",
+        "created_at",
+    )
     list_filter = ("type", "hostname", "router", "source")
 
     ordering = ("-created_at",)
     list_per_page = 20
 
     def router_display(self, obj):
-        return obj.router if obj.router else "Router with this HOSTNAME not added in database"
+        return (
+            obj.router
+            if obj.router
+            else "Router with this HOSTNAME not added in database"
+        )
 
     router_display.short_description = "Router"
-
 
 
 @admin.register(Latency)
