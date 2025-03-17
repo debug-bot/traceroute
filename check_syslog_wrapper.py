@@ -105,11 +105,12 @@ def main():
     header_pattern = re.compile(
         r"^hostname=(?P<hostname>\S+)\s+program=(?P<program>\S+)\s+msg=(?P<msg>.*)$"
     )
-    
 
     # 1) Fetch the alert rule data (keywords + mapping) once at startup
     alert_rule_data = get_alert_rule_data()
     print(alert_rule_data)
+    log_debug(alert_rule_data)
+
     # Prepare a regex pattern from the list of all unique keywords
     keywords = alert_rule_data["keywords"]
     if keywords:
@@ -140,9 +141,11 @@ def main():
             if buffer:
                 alerts = []
                 print(233)
+                log_debug(233)
                 for line in buffer:
                     match = header_pattern.match(line)
                     print(23,match)
+                    log_debug(23,match)
                     if match:
                         data = match.groupdict()
                         msg = data.get("msg", "")
