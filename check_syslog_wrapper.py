@@ -165,19 +165,21 @@ def main():
                             ].items():
                                 if mk.lower() == stored_kw.lower():
                                     matched_rule_names.update(rule_names)
+                        try:
+                            # If we found any matched rule names, update last_triggered
+                            if matched_rule_names:
+                                log_debug(2342)
+                                # Single DB query: update all matched rules in one go
+                                AlertRule.objects.filter(
+                                    name__in=matched_rule_names
+                                ).update(last_triggered=timezone.now())
 
-                        # If we found any matched rule names, update last_triggered
-                        if matched_rule_names:
-                            log_debug(2342)
-                            # Single DB query: update all matched rules in one go
-                            AlertRule.objects.filter(
-                                name__in=matched_rule_names
-                            ).update(last_triggered=timezone.now())
-
-                        # Add matched keywords and rule names to your payload
-                        data["matching_keywords"] = matched_keywords
-                        data["matched_rule_names"] = list(matched_rule_names)
-                        alerts.append(data)
+                            # Add matched keywords and rule names to your payload
+                            data["matching_keywords"] = matched_keywords
+                            data["matched_rule_names"] = list(matched_rule_names)
+                            alerts.append(data)
+                        except Exception as e:
+                            log_debug(e)
                     else:
                         # If the line doesn't match the expected format, include the raw line
                         alerts.append({"raw": line})
