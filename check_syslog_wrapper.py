@@ -130,6 +130,7 @@ def main():
         if ready:
             # Read a single line from STDIN
             line = sys.stdin.readline()
+            log_debug(line)
             if line:
                 buffer.append(line.strip())
                 last_read_time = time.time()  # reset timer with each new line
