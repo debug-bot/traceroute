@@ -182,6 +182,7 @@ def main():
 
                 # log_debug(23422)
                 # log_debug(alerts)
+                print(12,alerts)
                 payload = {"alerts": alerts}
                 try:
                     response = requests.post(POST_URL, json=payload, timeout=10)
