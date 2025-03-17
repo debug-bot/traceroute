@@ -775,6 +775,7 @@ def check_syslog_view(request):
             # Extract fields with default values if not provided.
             hostname = alert.get("hostname", "Unknown")
             program = alert.get("program", "Unknown")
+            program = program.upper()
             msg = alert.get("msg", "")
             rule_names = alert.get("matched_rule_names", [])
             rule_names_str = (", ").join(rule_names)
