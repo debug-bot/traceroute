@@ -5,7 +5,6 @@ import django
 import select
 import time
 import requests
-import json
 import re
 
 # Ensure the current directory (where manage.py is) is in the Python path.
@@ -15,10 +14,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 django.setup()
 
-from app.models import Alert, AlertRule  # Import your Alert model
+from app.models import AlertRule  # Import your Alert model
 
-from django.utils import timezone
-from django.conf import settings
 
 DEBUG_LOG = "/var/log/rsyslog_wrapper/check_syslog_wrapper_debug.log"
 POST_URL = "https://fastcli.com/check-syslog/"  # Django endpoint to receive POST data
@@ -28,24 +25,9 @@ AGGREGATION_TIMEOUT = 5  # seconds
 def log_debug(message):
     try:
         with open(DEBUG_LOG, "a") as f:
-            f.write(json.dumps(message) + "\n")
+            f.write(message + "\n")
     except Exception:
         pass
-
-
-def get_keywords():
-    """
-    Retrieve the comma-separated keywords string from the database.
-    Modify the query as needed based on your model structure.
-    """
-    try:
-        alert = Alert.objects.first()  # adjust the query logic as required
-        if alert and hasattr(alert, "keywords_str"):
-            return alert.keywords_str
-    except Exception as e:
-        log_debug("Error fetching keywords from DB: {}".format(e))
-    # Fallback if DB query fails
-    return "BGP, OSPF, RPD, ISIS, MPLS"
 
 
 def get_alert_rule_data():
@@ -156,17 +138,7 @@ def main():
                             ].items():
                                 if mk.lower() == stored_kw.lower():
                                     matched_rule_names.update(rule_names)
-                        # If we found any matched rule names, update last_triggered
-                        if matched_rule_names:
-                        #     # Single DB query: update all matched rules in one go
-                            try:
-                                AlertRule.objects.filter(
-                                    name__in=matched_rule_names
-                                ).update(last_triggered=timezone.now())
-                            except Exception as e:
-                                log_debug('Error updating db:'+str(e))
-                            
-
+                                    
                         # Add matched keywords and rule names to your payload
                         data["matching_keywords"] = matched_keywords
                         data["matched_rule_names"] = list(matched_rule_names)

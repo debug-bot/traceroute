@@ -754,6 +754,7 @@ def alerts_view(request):
 
 from django.views.decorators.csrf import csrf_exempt
 import re
+from django.utils import timezone
 
 
 @csrf_exempt
@@ -776,14 +777,20 @@ def check_syslog_view(request):
             program = alert.get("program", "Unknown")
             msg = alert.get("msg", "")
             rule_names = alert.get("matched_rule_names", [])
-            rule_names_str = (', ').join(rule_names)
+            rule_names_str = (", ").join(rule_names)
             # Log the alert details; replace this with your processing logic.
-            print(f"Received alert [{rule_names_str}] from {hostname} ({program}): {msg}")
+            print(
+                f"Received alert [{rule_names_str}] from {hostname} ({program}): {msg}"
+            )
 
         if hostname == "net-tools":
             return JsonResponse(
                 {"error": "Invalid request, 'Same Hostname'"}, status=400
             )
+            
+        AlertRule.objects.filter(name__in=rule_names).update(
+            last_triggered=timezone.now()
+        )
 
         # Define keywords as a comma-separated string
         keywords_str = "BGP, OSPF, RPD, ISIS, MPLS"
