@@ -776,9 +776,9 @@ def check_syslog_view(request):
             program = alert.get("program", "Unknown")
             msg = alert.get("msg", "")
             rule_names = alert.get("matched_rule_names", [])
-            rule_names_str = rule_names.join(', ')
+            rule_names_str = (', ').join(rule_names)
             # Log the alert details; replace this with your processing logic.
-            print(f"Received alert [{rule_names.join(', ')}] from {hostname} ({program}): {msg}")
+            print(f"Received alert [{rule_names_str}] from {hostname} ({program}): {msg}")
 
         if hostname == "net-tools":
             return JsonResponse(
