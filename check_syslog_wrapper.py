@@ -141,6 +141,7 @@ def main():
                 alerts = []
                 for line in buffer:
                     match = header_pattern.match(line)
+                    print(23,match)
                     if match:
                         data = match.groupdict()
                         msg = data.get("msg", "")
