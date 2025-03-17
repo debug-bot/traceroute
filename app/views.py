@@ -228,11 +228,7 @@ def dashboard2(request):
     )
     popular_commands = PopularCommand.objects.all()
 
-    
-    return render(
-        request,
-        "dashboard.html"
-    )
+    return render(request, "dashboard.html")
 
 
 def get_devices_by_datacenters(request):
@@ -478,27 +474,32 @@ from django.db.models import Sum, Count, Case, When, IntegerField
 def temp(request):
     return render(request, "temp/base.html")
 
-@login_required(login_url='/login')
+
+@login_required(login_url="/login")
 def dashboard(request):
     datacenters = DataCenter.objects.all()
 
     devices = list(Router.objects.all())
     total_devices = len(devices)
-    network_uptime = sum(device.uptime_percentage for device in devices)
     offline_devices = sum(device.status == "offline" for device in devices)
+    network_uptime = (
+        (sum(device.uptime_percentage for device in devices) / total_devices)
+        if total_devices
+        else 0
+    )
     active_alerts = "..."
-    
-    alerts = Alert.objects.order_by('-created_at')[:5]
-    
+
+    alerts = Alert.objects.order_by("-created_at")[:5]
+
     context = {
         "total_devices": total_devices,
         "offline_devices": offline_devices,
-        "network_uptime": f'{int(network_uptime)}%',
+        "network_uptime": f"{int(network_uptime)}%",
         "active_alerts": active_alerts,
         "datacenters": datacenters,
-        "alerts": alerts
+        "alerts": alerts,
     }
-    
+
     return render(request, "temp/dashboard.html", context)
 
 
@@ -777,8 +778,10 @@ def check_syslog_view(request):
             # Log the alert details; replace this with your processing logic.
             print(f"Received alert from {hostname} ({program}): {msg}")
 
-        if hostname == 'net-tools':
-            return JsonResponse({"error": "Invalid request, 'Same Hostname'"}, status=400)
+        if hostname == "net-tools":
+            return JsonResponse(
+                {"error": "Invalid request, 'Same Hostname'"}, status=400
+            )
 
         # Define keywords as a comma-separated string
         keywords_str = "BGP, OSPF, RPD, ISIS, MPLS"
@@ -788,7 +791,7 @@ def check_syslog_view(request):
         # Find all matching keywords in the alert message
         matching_keywords = pattern.findall(msg)
 
-        if matching_keywords and hostname != 'net-tools':
+        if matching_keywords and hostname != "net-tools":
             email_subject = f"Syslog Alert ({program}): {hostname}"
             # Using set() to list each matching keyword only once
             email_body = (
@@ -802,13 +805,11 @@ def check_syslog_view(request):
                 subject=email_subject,
                 message=email_body,
                 hostname=hostname,
-                program=program
+                program=program,
             )
 
             return JsonResponse({"status": "success", "alert": msg})
         else:
-            return JsonResponse(
-                {"status": "no matching keywords found", "alert": msg}
-            )
+            return JsonResponse({"status": "no matching keywords found", "alert": msg})
     else:
         return JsonResponse({"error": "Invalid request method"}, status=405)
