@@ -182,6 +182,7 @@ def main():
                         # If the line doesn't match the expected format, include the raw line
                         alerts.append({"raw": line})
 
+                log_debug(23422)
                 log_debug(alerts)
                 payload = {"alerts": alerts}
                 try:
