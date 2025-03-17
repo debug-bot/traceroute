@@ -178,6 +178,7 @@ def main():
                             data["matching_keywords"] = matched_keywords
                             data["matched_rule_names"] = list(matched_rule_names)
                             alerts.append(data)
+                            log_debug(333)
                         except Exception as e:
                             log_debug(str(e))
                     else:
