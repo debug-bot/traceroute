@@ -28,7 +28,7 @@ AGGREGATION_TIMEOUT = 2  # seconds
 def log_debug(message):
     try:
         with open(DEBUG_LOG, "a") as f:
-            f.write(message + "\n")
+            f.write(json.dumps(message) + "\n")
     except Exception:
         pass
 
