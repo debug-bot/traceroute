@@ -154,7 +154,7 @@ def main():
                         # 2) Find all matching keywords in the msg
                         matched_keywords = keyword_pattern.findall(msg)
                         print(23, matched_keywords)
-                        log_debug(223, matched_keywords)
+                        log_debug(223)
 
                         # 3) Collect rule names for each matched keyword
                         matched_rule_names = set()
