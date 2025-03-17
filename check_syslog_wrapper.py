@@ -180,7 +180,7 @@ def main():
                             alerts.append(data)
                             log_debug(333)
                         except Exception as e:
-                            log_debug(str(e))
+                            log_debug('234a2'+str(e))
                     else:
                         # If the line doesn't match the expected format, include the raw line
                         alerts.append({"raw": line})
