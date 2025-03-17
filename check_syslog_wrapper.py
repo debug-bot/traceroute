@@ -139,6 +139,7 @@ def main():
             # Timeout reached without new input: process the buffered lines
             if buffer:
                 alerts = []
+                print(233)
                 for line in buffer:
                     match = header_pattern.match(line)
                     print(23,match)
