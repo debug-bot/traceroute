@@ -169,6 +169,8 @@ def main():
                             # If we found any matched rule names, update last_triggered
                             if matched_rule_names:
                                 log_debug(2342)
+                                log_debug(matched_rule_names)
+                                log_debug(matched_keywords)
                                 # Single DB query: update all matched rules in one go
                                 AlertRule.objects.filter(
                                     name__in=matched_rule_names
