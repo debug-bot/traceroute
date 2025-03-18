@@ -63,10 +63,10 @@ class DataCenter(models.Model):
         country = ", " + self.country if self.country else ""
         return self.city + state + country
 
-    def clean(self):
-        # Ensure the city contains only alphabetic characters
-        if not self.city.replace(" ", "").isalpha():
-            raise ValidationError("City name must contain only alphabetic characters")
+    # def clean(self):
+    #     # Ensure the city contains only alphabetic characters
+    #     if not self.city.replace(" ", "").isalpha():
+    #         raise ValidationError("City name must contain only alphabetic characters")
 
     class Meta:
         verbose_name = "Data Center"
