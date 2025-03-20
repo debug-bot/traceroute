@@ -297,6 +297,11 @@ class ConfigurationBackupHistory(models.Model):
     
     def __str__(self):
         return f"{self.configuration} - {self.created_at}"
+    
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Configuration Backup History"
+        verbose_name_plural = "Configuration Backup Histories"
 
 class AlertRule(models.Model):
     name = models.CharField(max_length=200)
