@@ -6,7 +6,7 @@ import datetime
 from django.core.management.base import BaseCommand
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from app.models import TYPE_CHOICES, Router, Configuration
+from app.models import TYPE_CHOICES, ConfigurationBackupHistory, Router, Configuration
 from app.utils import compare_and_return_changes_text, send_alert_email
 
 
@@ -95,6 +95,13 @@ class Command(BaseCommand):
                     # Update only created_at field
                     last_config.created_at = timezone.now()
                     last_config.save()
+                    
+                    # Update Configuration History Model
+                    ConfigurationBackupHistory.objects.create(
+                        configuration=last_config,
+                        success=True,
+                        created_at=last_config.created_at
+                    )
                     # Skip to the next router
                     continue
 
@@ -125,8 +132,9 @@ class Command(BaseCommand):
             # 3) If different (or no previous config), store a new version
             #    We'll make a simple version scheme like "vYYYYMMDD-HHMMSS"
             new_version = timezone.now().strftime("v%Y%m%d-%H%M%S")
+            now = timezone.now()
 
-            config_obj = Configuration(router=router, version=new_version)
+            config_obj = Configuration(router=router, version=new_version, created_at=now)
 
             # 4) Save the config text to the FileField
             #    We'll name it something like "routerID_version.txt"
@@ -137,6 +145,13 @@ class Command(BaseCommand):
             
 
             config_obj.save()
+            
+            # Update Configuration History Model
+            ConfigurationBackupHistory.objects.create(
+                configuration=config_obj,
+                success=True,
+                created_at=now
+            )
 
             self.stdout.write(
                 self.style.SUCCESS(

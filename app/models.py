@@ -290,6 +290,13 @@ class Configuration(models.Model):
     class Meta:
         ordering = ["-created_at"]
 
+class ConfigurationBackupHistory(models.Model):
+    configuration = models.ForeignKey(Configuration, on_delete=models.CASCADE, help_text="Configuration backup history")
+    created_at = models.DateTimeField(auto_now_add=True)
+    success = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.configuration} - {self.created_at}"
 
 class AlertRule(models.Model):
     name = models.CharField(max_length=200)

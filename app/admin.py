@@ -4,6 +4,7 @@ from .models import (
     Alert,
     AlertRule,
     Configuration,
+    ConfigurationBackupHistory,
     Latency,
     Router,
     SSHSettings,
@@ -129,7 +130,18 @@ class AlertAdmin(admin.ModelAdmin):
 
     router_display.short_description = "Router"
 
-
+@admin.register(ConfigurationBackupHistory)
+class ConfigurationBackupHistoryAdmin(admin.ModelAdmin):
+    list_display = ("configuration", "created_at")
+    
+    list_filter = ("configuration", "created_at")
+    
+    search_fields = ("configuration", "created_at")
+    
+    ordering = ("-created_at",)
+    
+    list_per_page = 20
+    
 @admin.register(Latency)
 class LatencyAdmin(admin.ModelAdmin):
     list_display = ("router", "latency", "created_at")
