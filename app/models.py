@@ -224,6 +224,8 @@ class Router(models.Model):
     last_3_latency = models.JSONField(
         default=dict, help_text="Last 3 latency values in ms"
     )
+    
+    only_monitor = models.BooleanField(default=False, help_text="Only monitor this device using ICMP without downloading configurations")
 
     # Following 3 fields are in percentage
     cpu_usage = models.FloatField(default=0.0)

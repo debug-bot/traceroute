@@ -60,6 +60,7 @@ class RouterAdmin(admin.ModelAdmin):
         "version",
         "datacenter",
         "status",
+        "only_monitor",
         "last_pings",
         "updated_at",
         "cpu_usage",
@@ -72,7 +73,7 @@ class RouterAdmin(admin.ModelAdmin):
     )
 
     # Add filters for these fields
-    list_filter = ("type", "version", "datacenter", "status")
+    list_filter = ("type", "version", "datacenter", "status", "only_monitor")
 
     # Add a search bar for these fields
     search_fields = ("name", "ip", "datacenter")
@@ -80,7 +81,7 @@ class RouterAdmin(admin.ModelAdmin):
     # Group related fields in the detail view
     fieldsets = (
         ("Router SSH Settings", {"fields": ("ssh_settings",)}),
-        ("Router Details", {"fields": ("type", "name", "asn", "ip", "version")}),
+        ("Router Details", {"fields": ("type", "name", "asn", "ip", "version", "only_monitor",)}),
         ("Location Information", {"fields": ("datacenter",)}),
         # ("Status Information", {"fields": ("status",  "last_pings", "total_pings", "successful_pings", "consecutive_failures")}),
         # ("Resource Usage", {"fields": ("cpu_usage", "mem_usage", "storage_usage")}),

@@ -15,7 +15,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         command = "show configuration | display set"
-        routers = Router.objects.all()
+        routers = Router.objects.filter(only_monitor=False).all()
         for router in routers:
             self.stdout.write(
                 self.style.NOTICE(
@@ -92,6 +92,10 @@ class Command(BaseCommand):
                     self.stdout.write(
                         self.style.SUCCESS(f"No change for {router.name}.")
                     )
+                    # Update only created_at field
+                    last_config.created_at = timezone.now()
+                    last_config.save()
+                    # Skip to the next router
                     continue
 
                 else:
@@ -130,6 +134,7 @@ class Command(BaseCommand):
             config_obj.file.save(
                 filename, ContentFile(config_text)  # Wrap the string in a ContentFile
             )
+            
 
             config_obj.save()
 
