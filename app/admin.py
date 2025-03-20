@@ -52,11 +52,11 @@ class CommandHistoryAdmin(admin.ModelAdmin):
 class RouterAdmin(admin.ModelAdmin):
     # Fields to display in the admin list view
     list_display = (
+        "name",
+        "ip",
         "ssh_settings",
         "type",
-        "name",
         "asn",
-        "ip",
         "version",
         "datacenter",
         "status",
